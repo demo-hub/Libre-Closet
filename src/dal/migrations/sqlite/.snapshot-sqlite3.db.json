@@ -868,7 +868,7 @@
         },
         "color": {
           "name": "color",
-          "type": "integer",
+          "type": "text",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -880,7 +880,7 @@
           "default": null,
           "comment": null,
           "enumItems": [],
-          "mappedType": "enum"
+          "mappedType": "text"
         },
         "brand": {
           "name": "brand",

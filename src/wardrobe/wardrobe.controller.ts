@@ -315,7 +315,7 @@ export class WardrobeController {
       name?: string;
       category: string;
       brand?: string;
-      color?: GarmentColor;
+      color?: string | string[];
       size?: string;
       notes?: string;
     },
@@ -350,7 +350,7 @@ export class WardrobeController {
       name?: string;
       category?: string;
       brand?: string;
-      color?: GarmentColor;
+      color?: string | string[];
       size?: string;
       notes?: string;
       washingDetails?: string;
