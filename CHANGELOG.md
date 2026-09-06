@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- ...
+#### Fixed
+
+- Saving a garment with one or more colors failed on PostgreSQL
+- Upgrading an older database no longer fails on PostgreSQL or removes garments from saved outfits on SQLite
 
 ## 0.5.0 - 2026-06-26
 

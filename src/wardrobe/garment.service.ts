@@ -198,7 +198,7 @@ export class GarmentService {
       name: dto.name,
       category: dto.category,
       brand: dto.brand,
-      color: dto.color as any,
+      color: dto.color,
       size: this.normalizeSize(dto.size),
       notes: dto.notes,
       photo: photo ?? undefined,

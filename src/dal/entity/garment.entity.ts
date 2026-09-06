@@ -1,7 +1,6 @@
 import {
   Collection,
   Entity,
-  Enum,
   ManyToMany,
   ManyToOne,
   OneToOne,
@@ -13,9 +12,6 @@ import { File } from './file.entity';
 import { Outfit } from './outfit.entity';
 import { ShareableId } from './shareableId.entity';
 import { User } from './user.entity';
-import { GarmentColor } from '../../wardrobe/garment-color.enum';
-
-export { GarmentColor };
 
 @Entity()
 export class Garment extends ShareableId {
@@ -28,8 +24,9 @@ export class Garment extends ShareableId {
   @Property()
   public category!: string;
 
-  @Enum({ nullable: true })
-  public color?: GarmentColor;
+  // Comma-joined color names.
+  @Property({ nullable: true, columnType: 'text' })
+  public color?: string;
 
   @Property({ nullable: true })
   public brand?: string;

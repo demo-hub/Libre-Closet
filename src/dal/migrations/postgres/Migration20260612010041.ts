@@ -9,14 +9,10 @@ export class Migration20260612010041 extends Migration {
 
     this.addSql(`alter table "wardrobe_share" add constraint "wardrobe_share_grantor_id_foreign" foreign key ("grantor_id") references "user" ("id") on update cascade on delete cascade;`);
     this.addSql(`alter table "wardrobe_share" add constraint "wardrobe_share_grantee_id_foreign" foreign key ("grantee_id") references "user" ("id") on update cascade on delete cascade;`);
-
-    this.addSql(`alter table "garment" alter column "color" type smallint using ("color"::smallint);`);
   }
 
   override async down(): Promise<void> {
     this.addSql(`drop table if exists "wardrobe_share" cascade;`);
-
-    this.addSql(`alter table "garment" alter column "color" type varchar(255) using ("color"::varchar(255));`);
   }
 
 }
