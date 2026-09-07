@@ -1,4 +1,6 @@
 import { MultipartFile } from '@fastify/multipart';
+import { File } from '../../dal/entity/file.entity';
+
 export interface CreateGarmentDto {
   name?: string;
   category: string;
@@ -9,4 +11,5 @@ export interface CreateGarmentDto {
   washingDetails?: string;
   dateAquired?: string;
   files?: AsyncIterableIterator<MultipartFile>;
+  photo?: File;
 }

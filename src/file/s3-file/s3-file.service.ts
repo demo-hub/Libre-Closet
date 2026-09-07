@@ -75,6 +75,7 @@ export class S3FileService extends FileService {
 
     const file = this.fileRepository.create({
       fileName: storedFileName,
+      mimetype: 'image/webp',
       createdOn: new Date().toISOString(),
       createdBy: userId,
     });
@@ -130,6 +131,7 @@ export class S3FileService extends FileService {
 
     const file = this.fileRepository.create({
       fileName: newFileName,
+      mimetype: 'image/webp',
       createdOn: new Date().toISOString(),
       createdBy: userId,
     });
@@ -152,6 +154,12 @@ export class S3FileService extends FileService {
       Key: file.fileName,
     });
     return result.Body as Readable;
+  }
+
+  protected async removeFileRecord(file: File): Promise<void> {
+    // nativeDelete, not removeAndFlush: flushing here would also commit whatever
+    // the caller left pending after the failure that triggered the cleanup.
+    await this.em.nativeDelete(File, { id: file.id });
   }
 
   protected async store(fileName: string, stream: Readable): Promise<void> {

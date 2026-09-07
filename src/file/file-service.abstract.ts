@@ -44,6 +44,17 @@ export abstract class FileService implements FileServiceInterface {
   ): Promise<File | undefined>;
   abstract delete(fileName: string): Promise<void>;
 
+  /** Removes a stored image, its cut-out and its row. Best-effort: callers use it while handling another error. */
+  async discard(file: File): Promise<void> {
+    await this.delete(file.fileName).catch((err) => this.logger.warn(err));
+    await this.delete(this.nobgFileName(file.fileName)).catch((err) =>
+      this.logger.warn(err),
+    );
+    await this.removeFileRecord(file).catch((err) => this.logger.warn(err));
+  }
+
+  protected abstract removeFileRecord(file: File): Promise<void>;
+
   async storeNobgVariantFromStream(
     stream: Readable,
     originalFileName: string,

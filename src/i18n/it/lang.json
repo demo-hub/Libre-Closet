@@ -101,6 +101,8 @@
   "ADD_PHOTO": "Aggiungi Foto",
   "TAKE_PHOTO": "Scatta foto",
   "UPDATE_PHOTO": "Aggiorna Foto",
+  "GARMENT_SAVED": "Capo salvato!",
+  "PHOTO_SAVED": "Foto salvata!",
   "BG_REMOVAL_TOGGLE": "Rimuovi sfondo automaticamente",
   "REMOVING_BACKGROUND": "Rimozione sfondo…",
   "BG_STAGE_DOWNLOADING": "Download risorse…",
