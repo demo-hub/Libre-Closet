@@ -31,6 +31,8 @@ describe('ImportController', () => {
         { provide: WardrobeShareService, useValue: shareService },
       ],
     })
+      // Nest instantiates the controller's guard when compiling; the chain
+      // itself is not exercised by direct method calls.
       .overrideGuard(ConditionalAuthGuard)
       .useValue({ canActivate: () => true })
       .compile();
