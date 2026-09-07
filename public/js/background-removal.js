@@ -3,8 +3,8 @@
  *
  * Runs @imgly/background-removal in a Web Worker (ONNX + WASM) before the
  * form submits, injecting the processed webp into a hidden nobgPhoto field.
- * On any failure the form submits unchanged — the server-side fallback path
- * handles generation lazily on first /file/nobg/ request.
+ * On any failure the form submits the original only; /file/nobg/ then serves
+ * the original until a cut-out is saved from the mask editor.
  *
  * Models are served from /bg-removal-models/ (@imgly/background-removal-data
  * installed from the IMG.LY CDN tarball — no runtime CDN required).
@@ -91,16 +91,26 @@ export const initBackgroundRemoval = async () => {
     });
   } catch (err) {
     // Package failed to load (old browser, no ES module support, etc.)
-    // Leave the form as-is; server fallback will handle it.
+    // Leave the form as-is; the original photo is uploaded without a cut-out.
     console.warn('[bg-removal] Failed to load background-removal module:', err);
     return;
   }
 };
 
-export const wireUpPhotoInput = async () => {
+/**
+ * @param {object} [options]
+ * @param {string} [options.submitBtnId] - Button disabled while removal runs.
+ * @param {(file: File) => void} [options.onSelect] - Called with the chosen file.
+ * @param {(blob: Blob) => void} [options.onNobg] - Called with the final cut-out.
+ */
+export const wireUpPhotoInput = async ({
+  submitBtnId = 'photoBtn',
+  onSelect,
+  onNobg,
+} = {}) => {
   const photoInput = document.getElementById('photoInput');
   const nobgInput = document.getElementById('nobgPhotoInput');
-  const submitBtn = document.getElementById('photoBtn');
+  const submitBtn = document.getElementById(submitBtnId);
   const bgStatus = document.getElementById('bgStatus');
   const bgStatusText = document.getElementById('bgStatusText');
   const bgStatusHint = document.getElementById('bgStatusHint');
@@ -113,6 +123,7 @@ export const wireUpPhotoInput = async () => {
 
     const file = photoInput.files?.[0];
     if (!file) return;
+    onSelect?.(file);
 
     if (!isBgRemovalEnabled()) {
       if (submitBtn) submitBtn.disabled = false;
@@ -167,12 +178,10 @@ export const wireUpPhotoInput = async () => {
       const dt = new DataTransfer();
       dt.items.add(new File([blob], 'nobg.webp', { type: 'image/webp' }));
       nobgInput.files = dt.files;
+      onNobg?.(blob);
     } catch (err) {
-      // Processing failed — clear any partial result and let server fallback run
-      console.warn(
-        '[bg-removal] Processing failed, using server fallback:',
-        err,
-      );
+      // Processing failed — clear any partial result and upload the original only
+      console.warn('[bg-removal] Processing failed, uploading original only:', err);
       nobgInput.value = '';
     } finally {
       clearTimeout(stillWorkingTimer);
@@ -192,8 +201,9 @@ export const wireUpPhotoInput = async () => {
  * then POSTs only the updated nobg variant to /wardrobe/:id/nobg.
  * @param {string} fileName - The stored filename of the garment photo.
  * @param {number} garmentId - The garment's database ID.
+ * @param {number|null} [ownerId] - Shared-wardrobe owner, forwarded as ?ownerId.
  */
-export const wireUpEditMaskBtn = async (fileName, garmentId) => {
+export const wireUpEditMaskBtn = async (fileName, garmentId, ownerId) => {
   const btn = document.getElementById('editMaskBtn');
   if (!btn) return;
 
@@ -219,7 +229,8 @@ export const wireUpEditMaskBtn = async (fileName, garmentId) => {
 
       const formData = new FormData();
       formData.append('nobgPhoto', new File([editedBlob], 'nobg.webp', { type: 'image/webp' }));
-      await fetch(`/wardrobe/${garmentId}/nobg`, { method: 'POST', body: formData });
+      const query = ownerId ? `?ownerId=${ownerId}` : '';
+      await fetch(`/wardrobe/${garmentId}/nobg${query}`, { method: 'POST', body: formData });
 
       // Display the edited result directly from the in-memory blob — avoids
       // any browser cache serving the old nobg image after the POST.

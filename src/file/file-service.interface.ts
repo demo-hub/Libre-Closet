@@ -14,6 +14,7 @@ export interface FileServiceInterface {
   ): Promise<File>;
   copyImage(sourceFileName: string, userId?: number): Promise<File | undefined>;
   delete(fileName: string): Promise<void>;
+  discard(file: File): Promise<void>;
   deleteById(fileId: any, userId: any): Promise<any>;
   get(fileName: string): Promise<Readable | undefined>;
   getByShareableId(shareableId: string): Promise<Readable | undefined>;

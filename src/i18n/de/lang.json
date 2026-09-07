@@ -101,6 +101,8 @@
   "ADD_PHOTO": "Foto hinzufügen",
   "TAKE_PHOTO": "Foto aufnehmen",
   "UPDATE_PHOTO": "Foto aktualisieren",
+  "GARMENT_SAVED": "Kleidungsstück gespeichert!",
+  "PHOTO_SAVED": "Foto gespeichert!",
   "BG_REMOVAL_TOGGLE": "Hintergrund automatisch entfernen",
   "REMOVING_BACKGROUND": "Hintergrund wird entfernt…",
   "BG_STAGE_DOWNLOADING": "Ressourcen werden heruntergeladen…",

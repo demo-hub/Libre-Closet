@@ -127,7 +127,7 @@ export class GarmentService {
   }
 
   async create(dto: CreateGarmentDto, userId?: number): Promise<Garment> {
-    let photo: File | undefined = undefined;
+    let photo: File | undefined = dto.photo;
     if (dto.files) {
       for await (const file of dto.files) {
         if (file.fieldname === 'photo') {
@@ -137,6 +137,11 @@ export class GarmentService {
         }
       }
     }
+
+    // Resolved first: repository.create() stages the entity, so a failure after
+    // it would leave a half-built garment pending in the unit of work.
+    const owner =
+      userId != null ? await this.userRepository.findOneOrFail(userId) : null;
 
     const garment = this.garmentRepository.create({
       name: dto.name,
@@ -150,9 +155,8 @@ export class GarmentService {
       photo: photo ?? undefined,
     });
 
-    if (userId != null) {
-      const user = await this.userRepository.findOneOrFail(userId);
-      garment.owner = user as any;
+    if (owner) {
+      garment.owner = owner as any;
     }
 
     await this.garmentRepository.getEntityManager().persistAndFlush(garment);
@@ -249,9 +253,13 @@ export class GarmentService {
     userId?: number,
     requestingUserId?: number,
   ): Promise<Garment> {
+    // Resolved before the body is touched, so a caller who may not edit this
+    // garment cannot leave a stored blob behind. The iterator has not been
+    // advanced yet, so this read does not backpressure the parser.
+    const garment = await this.findOne(id, requestingUserId, userId);
+
     let photo: File | undefined;
     if (dto.files) {
-      // Process file uploads BEFORE any async DB operations.
       // @fastify/multipart yields live streams; if a stream isn't consumed,
       // the parser backpressures and the async iterator hangs. Each file's
       // pipeline must be started (not awaited) inside the loop so busboy can
@@ -265,13 +273,13 @@ export class GarmentService {
       const photoFileName = `${randomUUID()}.webp`;
 
       for await (const file of dto.files) {
-        if (file.fieldname === 'photo') {
+        if (file.fieldname === 'photo' && file.filename) {
           photoPromise = this.fileService.storeImageFromFileUpload(
             file,
             userId,
             photoFileName,
           );
-        } else if (file.fieldname === 'nobgPhoto') {
+        } else if (file.fieldname === 'nobgPhoto' && file.filename) {
           nobgPromise = this.fileService.storeNobgVariantFromStream(
             file.file,
             photoFileName,
@@ -281,15 +289,20 @@ export class GarmentService {
         }
       }
 
-      if (photoPromise) {
-        [photo] = await Promise.all([
-          photoPromise,
-          nobgPromise ?? Promise.resolve(),
-        ]);
+      // Both promises are always observed: an unselected photo input leaves
+      // photoPromise undefined while a cut-out may still be in flight.
+      [photo] = await Promise.all([
+        photoPromise ?? Promise.resolve(undefined),
+        nobgPromise?.catch((err) => this.logger.warn(err)) ?? Promise.resolve(),
+      ]);
+
+      if (nobgPromise && !photo) {
+        // A cut-out without an original would never be served.
+        await this.fileService
+          .delete(this.fileService.nobgFileName(photoFileName))
+          .catch((err) => this.logger.warn(err));
       }
     }
-
-    const garment = await this.findOne(id, requestingUserId, userId);
 
     if (photo) {
       await this.deleteOldPhoto(garment);

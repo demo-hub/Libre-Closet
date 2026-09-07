@@ -7,8 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+#### Added
+
+- Add a photo, with background removal, while creating a garment
+
+#### Changed
+
+- Complete the German, Spanish, French, Italian and Russian translations
+
 #### Fixed
 
+- Garments could be created in another user's wardrobe when user accounts are disabled
+- A photo upload that was rejected no longer leaves the image on the server
 - Saving a garment with one or more colors failed on PostgreSQL
 - Upgrading an older database no longer fails on PostgreSQL or removes garments from saved outfits on SQLite
 

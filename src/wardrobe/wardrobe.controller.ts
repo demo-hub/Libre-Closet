@@ -106,7 +106,8 @@ export class WardrobeController {
     @Query('ownerId') ownerId: string | undefined,
   ) {
     const userId = this.userId(req);
-    const viewOwner = ownerId ? parseInt(ownerId, 10) : undefined;
+    const viewOwner =
+      userId != null && ownerId ? parseInt(ownerId, 10) : undefined;
     if (userId != null && viewOwner != null && viewOwner !== userId) {
       const canManage = await this.shareService.canManage(userId, viewOwner);
       if (!canManage) throw new ForbiddenException();
@@ -148,7 +149,8 @@ export class WardrobeController {
     @Query('ownerId') ownerId: string | undefined,
   ) {
     const userId = this.userId(req);
-    const viewOwner = ownerId ? parseInt(ownerId, 10) : undefined;
+    const viewOwner =
+      userId != null && ownerId ? parseInt(ownerId, 10) : undefined;
 
     if (userId != null && viewOwner != null && viewOwner !== userId) {
       const canManage = await this.shareService.canManage(userId, viewOwner);
@@ -193,7 +195,8 @@ export class WardrobeController {
     @Query('photoSaved') photoSaved: string | undefined,
   ) {
     const userId = this.userId(req);
-    const viewOwner = ownerId ? parseInt(ownerId, 10) : undefined;
+    const viewOwner =
+      userId != null && ownerId ? parseInt(ownerId, 10) : undefined;
     const garment = await this.garmentService.findOne(id, userId, viewOwner);
 
     let canEdit = true;
@@ -237,7 +240,8 @@ export class WardrobeController {
     @Query('ownerId') ownerId: string | undefined,
   ) {
     const userId = this.userId(req);
-    const viewOwner = ownerId ? parseInt(ownerId, 10) : undefined;
+    const viewOwner =
+      userId != null && ownerId ? parseInt(ownerId, 10) : undefined;
 
     if (userId != null && viewOwner != null && viewOwner !== userId) {
       const canManage = await this.shareService.canManage(userId, viewOwner);
@@ -284,7 +288,8 @@ export class WardrobeController {
     @Query('ownerId') ownerId: string | undefined,
   ) {
     const userId = this.userId(req);
-    const viewOwner = ownerId ? parseInt(ownerId, 10) : undefined;
+    const viewOwner =
+      userId != null && ownerId ? parseInt(ownerId, 10) : undefined;
     const [garment, filters] = await Promise.all([
       this.garmentService.findOne(id, userId, viewOwner),
       this.garmentService.findAvailableFilters(viewOwner ?? userId),
@@ -324,7 +329,8 @@ export class WardrobeController {
     @Query('ownerId') ownerId: string | undefined,
   ) {
     const userId = this.userId(req);
-    const viewOwner = ownerId ? parseInt(ownerId, 10) : undefined;
+    const viewOwner =
+      userId != null && ownerId ? parseInt(ownerId, 10) : undefined;
     // Verify the requesting user has access to the source garment
     await this.garmentService.findOne(id, userId, viewOwner);
     const cloned = await this.garmentService.clone(
@@ -361,7 +367,8 @@ export class WardrobeController {
     @Query('ownerId') ownerId: string | undefined,
   ) {
     const userId = this.userId(req);
-    const viewOwner = ownerId ? parseInt(ownerId, 10) : undefined;
+    const viewOwner =
+      userId != null && ownerId ? parseInt(ownerId, 10) : undefined;
 
     if (userId != null && viewOwner != null && viewOwner !== userId) {
       const canManage = await this.shareService.canManage(userId, viewOwner);
@@ -395,7 +402,8 @@ export class WardrobeController {
     @Query('ownerId') ownerId: string | undefined,
   ) {
     const userId = this.userId(req);
-    const viewOwner = ownerId ? parseInt(ownerId, 10) : undefined;
+    const viewOwner =
+      userId != null && ownerId ? parseInt(ownerId, 10) : undefined;
 
     if (userId != null && viewOwner != null && viewOwner !== userId) {
       const canManage = await this.shareService.canManage(userId, viewOwner);
@@ -422,7 +430,8 @@ export class WardrobeController {
     @Query('ownerId') ownerId: string | undefined,
   ) {
     const userId = this.userId(req);
-    const viewOwner = ownerId ? parseInt(ownerId, 10) : undefined;
+    const viewOwner =
+      userId != null && ownerId ? parseInt(ownerId, 10) : undefined;
 
     // Archive/unarchive is only allowed for the owner
     if (viewOwner != null && viewOwner !== userId) {
@@ -443,7 +452,8 @@ export class WardrobeController {
     @Query('ownerId') ownerId: string | undefined,
   ) {
     const userId = this.userId(req);
-    const viewOwner = ownerId ? parseInt(ownerId, 10) : undefined;
+    const viewOwner =
+      userId != null && ownerId ? parseInt(ownerId, 10) : undefined;
 
     if (userId != null && viewOwner != null && viewOwner !== userId) {
       const canManage = await this.shareService.canManage(userId, viewOwner);
@@ -471,7 +481,8 @@ export class WardrobeController {
     @Query('ownerId') ownerId: string | undefined,
   ) {
     const userId = this.userId(req);
-    const viewOwner = ownerId ? parseInt(ownerId, 10) : undefined;
+    const viewOwner =
+      userId != null && ownerId ? parseInt(ownerId, 10) : undefined;
 
     // Delete is only allowed for the owner
     if (viewOwner != null && viewOwner !== userId) {
