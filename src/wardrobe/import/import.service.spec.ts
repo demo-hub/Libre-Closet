@@ -202,6 +202,36 @@ describe('ImportService', () => {
     expect(garmentService.create).not.toHaveBeenCalled();
   });
 
+  it('drops the cut-out when the original could not be stored', async () => {
+    fileService.storeImageFromFileUpload.mockRejectedValueOnce(
+      new Error('sharp: unsupported image'),
+    );
+    const req = request([
+      field('category', 'tops'),
+      filePart('photo', 'a.png'),
+      filePart('nobgPhoto', 'nobg.webp'),
+    ]);
+
+    await expect(service.createFromMultipart(req)).rejects.toThrow(
+      'sharp: unsupported image',
+    );
+
+    const deleted = fileService.delete.mock.calls.map(([n]) => n as string);
+    expect(deleted.some((n) => n.endsWith('-nobg.webp'))).toBe(true);
+  });
+
+  it('drops a cut-out that arrives without a photo', async () => {
+    const req = request([
+      field('category', 'tops'),
+      filePart('nobgPhoto', 'nobg.webp'),
+    ]);
+
+    await service.createFromMultipart(req);
+
+    const deleted = fileService.delete.mock.calls.map(([n]) => n as string);
+    expect(deleted.some((n) => n.endsWith('-nobg.webp'))).toBe(true);
+  });
+
   it('discards an in-flight upload when the parser fails mid-request', async () => {
     const parserError = new Error('FST_FILES_LIMIT');
     const req = {

@@ -72,9 +72,7 @@ export class ImportService {
     }
   }
 
-  // Parts are live streams: each file part must be consumed or resumed before
-  // the iterator advances, and pipelines start inside the loop (see
-  // GarmentService.update). Empty-filename parts are unselected inputs.
+  // Pipelines must start inside the loop or @fastify/multipart backpressures (see GarmentService.update).
   private async consume(
     req: FastifyRequest,
     owner?: number,

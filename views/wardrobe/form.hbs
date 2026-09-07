@@ -29,7 +29,8 @@
   <form
     method="POST"
     action="{{#if isClone}}/wardrobe/{{garment.id}}/clone{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}{{else if garment.id}}/wardrobe/{{garment.id}}{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}{{else}}/wardrobe/import{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}{{/if}}"
-    {{#unless garment.id}}enctype="multipart/form-data"{{/unless}}
+    {{#unless garment.id}}enctype="multipart/form-data" hx-indicator="#saveLoading"
+    hx-disabled-elt="#saveBtn"{{/unless}}
     class="flex flex-col gap-4"
   >
     {{#unless garment.id}}
@@ -141,6 +142,10 @@
       <button type="submit" id="saveBtn" class="btn btn-primary flex-1">
         {{t 'lang.SAVE'}}
       </button>
+      <span
+        id="saveLoading"
+        class="htmx-indicator loading loading-ring loading-sm self-center"
+      ></span>
     </div>
   </form>
   {{#unless garment.id}}{{> maskEditor}}{{/unless}}

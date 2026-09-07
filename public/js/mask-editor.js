@@ -157,6 +157,8 @@ export function openMaskEditor(originalFile, nobgBlob) {
       sizeInput.removeEventListener('input', onSizeChange);
       acceptBtn.removeEventListener('click', onAccept);
       skipBtn.removeEventListener('click', onSkip);
+      // Removed before close() so dismissal handling does not re-enter.
+      dialog.removeEventListener('close', onDismiss);
       dialog.close();
     };
 
@@ -170,8 +172,16 @@ export function openMaskEditor(originalFile, nobgBlob) {
       resolve(nobgBlob);
     };
 
+    // Escape and the backdrop close the dialog natively; without this the
+    // promise would never settle and the caller's submit button stay disabled.
+    const onDismiss = () => {
+      cleanup();
+      resolve(nobgBlob);
+    };
+
     acceptBtn.addEventListener('click', onAccept);
     skipBtn.addEventListener('click', onSkip);
+    dialog.addEventListener('close', onDismiss);
 
     dialog.showModal();
   });

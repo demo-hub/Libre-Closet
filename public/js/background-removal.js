@@ -254,5 +254,7 @@ export default {
   wireUpEditMaskBtn,
 };
 
-// Preload clientside background removal models
-(() => initBackgroundRemoval())();
+// Preload the models only when removal is actually enabled; they are ~40 MB.
+(() => {
+  if (isBgRemovalEnabled()) initBackgroundRemoval();
+})();
