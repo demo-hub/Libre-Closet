@@ -83,6 +83,8 @@
   "COLOR": "Colore",
   "SIZE": "Taglia",
   "NOTES": "Note",
+  "SOURCE_LINK": "Link di origine",
+  "IMPORTED_FROM": "Importato da",
   "PHOTO": "Foto",
   "SAVE": "Salva",
   "DELETE": "Elimina",

@@ -16,6 +16,7 @@ import { MultipartFile } from '@fastify/multipart';
 import { CreateGarmentDto } from './dto/create-garment.dto';
 import { UpdateGarmentDto } from './dto/update-garment.dto';
 import { SearchGarmentDto } from './dto/search-garment.dto';
+import { sanitizeSourceUrl } from './source-url';
 import { GarmentCategory } from './garment-category.enum';
 import { WardrobeShareService } from '../wardrobe-share/wardrobe-share.service';
 
@@ -152,6 +153,7 @@ export class GarmentService {
       notes: dto.notes,
       washingDetails: dto.washingDetails,
       dateAquired: dto.dateAquired ? new Date(dto.dateAquired) : undefined,
+      sourceUrl: sanitizeSourceUrl(dto.sourceUrl),
       photo: photo ?? undefined,
     });
 
@@ -172,6 +174,7 @@ export class GarmentService {
       color?: string;
       size?: string;
       notes?: string;
+      sourceUrl?: string;
     },
     userId?: number,
   ): Promise<Garment> {
@@ -205,6 +208,7 @@ export class GarmentService {
       color: dto.color,
       size: this.normalizeSize(dto.size),
       notes: dto.notes,
+      sourceUrl: sanitizeSourceUrl(dto.sourceUrl) ?? source.sourceUrl,
       photo: photo ?? undefined,
     });
 
@@ -320,6 +324,8 @@ export class GarmentService {
       garment.dateAquired = dto.dateAquired
         ? new Date(dto.dateAquired)
         : undefined;
+    if ('sourceUrl' in dto)
+      garment.sourceUrl = sanitizeSourceUrl(dto.sourceUrl);
 
     await this.garmentRepository.getEntityManager().flush();
     return garment;
