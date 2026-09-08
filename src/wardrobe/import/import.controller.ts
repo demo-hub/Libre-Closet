@@ -7,13 +7,15 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { minutes, Throttle } from '@nestjs/throttler';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ConditionalAuthGuard } from '../../auth/conditional-auth.guard';
 import { Payload } from '../../auth/dto/payload.dto';
 import { WardrobeShareService } from '../../wardrobe-share/wardrobe-share.service';
 import { ImportService } from './import.service';
+import { SameOriginGuard } from './same-origin.guard';
 
-@UseGuards(ConditionalAuthGuard)
+@UseGuards(ConditionalAuthGuard, SameOriginGuard)
 @Controller('wardrobe/import')
 export class ImportController {
   constructor(
@@ -21,6 +23,7 @@ export class ImportController {
     private readonly shareService: WardrobeShareService,
   ) {}
 
+  @Throttle({ default: { limit: 30, ttl: minutes(1) } })
   @Post()
   async create(
     @Req() req: FastifyRequest,

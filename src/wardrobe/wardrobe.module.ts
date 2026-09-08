@@ -15,6 +15,7 @@ import { WardrobeController } from './wardrobe.controller';
 import { OutfitController } from './outfit.controller';
 import { ImportController } from './import/import.controller';
 import { ImportService } from './import/import.service';
+import { SafeFetchService } from './import/safe-fetch.service';
 
 @Module({
   imports: [
@@ -29,7 +30,13 @@ import { ImportService } from './import/import.service';
     CalendarController,
     ImportController,
   ],
-  providers: [GarmentService, OutfitService, CalendarService, ImportService],
-  exports: [GarmentService, OutfitService, CalendarService],
+  providers: [
+    GarmentService,
+    OutfitService,
+    CalendarService,
+    ImportService,
+    SafeFetchService,
+  ],
+  exports: [GarmentService, OutfitService, CalendarService, SafeFetchService],
 })
 export class WardrobeModule {}

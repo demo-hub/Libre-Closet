@@ -149,6 +149,9 @@ npm run start:prod
 | `AUTH_ENABLED`                     | Enable JWT user accounts and login             | `false`        | `true`                                                                                    |
 | `DISABLE_REGISTRATION`             | Disallows user sign ups when true              | `false`        | `true`                                                                                    |
 | `PWA_ENABLED`                      | Enable service worker and PWA install prompt   | `false`        | `true`                                                                                    |
+| `IMPORT_URL_ENABLED`               | Allow importing a garment from a pasted link   | `true`         | `false`                                                                                   |
+| `IMPORT_ALLOW_PRIVATE_NETWORKS`    | Development and testing only - let the importer reach private and loopback addresses on any port | `false` | `true`                                                          |
+| `IMPORT_FETCH_TIMEOUT_MS`          | Time budget for fetching a pasted link         | `10000`        | `20000`                                                                                   |
 | `ACCESS_TOKEN_SECRET`              | JWT signing secret - **change for production** | `ChangeMe!`    | `u9n8c2y847rfctb23468tcb689f243`                                                          |
 | `DATABASE_TYPE`                    | `sqlite` or `postgres`                         | `sqlite`       | `postgres`                                                                                |
 | `DATABASE_HOST`                    | Postgres host                                  | -              | `192.168.10.5`                                                                            |

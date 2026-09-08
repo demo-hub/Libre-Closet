@@ -19,6 +19,7 @@ import { User } from '../../auth/user.decorator';
 import { User as UserEntity } from '../../dal/entity/user.entity';
 import { FileService } from '../file-service.abstract';
 import { ConditionalAuthGuard } from '../../auth/conditional-auth.guard';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller('file')
 export class FileController {
@@ -58,6 +59,7 @@ export class FileController {
     };
   }
 
+  @SkipThrottle()
   @Get(':fileName')
   @Header('Cache-Control', 'public, max-age=31536000, immutable') // public for CDN, max-age= 1 year for immutable content
   async getFile(@Param('fileName') fileName: string) {
@@ -72,6 +74,7 @@ export class FileController {
     return this.fileService.watermarkImage(fileStream);
   }
 
+  @SkipThrottle()
   @Get('nobg/:fileName')
   @Header('content-type', 'image/webp')
   async nobg(@Param('fileName') fileName: string, @Res() reply: FastifyReply) {
