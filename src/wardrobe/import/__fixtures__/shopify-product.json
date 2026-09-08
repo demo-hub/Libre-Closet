@@ -1,0 +1,45 @@
+{
+  "id": 7391839881,
+  "title": "Everyday Merino Crew Jumper",
+  "handle": "everyday-merino-crew",
+  "description": "<p>A midweight crew neck knitted from <strong>traceable merino</strong>.</p><ul><li>Machine washable</li></ul>",
+  "published_at": "2026-02-11T09:00:00+00:00",
+  "vendor": "Harbour & Co",
+  "type": "Knitwear",
+  "tags": ["knitwear", "merino", "autumn"],
+  "price": 8900,
+  "price_min": 8900,
+  "price_max": 8900,
+  "available": true,
+  "options": [
+    { "name": "Size", "position": 1, "values": ["S", "M", "L"] },
+    { "name": "Colour", "position": 2, "values": ["Oat", "Navy"] }
+  ],
+  "images": [
+    "//cdn.shopify.com/s/files/1/0001/merino-oat-front.jpg",
+    "//cdn.shopify.com/s/files/1/0001/merino-navy-front.jpg"
+  ],
+  "featured_image": "//cdn.shopify.com/s/files/1/0001/merino-oat-front.jpg",
+  "variants": [
+    {
+      "id": 42111000001,
+      "title": "S / Oat",
+      "option1": "S",
+      "option2": "Oat",
+      "options": ["S", "Oat"],
+      "available": false,
+      "price": 8900,
+      "featured_image": { "src": "//cdn.shopify.com/s/files/1/0001/merino-oat-front.jpg" }
+    },
+    {
+      "id": 42111000002,
+      "title": "M / Navy",
+      "option1": "M",
+      "option2": "Navy",
+      "options": ["M", "Navy"],
+      "available": true,
+      "price": 8900,
+      "featured_image": { "src": "//cdn.shopify.com/s/files/1/0001/merino-navy-front.jpg" }
+    }
+  ]
+}
