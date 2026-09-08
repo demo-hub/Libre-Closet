@@ -11,10 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add a photo, with background removal, while creating a garment
 - Record where a garment came from with a source link
+- Groundwork for importing a garment from a link
 
 #### Changed
 
 - Complete the German, Spanish, French, Italian and Russian translations
+- Photo controls respond immediately, and the background-removal models are downloaded only when you reach for them rather than on every page load
+- Requests are now rate limited, which also activates the existing sign-in limits
 
 #### Fixed
 

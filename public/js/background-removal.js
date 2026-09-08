@@ -79,21 +79,26 @@ const squarePadBlob = async (blob) => {
   return canvas.convertToBlob({ type: 'image/png' });
 };
 
-let mod = await import('/modules/background-removal/index.mjs');
-let removeBackground = mod.removeBackground;
-
 import { openMaskEditor } from '/js/mask-editor.js';
+
+// Loaded on demand, not at module scope: a top-level await here would hold up
+// every consumer of this file, so the photo controls would not respond until
+// the removal library had downloaded.
+let modPromise;
+const loadRemover = () => {
+  modPromise ??= import('/modules/background-removal/index.mjs');
+  return modPromise;
+};
 
 export const initBackgroundRemoval = async () => {
   try {
-    mod.preload(config).then(() => {
-      console.log('Asset preloading succeeded');
-    });
+    const mod = await loadRemover();
+    await mod.preload(config);
+    console.log('Asset preloading succeeded');
   } catch (err) {
     // Package failed to load (old browser, no ES module support, etc.)
     // Leave the form as-is; the original photo is uploaded without a cut-out.
     console.warn('[bg-removal] Failed to load background-removal module:', err);
-    return;
   }
 };
 
@@ -172,6 +177,7 @@ export const wireUpPhotoInput = async ({
 
     try {
       console.log(config);
+      const { removeBackground } = await loadRemover();
       const rawBlob = await removeBackground(squareFile, config);
       const blob = await openMaskEditor(squareFile, rawBlob);
 
@@ -192,6 +198,7 @@ export const wireUpPhotoInput = async ({
     }
   });
 
+  preloadOnFirstTouch();
   console.log('wired up photo input for background removal');
 };
 
@@ -254,7 +261,21 @@ export default {
   wireUpEditMaskBtn,
 };
 
-// Preload the models only when removal is actually enabled; they are ~40 MB.
-(() => {
-  if (isBgRemovalEnabled()) initBackgroundRemoval();
-})();
+/**
+ * Starts fetching the models when the user first reaches for the photo
+ * controls, rather than on page load: they are ~40 MB, and someone who only
+ * edits text should never pay for them. Choosing a photo takes a moment, so
+ * the download still overlaps with the user's own action.
+ */
+const preloadOnFirstTouch = () => {
+  const triggers = ['photoInput', 'photoCaptureBtn', 'photoCaptureInput']
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+  const start = () => {
+    if (isBgRemovalEnabled()) initBackgroundRemoval();
+  };
+  for (const el of triggers) {
+    el.addEventListener('pointerdown', start, { once: true });
+    el.addEventListener('focus', start, { once: true });
+  }
+};

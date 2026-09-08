@@ -17,7 +17,7 @@ import { WardrobeModule } from './wardrobe/wardrobe.module';
 import { WardrobeShareModule } from './wardrobe-share/wardrobe-share.module';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { User } from './dal/entity/user.entity';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { minutes, ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { ErrorViewFilter } from './error-view.filter';
 import { ViewContextModule } from './view-context/view-context.module';
@@ -74,6 +74,10 @@ import { ViewContextModule } from './view-context/view-context.module';
         AUTH_ENABLED: Joi.boolean().default(false),
         DISABLE_REGISTRATION: Joi.boolean().default(false),
         PWA_ENABLED: Joi.boolean().default(false),
+        IMPORT_URL_ENABLED: Joi.boolean().default(true),
+        // Development and testing: also lifts loopback and the port allowlist.
+        IMPORT_ALLOW_PRIVATE_NETWORKS: Joi.boolean().default(false),
+        IMPORT_FETCH_TIMEOUT_MS: Joi.number().default(10000),
         ACCESS_TOKEN_SECRET: Joi.string().default('ChangeMe!'),
         PUBLIC_VAPID_KEY: Joi.optional().default(
           'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
@@ -176,7 +180,7 @@ import { ViewContextModule } from './view-context/view-context.module';
     }),
     MikroOrmModule.forFeature([User]),
     // https://docs.nestjs.com/security/rate-limiting
-    ThrottlerModule.forRoot(),
+    ThrottlerModule.forRoot([{ name: 'default', ttl: minutes(1), limit: 600 }]),
     DalModule,
     AuthModule,
     FileModule,
