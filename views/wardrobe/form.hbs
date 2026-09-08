@@ -133,6 +133,21 @@
       >
     </div>
 
+    <div class="form-control">
+      <label class="label"
+        ><span class="label-text">{{t 'lang.SOURCE_LINK'}}</span></label
+      >
+      <input
+        type="url"
+        name="sourceUrl"
+        class="input input-bordered"
+        value="{{#if garment}}{{garment.sourceUrl}}{{/if}}"
+        placeholder="https://…"
+        inputmode="url"
+        autocomplete="off"
+      />
+    </div>
+
     <div class="flex gap-2 mt-2">
       <a
         href="{{#if garment.id}}/wardrobe/{{garment.id}}{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}{{else}}/wardrobe{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}{{/if}}"

@@ -83,6 +83,8 @@
   "COLOR": "Farbe",
   "SIZE": "Größe",
   "NOTES": "Notizen",
+  "SOURCE_LINK": "Quelllink",
+  "IMPORTED_FROM": "Importiert von",
   "PHOTO": "Foto",
   "SAVE": "Speichern",
   "DELETE": "Löschen",

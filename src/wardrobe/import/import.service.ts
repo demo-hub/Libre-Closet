@@ -62,6 +62,7 @@ export class ImportService {
           notes: first(fields.notes),
           washingDetails: first(fields.washingDetails),
           dateAquired: first(fields.dateAquired),
+          sourceUrl: first(fields.sourceUrl),
           photo,
         },
         owner,

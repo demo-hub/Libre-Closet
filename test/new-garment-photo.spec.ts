@@ -96,3 +96,35 @@ test('dismissing the mask editor settles it like Skip', async ({ page }) => {
     )
     .toBe(true);
 });
+
+/**
+ * The source link is stored sanitized and rendered as an outbound link
+ * labelled with its host; anything that is not http(s) is dropped.
+ */
+test('source link round-trips and renders as an outbound link', async ({
+  page,
+}) => {
+  await page.goto('/wardrobe/new?sourceUrl=https%3A%2F%2Fshop.example%2Fp%2F1');
+  await expect(page.locator('input[name="sourceUrl"]')).toHaveValue(
+    'https://shop.example/p/1',
+  );
+
+  await page.locator('input[name="category"]').fill('tops');
+  await page.locator('#saveBtn').click();
+  await expect(page).toHaveURL(/\/wardrobe\/\d+/);
+
+  const link = page.getByRole('link', { name: 'shop.example' });
+  await expect(link).toHaveAttribute('href', 'https://shop.example/p/1');
+  await expect(link).toHaveAttribute('rel', /noopener/);
+  await expect(link).toHaveAttribute('target', '_blank');
+
+  // A link that could not be rendered safely is never stored.
+  await page.goto('/wardrobe/new');
+  await page.locator('input[name="category"]').fill('tops');
+  await page
+    .locator('input[name="sourceUrl"]')
+    .fill('javascript:alert(document.domain)');
+  await page.locator('#saveBtn').click();
+  await expect(page).toHaveURL(/\/wardrobe\/\d+/);
+  await expect(page.locator('main a[href^="javascript:"]')).toHaveCount(0);
+});

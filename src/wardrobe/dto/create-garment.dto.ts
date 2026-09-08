@@ -10,6 +10,7 @@ export interface CreateGarmentDto {
   notes?: string;
   washingDetails?: string;
   dateAquired?: string;
+  sourceUrl?: string;
   files?: AsyncIterableIterator<MultipartFile>;
   photo?: File;
 }

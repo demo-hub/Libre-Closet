@@ -21,6 +21,7 @@ import { Payload } from '../auth/dto/payload.dto';
 import { GarmentCategory } from './garment-category.enum';
 import { GarmentColor } from './garment-color.enum';
 import { GarmentService } from './garment.service';
+import { sanitizeSourceUrl, sourceUrlHost } from './source-url';
 import { WardrobeShareService } from '../wardrobe-share/wardrobe-share.service';
 import { SharePermission } from '../dal/entity/wardrobe-share.entity';
 import type { SearchGarmentDto } from './dto/search-garment.dto';
@@ -104,6 +105,7 @@ export class WardrobeController {
     @Req() req: FastifyRequest,
     @I18n() i18n: I18nContext,
     @Query('ownerId') ownerId: string | undefined,
+    @Query('sourceUrl') sourceUrl: string | undefined,
   ) {
     const userId = this.userId(req);
     const viewOwner =
@@ -126,7 +128,7 @@ export class WardrobeController {
     return {
       categories,
       colors: Object.values(GarmentColor),
-      garment: null,
+      garment: { sourceUrl: sanitizeSourceUrl(sourceUrl) },
       viewOwner,
     };
   }
@@ -143,6 +145,7 @@ export class WardrobeController {
       notes?: string;
       washingDetails?: string;
       dateAquired?: string;
+      sourceUrl?: string;
     },
     @Req() req: FastifyRequest,
     @Res() reply: FastifyReply,
@@ -175,6 +178,7 @@ export class WardrobeController {
         notes: body.notes,
         washingDetails: body.washingDetails,
         dateAquired: body.dateAquired,
+        sourceUrl: body.sourceUrl,
       },
       viewOwner ?? userId,
     );
@@ -225,6 +229,7 @@ export class WardrobeController {
       canEdit,
       canDelete,
       canClone,
+      sourceHost: sourceUrlHost(garment.sourceUrl),
       viewOwner: viewOwner ?? null,
       justCreated: created === '1',
       justSavedPhoto: photoSaved === '1',
@@ -323,6 +328,7 @@ export class WardrobeController {
       color?: string | string[];
       size?: string;
       notes?: string;
+      sourceUrl?: string;
     },
     @Req() req: FastifyRequest,
     @Res() reply: FastifyReply,
@@ -342,6 +348,7 @@ export class WardrobeController {
         color: Array.isArray(body.color) ? body.color.join(',') : body.color,
         size: body.size,
         notes: body.notes,
+        sourceUrl: body.sourceUrl,
       },
       userId,
     );
@@ -361,6 +368,7 @@ export class WardrobeController {
       notes?: string;
       washingDetails?: string;
       dateAquired?: string;
+      sourceUrl?: string;
     },
     @Req() req: FastifyRequest,
     @Res() reply: FastifyReply,
@@ -386,6 +394,7 @@ export class WardrobeController {
         notes: body.notes,
         washingDetails: body.washingDetails,
         dateAquired: body.dateAquired,
+        sourceUrl: body.sourceUrl,
       },
       viewOwner ?? userId,
       userId,

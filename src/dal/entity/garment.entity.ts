@@ -37,13 +37,18 @@ export class Garment extends ShareableId {
   @Property({ type: Date, nullable: true })
   public dateAquired?: Date;
 
-  @Property({ nullable: true })
+  // text, not varchar: imported descriptions overflow 255 characters.
+  @Property({ nullable: true, columnType: 'text' })
   public notes?: string;
 
   @Property({ default: false })
   public archived = false;
   @Property({ nullable: true, columnType: 'text' })
   public washingDetails?: string;
+
+  // text, not varchar: product URLs routinely exceed 255 characters.
+  @Property({ nullable: true, columnType: 'text' })
+  public sourceUrl?: string;
 
   @OneToOne({
     entity: () => File,

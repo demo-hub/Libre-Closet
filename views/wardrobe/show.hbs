@@ -138,6 +138,20 @@
         <span class="text-base-content/60 text-sm">{{t 'lang.NOTES'}}</span>
         <p class="text-sm">{{garment.notes}}</p>
       </div>
+      {{/if}} {{#if sourceHost}}
+      <div class="flex justify-between gap-2">
+        <span class="text-base-content/60 text-sm"
+          >{{t 'lang.IMPORTED_FROM'}}</span
+        >
+        <a
+          href="{{garment.sourceUrl}}"
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+          hx-boost="false"
+          class="link link-primary text-sm truncate"
+          >{{sourceHost}}</a
+        >
+      </div>
       {{/if}}
     </div>
   </div>
