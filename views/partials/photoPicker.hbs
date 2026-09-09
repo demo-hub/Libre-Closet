@@ -118,6 +118,7 @@
   </div>
 <script type="module">
   import { wireUpPhotoInput } from '/js/background-removal.js';
+  import { suggestGarmentColors } from '/js/color-suggest.js';
 
   const toggle = document.getElementById('bgRemovalToggle');
   const stored = localStorage.getItem('bgRemovalEnabled');
@@ -166,6 +167,11 @@
   wireUpPhotoInput({
     submitBtnId: '{{#if submitBtnId}}{{submitBtnId}}{{else}}photoBtn{{/if}}',
     onSelect: showPreview,
-    onNobg: showPreview,
+    onNobg: async (blob) => {
+      showPreview(blob);
+      // The cut-out is the only view of the garment with its background gone,
+      // so this is the one moment its colours can be read.
+      await suggestGarmentColors(blob);
+    },
   });
 </script>

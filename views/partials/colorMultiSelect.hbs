@@ -1,7 +1,11 @@
 <script>
   window.KNOWN_COLORS = new Set({{{json colors}}});
 </script>
-<div class="form-control w-full min-w-0">
+<div
+  class="form-control w-full min-w-0"
+  data-color-field
+  data-suggested-label="{{t 'lang.SUGGESTED'}}"
+>
   <label class="label">
     <span class="label-text">{{t 'lang.COLOR'}}</span>{{> suggestedBadge
     field='colors'}}

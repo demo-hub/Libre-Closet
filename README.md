@@ -87,6 +87,7 @@ Note, these screenshots are taken of the web application viewed as an installed 
 - **Outfit builder** - combine garments into saved looks with the Clueless inspired outfit builder
 - **Outfit Scheduling** - schedule out multiple outfits for given days through the week and get a view of what you've worn
 - **Image Background Removal** - Images automatically have their backgrounds removed and optimized WebP upon upload
+- **Color suggestion** - once the background is gone, the garment's colors are read from the photo in your browser and ticked for you to confirm
 - **Offline-ready PWA** - install to home screen, works without internet
 - **Optional auth** - run open for personal use or enable JWT accounts for multi-user
 - **S3 or local storage** - local disk by default, swap to any S3-compatible provider
