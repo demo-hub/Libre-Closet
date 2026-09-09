@@ -20,6 +20,7 @@ import { ConditionalAuthGuard } from '../auth/conditional-auth.guard';
 import { Payload } from '../auth/dto/payload.dto';
 import { GarmentCategory } from './garment-category.enum';
 import { GarmentColor } from './garment-color.enum';
+import { buildFormModel, customOf } from './garment-form';
 import { GarmentService } from './garment.service';
 import { sanitizeSourceUrl, sourceUrlHost } from './source-url';
 import { WardrobeShareService } from '../wardrobe-share/wardrobe-share.service';
@@ -106,6 +107,8 @@ export class WardrobeController {
     @I18n() i18n: I18nContext,
     @Query('ownerId') ownerId: string | undefined,
     @Query('sourceUrl') sourceUrl: string | undefined,
+    @Query('url') url: string | undefined,
+    @Query('mode') mode: string | undefined,
   ) {
     const userId = this.userId(req);
     const viewOwner =
@@ -114,23 +117,14 @@ export class WardrobeController {
       const canManage = await this.shareService.canManage(userId, viewOwner);
       if (!canManage) throw new ForbiddenException();
     }
-    const filters = await this.garmentService.findAvailableFilters(
-      viewOwner ?? userId,
-    );
-    const enumValues = Object.values(GarmentCategory) as string[];
-    const customCategories = filters.categories.filter(
-      (c) => !enumValues.includes(c),
-    );
-    const categories = [...enumValues, ...customCategories].map((value) => ({
-      value,
-      label: this.garmentService.resolveCategoryLabel(value, i18n),
-    }));
-    return {
-      categories,
-      colors: Object.values(GarmentColor),
-      garment: { sourceUrl: sanitizeSourceUrl(sourceUrl) },
+    // ?url= and ?mode=link are the deep links a share target lands on.
+    const pasted = sanitizeSourceUrl(url);
+    return buildFormModel(this.garmentService, i18n, viewOwner ?? userId, {
+      garment: { sourceUrl: sanitizeSourceUrl(sourceUrl) ?? pasted },
       viewOwner,
-    };
+      importUrl: pasted,
+      importOpen: mode === 'link' || Boolean(pasted),
+    });
   }
 
   @Post()
@@ -313,6 +307,9 @@ export class WardrobeController {
       cloneName: garment.name ? `${garment.name} (cloned)` : undefined,
       categories,
       colors: Object.values(GarmentColor),
+      // Without these the clone's non-palette colours render as no checkbox at
+      // all, and saving the copy drops them.
+      customColors: customOf(garment.color ?? ''),
       viewOwner: viewOwner ?? null,
     };
   }

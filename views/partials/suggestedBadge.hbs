@@ -1,0 +1,10 @@
+{{!-- An honest "unreviewed" marker: the value was read off a page, not typed.
+The hyperscript drops it the moment the user edits the field. --}}
+{{#if (lookup suggested field)}}
+<span
+  class="badge badge-ghost badge-sm ml-2"
+  data-suggested="{{field}}"
+  _="on input from closest .form-control remove me"
+  >{{t 'lang.SUGGESTED'}}</span
+>
+{{/if}}

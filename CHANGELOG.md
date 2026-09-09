@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
+- Import a garment from a link: paste a product URL and the page's name, brand, colors, category, size options, description and photo are filled in for you to check
 - Add a photo, with background removal, while creating a garment
 - Record where a garment came from with a source link
-- Groundwork for importing a garment from a link
 
 #### Changed
 
@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
+- A request the server refused or rate limited failed silently, with nothing shown to the user
 - Closing the background touch-up window left the Save button stuck on a new garment
 - Garments could be created in another user's wardrobe when user accounts are disabled
 - A photo upload that was rejected no longer leaves the image on the server

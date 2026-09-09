@@ -3,7 +3,8 @@
 </script>
 <div class="form-control w-full min-w-0">
   <label class="label">
-    <span class="label-text">{{t 'lang.COLOR'}}</span>
+    <span class="label-text">{{t 'lang.COLOR'}}</span>{{> suggestedBadge
+    field='colors'}}
   </label>
 
   <details class="color-ms w-full min-w-0" id="color-ms-{{@index}}">

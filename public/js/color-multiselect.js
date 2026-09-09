@@ -8,6 +8,8 @@
   }
 
   function initMultiselect(det) {
+    if (det.dataset.msInit) return;
+    det.dataset.msInit = '1';
     const pillsEl     = det.querySelector('.ms-pills');
     const searchEl    = det.querySelector('.ms-search-input');
     const optionsEl   = det.querySelector('.ms-options');
@@ -127,6 +129,11 @@
   // Init on load
   document.addEventListener('DOMContentLoaded', function () { initAll(); });
 
-  // Re-init after HTMX swaps
-  document.addEventListener('htmx:afterSwap', function (e) { initAll(e.detail.target); });
+  // Re-init after HTMX swaps. e.target, not e.detail.target: for an outerHTML
+  // swap the latter is the old node, already detached, so the swapped-in
+  // multiselect would keep its checkboxes but never render its pills.
+  document.addEventListener('htmx:afterSwap', function (e) {
+    const root = e.target && e.target.isConnected ? e.target : document;
+    initAll(root);
+  });
 })();

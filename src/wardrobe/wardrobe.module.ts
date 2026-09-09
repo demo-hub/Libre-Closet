@@ -16,6 +16,7 @@ import { OutfitController } from './outfit.controller';
 import { ImportController } from './import/import.controller';
 import { ImportService } from './import/import.service';
 import { SafeFetchService } from './import/safe-fetch.service';
+import { UrlImportService } from './import/url-import.service';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { SafeFetchService } from './import/safe-fetch.service';
     CalendarService,
     ImportService,
     SafeFetchService,
+    UrlImportService,
   ],
   exports: [GarmentService, OutfitService, CalendarService, SafeFetchService],
 })

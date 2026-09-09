@@ -75,6 +75,7 @@ import { ViewContextModule } from './view-context/view-context.module';
         DISABLE_REGISTRATION: Joi.boolean().default(false),
         PWA_ENABLED: Joi.boolean().default(false),
         IMPORT_URL_ENABLED: Joi.boolean().default(true),
+        IMPORT_URL_RATE_LIMIT: Joi.number().integer().min(1).default(10),
         // Development and testing: also lifts loopback and the port allowlist.
         IMPORT_ALLOW_PRIVATE_NETWORKS: Joi.boolean().default(false),
         IMPORT_FETCH_TIMEOUT_MS: Joi.number().default(10000),
