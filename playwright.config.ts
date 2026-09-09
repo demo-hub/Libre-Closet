@@ -76,5 +76,13 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     stderr: 'pipe',
+    env: {
+      // url-import.spec.ts serves a fixture shop on 127.0.0.1, which the
+      // importer refuses to fetch unless this is set. Never set in production.
+      IMPORT_ALLOW_PRIVATE_NETWORKS: 'true',
+      // Every project runs the import spec from the same address, so the
+      // per-minute ceiling has to sit above the whole suite.
+      IMPORT_URL_RATE_LIMIT: '500',
+    },
   },
 });

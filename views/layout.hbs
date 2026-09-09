@@ -92,7 +92,27 @@ https://nestjs-i18n.com/quick-start --}}
     loading hbs rendered content which is pre-santized by the handlebars
     templatinng engine as it get's rendered.
     https://handlebarsjs.com/guide/expressions.html#literal-segments
-    https://htmx.org/essays/web-security-basics-with-htmx/ }} {{{body}}} {{! The
+    https://htmx.org/essays/web-security-basics-with-htmx/ }} {{{body}}} {{!
+    htmx does not swap a 4xx or 5xx response, so without this a refused or
+    rate-limited request looks to the user like nothing happened at all. }}
+    <div
+      id="requestErrorToast"
+      class="toast toast-top toast-center z-50 hidden"
+      aria-live="polite"
+    >
+      <div role="alert" class="alert alert-error">
+        <span>{{t 'lang.REQUEST_FAILED'}}</span>
+      </div>
+    </div>
+    <script>
+      document.addEventListener('htmx:responseError', function () {
+        const toast = document.getElementById('requestErrorToast');
+        if (!toast) return;
+        toast.classList.remove('hidden');
+        setTimeout(function () { toast.classList.add('hidden'); }, 5000);
+      });
+    </script>
+    {{! The
     service worker is used in conjunction with the manifest.json to enable PWA
     (Progressive Web App) functionality. This script tag uses JavaScript
     modules, so the proper `type` attribute value is required.

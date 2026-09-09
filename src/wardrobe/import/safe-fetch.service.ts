@@ -19,6 +19,26 @@ const SOCKET_TIMEOUT_MS = 8_000;
 const BROWSER_UA =
   'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36';
 
+/** The reader's locale first, then English, which most shops fall back to. */
+const acceptLanguage = (locale: string): string => {
+  const tag = /^[a-z]{2}(-[a-z]{2})?$/i.test(locale) ? locale : 'en';
+  return tag.toLowerCase().startsWith('en')
+    ? 'en;q=0.9,*;q=0.5'
+    : `${tag},en;q=0.8,*;q=0.5`;
+};
+
+/**
+ * A redirect chain that led nowhere. A subclass, so callers that only care
+ * that the fetch was refused keep working, while one that wants to tell the
+ * user something useful can tell it apart from a refused address.
+ */
+export class RedirectError extends BlockedAddressError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'RedirectError';
+  }
+}
+
 export class FetchTooLargeError extends Error {
   constructor(limit: number) {
     super(`response exceeded ${limit} bytes`);
@@ -52,11 +72,16 @@ export class SafeFetchService {
     this.agent = this.buildAgent();
   }
 
-  /** Fetches a product page as text, following redirects the policy still allows. */
-  async fetchHtml(input: string): Promise<FetchedBody> {
+  /**
+   * Fetches a product page as text, following redirects the policy still allows.
+   * `language` is the reader's locale: a localised shop states its colours and
+   * categories in the language it is asked for.
+   */
+  async fetchHtml(input: string, language?: string): Promise<FetchedBody> {
     return this.fetchWithPolicy(input, {
       cap: MAX_HTML_BYTES,
       headers: {
+        ...(language ? { 'Accept-Language': acceptLanguage(language) } : {}),
         Accept:
           'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Sec-Fetch-Dest': 'document',
@@ -117,10 +142,10 @@ export class SafeFetchService {
 
       await response.body?.cancel();
       if (hop >= MAX_REDIRECTS) {
-        throw new BlockedAddressError('too many redirects');
+        throw new RedirectError('too many redirects');
       }
       const location = response.headers.get('location');
-      if (!location) throw new BlockedAddressError('redirect without location');
+      if (!location) throw new RedirectError('redirect without location');
       url = parseSafeUrl(new URL(location, url).href, this.allowPrivate);
     }
   }

@@ -82,6 +82,7 @@ Note, these screenshots are taken of the web application viewed as an installed 
 ## Features
 
 - **Garment catalog** - name, category, brand, size, colors, notes, photo
+- **Import from a link** - paste a product URL and the server reads the page for its name, brand, colors, category and photo, for you to check before saving
 - **Customizable categories** - custom category support with filtering and input suggestion as you type
 - **Outfit builder** - combine garments into saved looks with the Clueless inspired outfit builder
 - **Outfit Scheduling** - schedule out multiple outfits for given days through the week and get a view of what you've worn
@@ -150,6 +151,7 @@ npm run start:prod
 | `DISABLE_REGISTRATION`             | Disallows user sign ups when true              | `false`        | `true`                                                                                    |
 | `PWA_ENABLED`                      | Enable service worker and PWA install prompt   | `false`        | `true`                                                                                    |
 | `IMPORT_URL_ENABLED`               | Allow importing a garment from a pasted link   | `true`         | `false`                                                                                   |
+| `IMPORT_URL_RATE_LIMIT`            | Link imports allowed per minute, per address   | `10`           | `60`                                                                                      |
 | `IMPORT_ALLOW_PRIVATE_NETWORKS`    | Development and testing only - let the importer reach private and loopback addresses on any port | `false` | `true`                                                          |
 | `IMPORT_FETCH_TIMEOUT_MS`          | Time budget for fetching a pasted link         | `10000`        | `20000`                                                                                   |
 | `ACCESS_TOKEN_SECRET`              | JWT signing secret - **change for production** | `ChangeMe!`    | `u9n8c2y847rfctb23468tcb689f243`                                                          |

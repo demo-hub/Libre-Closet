@@ -86,6 +86,35 @@ describe('SafeFetchService', () => {
     expect(seen.accept).toContain('text/html');
   });
 
+  describe('the language the shop is asked for', () => {
+    const askIn = async (locale?: string) => {
+      const service = await local();
+      let seen: http.IncomingHttpHeaders = {};
+      handler = (req, res) => {
+        seen = req.headers;
+        res.writeHead(200, { 'content-type': 'text/html' });
+        res.end('ok');
+      };
+      await service.fetchHtml(`${origin}/p`, locale);
+      return seen['accept-language'] ?? '';
+    };
+
+    it('asks in English when the reader has no preference', async () => {
+      expect(await askIn()).toBe('en;q=0.9,*;q=0.5');
+    });
+
+    it("asks in the reader's language first, then English", async () => {
+      // A localised shop states its colours in the language it is asked for.
+      expect(await askIn('de')).toBe('de,en;q=0.8,*;q=0.5');
+      expect(await askIn('pt-BR')).toBe('pt-BR,en;q=0.8,*;q=0.5');
+    });
+
+    it('does not pass a made-up locale through to the shop', async () => {
+      expect(await askIn('de, evil-header: 1')).toBe('en;q=0.9,*;q=0.5');
+      expect(await askIn('*')).toBe('en;q=0.9,*;q=0.5');
+    });
+  });
+
   it('sends the page as referer when fetching its image', async () => {
     const service = await local();
     let seen: http.IncomingHttpHeaders = {};

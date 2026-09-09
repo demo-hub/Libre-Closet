@@ -26,7 +26,69 @@
     </h1>
   </div>
 
+  {{#unless garment.id}}
+  {{#if importUrlEnabled}}
+  {{!-- A sibling of the save form, never nested: HTML drops a nested <form>
+  and its url input would be submitted with Save. --}}
   <form
+    id="importForm"
+    method="POST"
+    action="/wardrobe/import/url{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}"
+    hx-post="/wardrobe/import/url{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}"
+    hx-target="main"
+    hx-select="main"
+    hx-swap="outerHTML"
+    hx-indicator="#importLoading"
+    hx-disabled-elt="#importBtn"
+    class="mb-4"
+  >
+    <details class="collapse collapse-arrow bg-base-200" {{#if importOpen}}open{{/if}}>
+      <summary class="collapse-title text-sm font-medium">
+        {{t 'lang.IMPORT_FROM_LINK'}}
+      </summary>
+      <div class="collapse-content flex flex-col gap-2">
+        <div class="join w-full">
+          <input
+            type="url"
+            id="importUrl"
+            name="url"
+            class="input input-bordered input-sm join-item flex-1"
+            value="{{importUrl}}"
+            placeholder="{{t 'lang.IMPORT_URL_PLACEHOLDER'}}"
+            inputmode="url"
+            autocomplete="off"
+          />
+          <button id="importBtn" type="submit" class="btn btn-sm btn-neutral join-item">
+            {{t 'lang.IMPORT'}}
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="importLoading" class="htmx-indicator loading loading-ring loading-sm"></span>
+          <span class="text-xs text-base-content/60">{{t 'lang.IMPORT_URL_HINT'}}</span>
+        </div>
+      </div>
+    </details>
+  </form>
+
+  {{/if}}
+
+  {{!-- Inside <main>: hx-select drops everything outside it, so an alert
+  placed with the page toasts would never reach the user. Outside the
+  importUrlEnabled block, so the "switched off" state can still be shown. --}}
+  {{#if importFailure}}
+  <div role="alert" class="alert alert-warning mb-4 text-sm">
+    <span>{{importFailureMessage}}</span>
+  </div>
+  {{/if}}
+  {{#if importedFrom}}{{#unless importFailure}}
+  <div role="alert" class="alert alert-success mb-4 text-sm">
+    <span>{{importedFromMessage}}</span>
+  </div>
+  {{/unless}}{{/if}}
+  {{/unless}}
+
+  <form
+    id="garmentForm"
     method="POST"
     action="{{#if isClone}}/wardrobe/{{garment.id}}/clone{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}{{else if garment.id}}/wardrobe/{{garment.id}}{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}{{else}}/wardrobe/import{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}{{/if}}"
     {{#unless garment.id}}enctype="multipart/form-data" hx-indicator="#saveLoading"
@@ -34,14 +96,82 @@
     class="flex flex-col gap-4"
   >
     {{#unless garment.id}}
+    {{!-- Carried through a candidate swap, which re-posts this form's fields. --}}
+    <input type="hidden" name="importUrl" value="{{importUrl}}" />
+    <input
+      type="hidden"
+      name="candidates"
+      value="{{join allCandidates ' '}}"
+    />
+    <input type="hidden" name="suggested" value="{{suggestedFields}}" />
+    <input type="hidden" name="sizeOptions" value="{{join sizeOptions '|'}}" />
     <div class="form-control">
       <label class="label"><span class="label-text">{{t 'lang.PHOTO'}}</span></label>
-      {{> photoPicker preview=true submitBtnId='saveBtn'}}
+      {{> photoPicker preview=true submitBtnId='saveBtn'
+      previewSrc=importPreview.dataUri hasAlpha=importPreview.hasAlpha}}
+      {{#if importCandidates}}
+      <div class="flex flex-wrap gap-2 mt-2">
+        <span class="text-xs self-center text-base-content/60"
+          >{{t 'lang.OTHER_IMAGES'}}</span
+        >
+        {{#each importCandidates}}
+        <button
+          type="button"
+          class="btn btn-xs btn-outline"
+          hx-post="/wardrobe/import/url{{#if ../viewOwner}}?ownerId={{../viewOwner}}{{/if}}"
+          hx-vals='{"imageUrl": "{{this.url}}"}'
+          {{!-- htmx sends this button's own form on any non-GET, which is what
+          carries the user's edits through the swap; hx-params is the only way
+          to keep the photo itself out of a request that does not want it. --}}
+          hx-params="not photo,nobgPhoto"
+          hx-target="main"
+          hx-select="main"
+          hx-swap="outerHTML"
+          hx-indicator="#importLoading"
+        >
+          {{t 'lang.IMAGE'}} {{this.index}}
+        </button>
+        {{/each}}
+      </div>
+      {{/if}}
+      {{#if importPreview}}
+      {{!-- A module script, and after the picker's: htmx runs both in order,
+      and the picker registers the #photoInput listener this one fires. --}}
+      <script type="module">
+        const preview = document.getElementById('photoPreview');
+        const photoInput = document.getElementById('photoInput');
+        const nobgInput = document.getElementById('nobgPhotoInput');
+        const src = preview?.getAttribute('src') ?? '';
+        if (src.startsWith('data:image/')) {
+          // atob, not fetch: connect-src has no data: and the request would
+          // fail silently.
+          const bytes = Uint8Array.from(atob(src.split(',')[1]), (c) =>
+            c.charCodeAt(0),
+          );
+          const file = new File([bytes], 'imported.webp', {
+            type: 'image/webp',
+          });
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          photoInput.files = dt.files;
+          if (preview.dataset.hasAlpha === 'true') {
+            // Already cut out, so it is its own transparent variant: no model
+            // run, no mask editor.
+            const nobg = new DataTransfer();
+            nobg.items.add(new File([bytes], 'nobg.webp', { type: 'image/webp' }));
+            nobgInput.files = nobg.files;
+          } else {
+            photoInput.dispatchEvent(new Event('change'));
+          }
+        }
+      </script>
+      {{/if}}
     </div>
     {{/unless}}
     <div class="form-control">
       <label class="label"
-        ><span class="label-text">{{t 'lang.NAME'}}</span></label
+        ><span class="label-text">{{t 'lang.NAME'}}</span>{{> suggestedBadge
+        field='name'}}</label
       >
       <input
         type="text"
@@ -54,7 +184,8 @@
 
     <div class="form-control">
       <label class="label"
-        ><span class="label-text">{{t 'lang.CATEGORY'}} *</span></label
+        ><span class="label-text">{{t 'lang.CATEGORY'}} *</span>{{>
+        suggestedBadge field='category'}}</label
       >
       <input
         type="text"
@@ -75,7 +206,8 @@
 
     <div class="form-control">
       <label class="label"
-        ><span class="label-text">{{t 'lang.BRAND'}}</span></label
+        ><span class="label-text">{{t 'lang.BRAND'}}</span>{{> suggestedBadge
+        field='brand'}}</label
       >
       <input
         type="text"
@@ -90,7 +222,8 @@
 
     <div class="form-control">
       <label class="label"
-        ><span class="label-text">{{t 'lang.SIZE'}}</span></label
+        ><span class="label-text">{{t 'lang.SIZE'}}</span>{{> suggestedBadge
+        field='size'}}</label
       >
       <input
         type="text"
@@ -98,7 +231,17 @@
         class="input input-bordered"
         value="{{#if garment}}{{garment.size}}{{/if}}"
         placeholder="M, 32, One Size…"
+        {{#if sizeOptions}}list="size-suggestions"{{/if}}
+        autocomplete="off"
       />
+      {{#if sizeOptions}}
+      {{!-- Every size the shop sells, offered but never chosen for the user. --}}
+      <datalist id="size-suggestions">
+        {{#each sizeOptions}}
+        <option value="{{this}}"></option>
+        {{/each}}
+      </datalist>
+      {{/if}}
     </div>
 
     <div class="form-control">
@@ -122,7 +265,10 @@
     </div>
 
     <div class="form-control">
-      <label class="label"><span class="label-text">{{t 'lang.NOTES'}}</span></label>
+      <label class="label"
+        ><span class="label-text">{{t 'lang.NOTES'}}</span>{{> suggestedBadge
+        field='notes'}}</label
+      >
       <textarea
         name="notes"
         class="textarea textarea-bordered"
@@ -135,7 +281,8 @@
 
     <div class="form-control">
       <label class="label"
-        ><span class="label-text">{{t 'lang.SOURCE_LINK'}}</span></label
+        ><span class="label-text">{{t 'lang.SOURCE_LINK'}}</span>{{>
+        suggestedBadge field='sourceUrl'}}</label
       >
       <input
         type="url"

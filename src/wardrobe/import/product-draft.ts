@@ -351,7 +351,9 @@ export function buildDraft(
   applyNotes(draft, context);
 
   draft.imageCandidates = imageCandidates(meta, variant, group, pageUrl);
-  draft.sourceUrl = cleanSourceUrl(canonical(meta, pageUrl, host) ?? pageUrl);
+  const canonicalUrl = canonical(meta, pageUrl, host);
+  draft.sourceUrl = cleanSourceUrl(canonicalUrl ?? pageUrl);
+  draft.sources.sourceUrl = canonicalUrl ? 'opengraph' : 'url';
   return draft;
 }
 
@@ -480,11 +482,9 @@ const applySize = (
 };
 
 const applyNotes = (draft: GarmentPrefill, { field, meta }: Context) => {
+  const stated = str(field('description'));
   const description = stripHtml(
-    str(field('description')) ??
-      meta.meta['og:description'] ??
-      meta.meta.description ??
-      '',
+    stated ?? meta.meta['og:description'] ?? meta.meta.description ?? '',
   );
   const notes = [
     description,
@@ -493,7 +493,10 @@ const applyNotes = (draft: GarmentPrefill, { field, meta }: Context) => {
   ]
     .filter(Boolean)
     .join('\n');
-  if (notes) draft.notes = notes.slice(0, 1000);
+  if (notes) {
+    draft.notes = notes.slice(0, 1000);
+    draft.sources.notes = stated ? 'jsonld' : 'opengraph';
+  }
 };
 
 const safeHost = (url: string): string | undefined => {

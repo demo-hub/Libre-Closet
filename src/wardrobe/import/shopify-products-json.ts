@@ -218,9 +218,11 @@ export function parseShopifyProduct(
       .filter(Boolean)
       .join('\n')
       .slice(0, 1000) || undefined;
+  if (draft.notes) draft.sources.notes = 'shopify';
 
   draft.imageCandidates = imageCandidates(raw, chosen, pageUrl);
   draft.sourceUrl = cleanSourceUrl(pageUrl);
+  draft.sources.sourceUrl = 'url';
   return draft;
 }
 

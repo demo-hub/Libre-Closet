@@ -1,9 +1,16 @@
-{{!-- Element ids are the contract of public/js/background-removal.js and test/camera-capture.spec.ts. Params: preview, submitLabel, submitBtnId. --}}
+{{!-- Element ids are the contract of public/js/background-removal.js and test/camera-capture.spec.ts. Params: preview, submitLabel, submitBtnId, previewSrc, hasAlpha. --}}
 {{#if preview}}
 <figure
   class="relative rounded-box overflow-hidden mb-2 bg-base-200 aspect-square w-full max-w-sm mx-auto flex items-center justify-center text-base-content/30"
 >
-  <img id="photoPreview" alt="" class="object-cover w-full h-full hidden" />
+  {{!-- An imported photo arrives already rendered, so it is visible before any
+  script runs; the placeholder steps aside for it. --}}
+  <img
+    id="photoPreview"
+    alt=""
+    class="object-cover w-full h-full{{#unless previewSrc}} hidden{{/unless}}"
+    {{#if previewSrc}}src="{{previewSrc}}" data-has-alpha="{{hasAlpha}}"{{/if}}
+  />
   <svg
     id="photoPreviewPlaceholder"
     xmlns="http://www.w3.org/2000/svg"
@@ -11,7 +18,7 @@
     viewBox="0 0 24 24"
     stroke-width="1"
     stroke="currentColor"
-    class="size-20"
+    class="size-20{{#if previewSrc}} hidden{{/if}}"
   >
     <path
       stroke-linecap="round"
