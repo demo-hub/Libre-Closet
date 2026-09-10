@@ -429,9 +429,40 @@ Do not spell the volume name by hand. Compose namespaces it as `<project>_librec
 
 ---
 
+## HTTPS with Tailscale
+
+The least work by a distance, and the option that also solves access control. Verified against Tailscale 1.102.
+
+```bash
+sudo tailscale serve --bg 3000
+tailscale serve status          # prints your https://<host>.<tailnet>.ts.net URL
+```
+
+Tailscale terminates TLS with a real certificate for your machine's tailnet name and proxies to `127.0.0.1:3000`. Nothing to renew, nothing to install on your phone.
+
+**One prerequisite that is not obvious:** HTTPS certificates must be enabled for the tailnet first — admin console, Settings, DNS, enable MagicDNS and then HTTPS Certificates. It is a one-time switch per tailnet, and without it `serve` fails outright rather than falling back to something.
+
+Then two changes to the compose file:
+
+```yaml
+    ports:
+      - '127.0.0.1:3000:3000'
+    environment:
+      SITE_URL: 'https://your-server.your-tailnet.ts.net'
+      PWA_ENABLED: 'true'
+```
+
+`127.0.0.1:3000:3000` rather than `3000:3000` is the one worth taking deliberately. The app binds `0.0.0.0` unconditionally and there is no host or bind variable, so with the usual mapping anyone on your LAN can reach it — and with `AUTH_ENABLED=false` that is full read and write on your wardrobe. Publishing to loopback leaves the tailnet as the only route in, which is what makes running without accounts an honest choice rather than a gamble. `tailscale serve` proxies to `127.0.0.1:3000`, so it still reaches the app.
+
+`PWA_ENABLED` matters because HTTPS alone does not give you the PWA: the service worker is gated on the flag as well, and it defaults to false.
+
+What stays imperfect: `og:image` on a shared link still says `http://`, because the app trusts forwarded headers from loopback only and Tailscale connects from elsewhere. That affects how a link previews in a chat app, nothing in normal use — and with `AUTH_ENABLED=false` the sharing routes do not exist anyway. Garment photos are unaffected: every rendered `<img>` uses a relative `/file/...` path, so there is no mixed content to block.
+
+---
+
 ## Behind a reverse proxy
 
-The app trusts forwarded headers from loopback only, which no container deployment satisfies — a proxy in another container connects from the bridge network. Left alone, per-address rate limiting collapses into a single shared bucket, and generated share links come out with the wrong scheme. There is no setting for this: the trusted list is hardcoded at `src/main.ts:20` and no environment variable overrides it. The published image ships only `dist/`, so changing it means building your own — clone the repo, widen `trustProxy` to the address your proxy connects from (`'172.16.0.0/12'` covers the default Docker bridge ranges), and `docker build -f docker/Dockerfile -t libre-closet .`. Until you do, expect the shared rate-limit bucket and the wrong-scheme share links described above.
+Only if you are not using the section above. The app trusts forwarded headers from loopback only, which no container deployment satisfies — a proxy in another container connects from the bridge network. Left alone, per-address rate limiting collapses into a single shared bucket, and generated share links come out with the wrong scheme. There is no setting for this: the trusted list is hardcoded at `src/main.ts:20` and no environment variable overrides it. The published image ships only `dist/`, so changing it means building your own — clone the repo, widen `trustProxy` to the address your proxy connects from (`'172.16.0.0/12'` covers the default Docker bridge ranges), and `docker build -f docker/Dockerfile -t libre-closet .`. Until you do, expect the shared rate-limit bucket and the wrong-scheme share links described above.
 
 Two proxy defaults will bite regardless:
 
@@ -440,7 +471,7 @@ Two proxy defaults will bite regardless:
 
 Use `$http_host` rather than `$host` when setting the forwarded host, so a non-standard external port survives into the links the app generates.
 
-HTTPS plus `PWA_ENABLED=true` is what unlocks the PWA layer — install to home screen, offline, and sharing into the app from another app — because service workers require a secure context and the app only registers one when the flag is on. Add `PWA_ENABLED: 'true'` to the compose environment at the same time you terminate TLS; either one alone leaves those features absent, with no error anywhere. Note that `localhost` counts as a secure context, so testing on the server itself looks like it works while the same build fails on your phone.
+HTTPS plus `PWA_ENABLED=true` is what unlocks the PWA layer — install to home screen, offline, and sharing into the app from another app — because service workers require a secure context and the app only registers one when the flag is on. Either one alone leaves those features absent, with no error anywhere. Note that `localhost` counts as a secure context, so testing on the server itself looks like it works while the same build fails on your phone.
 
 ---
 
@@ -448,7 +479,7 @@ HTTPS plus `PWA_ENABLED=true` is what unlocks the PWA layer — install to home 
 
 For most self-hosters: a small VPS or a machine on your own network, built from the compose file above with SQLite + local storage. SQLite handles thousands of users without issue - see [DjangoCon 2023: Use SQLite in Production](https://youtu.be/yTicYJDT1zE).
 
-With `AUTH_ENABLED=false` there is no access control of any kind, so keep such an instance on a private network — a VPN like Tailscale is the least work — note that a bare tailnet address is still plain HTTP, so you need `tailscale serve` (or any other TLS terminator) plus `PWA_ENABLED=true` before the PWA features appear. If you would rather expose it publicly, turn `AUTH_ENABLED` on **before** adding any garments: with auth off every garment is stored unowned, and enabling it afterwards leaves the existing wardrobe orphaned and invisible to your new account. Set a real `ACCESS_TOKEN_SECRET` and `DISABLE_REGISTRATION=true` at the same time.
+With `AUTH_ENABLED=false` there is no access control of any kind, so keep such an instance on a private network. [HTTPS with Tailscale](#https-with-tailscale) is the least work and covers both concerns at once — a bare tailnet address is still plain HTTP, so `tailscale serve` plus `PWA_ENABLED=true` is what actually gets you the PWA. If you would rather expose it publicly, turn `AUTH_ENABLED` on **before** adding any garments: with auth off every garment is stored unowned, and enabling it afterwards leaves the existing wardrobe orphaned and invisible to your new account. Set a real `ACCESS_TOKEN_SECRET` and `DISABLE_REGISTRATION=true` at the same time.
 
 If you need horizontal scaling later, switch to S3-compatible storage and consider a PostgreSQL migration. [Litestream](https://litestream.io/) can stream the SQLite file offsite, but it replicates only the database — your photos still need backing up separately.
 
