@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { FastifyRequest } from 'fastify';
 import { I18nContext } from 'nestjs-i18n';
+import { GarmentEnricher } from '../ai/garment-enricher';
 import { User } from '../dal/entity/user.entity';
 
 @Injectable()
@@ -16,6 +17,7 @@ export class ViewContextService {
     private readonly userRepository: EntityRepository<User>,
     private configService: ConfigService,
     private jwtService: JwtService,
+    private readonly enricher: GarmentEnricher,
   ) {}
 
   async buildContext(req: FastifyRequest) {
@@ -49,6 +51,11 @@ export class ViewContextService {
       signupsDisabled: this.configService.get<boolean>('DISABLE_REGISTRATION'),
       pwaEnabled: this.configService.get<boolean>('PWA_ENABLED'),
       importUrlEnabled: this.configService.get<boolean>('IMPORT_URL_ENABLED'),
+      // The provider's own answer, not AI_PROVIDER: a provider that is named
+      // but unusable (no key, no model, an unparseable base URL) makes the
+      // route 404, and a button in front of a 404 does nothing at all.
+      aiEnabled: this.enricher.available,
+      aiHost: this.enricher.host,
       locale,
       canonicalUrl,
       ogUrl: canonicalUrl,

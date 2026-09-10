@@ -1,0 +1,66 @@
+{{!-- What the AI answered, rendered by the server rather than filled in by
+script: the values are model output, so they go through the same escaping every
+other field does. Swapped into #aiSuggestion by htmx. --}} {{#if suggestion}}
+<div
+  class="alert alert-info text-sm flex-col items-start gap-2"
+  role="status"
+  aria-live="polite"
+>
+  <span>{{t 'lang.AI_SUGGESTED_VIA'}} {{aiHost}}</span>
+  <div class="flex flex-wrap gap-2">
+    {{#if suggestion.name}}
+    <button
+      type="button"
+      class="btn btn-xs"
+      _="on click set #garmentForm.name.value to my @data-value then remove me"
+      data-value="{{suggestion.name}}"
+    >
+      {{t 'lang.NAME'}}: {{suggestion.name}}
+    </button>
+    {{/if}} {{#if suggestion.category}}
+    <button
+      type="button"
+      class="btn btn-xs"
+      _="on click set #garmentForm.category.value to my @data-value then remove me"
+      data-value="{{suggestion.category}}"
+    >
+      {{t 'lang.CATEGORY'}}: {{suggestion.category}}
+    </button>
+    {{/if}} {{#if suggestion.brand}}
+    <button
+      type="button"
+      class="btn btn-xs"
+      _="on click set #garmentForm.brand.value to my @data-value then remove me"
+      data-value="{{suggestion.brand}}"
+    >
+      {{t 'lang.BRAND'}}: {{suggestion.brand}}
+    </button>
+    {{/if}} {{#if suggestion.notes}}
+    <button
+      type="button"
+      class="btn btn-xs"
+      _="on click set #garmentForm.notes.value to my @data-value then remove me"
+      data-value="{{suggestion.notes}}"
+    >
+      {{t 'lang.NOTES'}}
+    </button>
+    {{/if}} {{#each suggestion.colors}}
+    <button
+      type="button"
+      class="btn btn-xs"
+      _="on click
+           set box to the first <input[name='color'][value='{{this}}']/>
+           if box then set box.checked to true then send change to box end
+           then remove me"
+    >
+      {{t 'lang.COLOR'}}: {{this}}
+    </button>
+    {{/each}}
+  </div>
+  <span class="text-xs opacity-70">{{t 'lang.AI_CHECK_BEFORE_SAVING'}}</span>
+</div>
+{{else}}
+<div class="alert alert-warning text-sm" role="status" aria-live="polite">
+  <span>{{aiFailed}}</span>
+</div>
+{{/if}}

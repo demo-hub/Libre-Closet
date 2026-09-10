@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Share a product page or a photo from another app straight into a new garment, where the installed app supports it
 - A share that arrives with an expired session, or with no connection, is kept and offered again instead of being lost
 - Choose which wardrobe to save into when a share did not say
+- Optional AI suggestions for a garment's details, off by default and never automatic: when an administrator configures a provider, a button appears in your own wardrobe that names the host it would send the photo to
 - Add a photo, with background removal, while creating a garment
 - Record where a garment came from with a source link
 

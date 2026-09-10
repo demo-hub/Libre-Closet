@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   ForbiddenException,
+  NotFoundException,
   Post,
   Query,
   Req,
@@ -13,6 +14,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { I18n, I18nContext } from 'nestjs-i18n';
 import { ConditionalAuthGuard } from '../../auth/conditional-auth.guard';
 import { Payload } from '../../auth/dto/payload.dto';
+import { GarmentEnricher } from '../../ai/garment-enricher';
 import { SharePermission } from '../../dal/entity/wardrobe-share.entity';
 import { WardrobeShareService } from '../../wardrobe-share/wardrobe-share.service';
 import { normalizeColorInput } from '../color-input';
@@ -26,6 +28,8 @@ import { truncate } from './garment-prefill';
 import { GarmentService } from '../garment.service';
 import { sanitizeSourceUrl } from '../source-url';
 import { cleanSourceUrl } from './garment-prefill';
+import sharp from 'sharp';
+import { GarmentColor } from '../garment-color.enum';
 import { intakeImage, toDataUri } from './image-intake';
 import { ImportService } from './import.service';
 import { MAX_IMAGE_BYTES } from './safe-fetch.service';
@@ -56,6 +60,7 @@ export class ImportController {
     private readonly urlImportService: UrlImportService,
     private readonly garmentService: GarmentService,
     private readonly shareService: WardrobeShareService,
+    private readonly enricher: GarmentEnricher,
   ) {}
 
   @Throttle({ default: { limit: 30, ttl: minutes(1) } })
@@ -351,6 +356,47 @@ export class ImportController {
       });
   }
 
+  /**
+   * Asks the configured provider what the photo shows. Never automatic: the
+   * button that reaches here names the host it will talk to, and pressing it is
+   * the consent. With no provider configured the route does not exist.
+   */
+  @Throttle({ default: { limit: 10, ttl: minutes(10) } })
+  @Post('analyze')
+  async analyze(
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+    @I18n() i18n: I18nContext,
+    @Query('ownerId') ownerId: string | undefined,
+  ) {
+    if (!this.enricher.available) throw new NotFoundException();
+    // Owner-only, unlike every other route in this file. A MANAGE share lets
+    // someone write into a wardrobe; it does not let them decide that its
+    // owner's own category names may be sent to a third party.
+    if (sharedOwner(req, ownerId) != null) throw new ForbiddenException();
+    const owner = userIdOf(req);
+
+    const photo = await readAnalyzePhoto(req);
+    if (!photo) {
+      return reply.viewPartial('partials/aiSuggestion', {
+        aiFailed: i18n.t('lang.AI_NO_SUGGESTION'),
+      });
+    }
+
+    const filters = await this.garmentService.findAvailableFilters(owner);
+    const suggestion = await this.enricher.analyzeImage(photo, {
+      knownCategories: filters.categories,
+      knownColors: Object.values(GarmentColor),
+      language: i18n.lang,
+    });
+
+    return reply.viewPartial('partials/aiSuggestion', {
+      suggestion,
+      aiFailed: suggestion ? undefined : i18n.t('lang.AI_NO_SUGGESTION'),
+      aiHost: this.enricher.host,
+    });
+  }
+
   /** The owner pattern from wardrobe.controller.ts, which every route repeats. */
   private async resolveOwner(
     req: FastifyRequest,
@@ -396,6 +442,63 @@ const listOf = (value: string | string[] | undefined, separator = ' ') =>
 /** The date input renders through a helper that throws on anything else. */
 const renderableDate = (value: string | undefined): string =>
   value && !Number.isNaN(new Date(value).getTime()) ? value : '';
+
+/**
+ * Reads one multipart file part to the end. `keep` false drains without
+ * buffering: the part has to be consumed either way or the stream stalls.
+ */
+async function drainFile(
+  file: AsyncIterable<Uint8Array>,
+  keep: boolean,
+): Promise<Buffer | undefined> {
+  const chunks: Buffer[] = [];
+  try {
+    for await (const chunk of file) {
+      if (keep) chunks.push(Buffer.from(chunk));
+    }
+  } catch {
+    return undefined;
+  }
+  return chunks.length ? Buffer.concat(chunks) : undefined;
+}
+
+/**
+ * The cut-out the user is looking at, downscaled to what a model needs. Only
+ * the photo is read: nothing else on the form is any of the provider's
+ * business.
+ */
+async function readAnalyzePhoto(
+  req: FastifyRequest,
+): Promise<Buffer | undefined> {
+  if (!req.isMultipart()) return undefined;
+  let photo: Buffer | undefined;
+  try {
+    for await (const part of req.parts({
+      limits: { files: 2, fileSize: MAX_IMAGE_BYTES },
+    })) {
+      if (part.type !== 'file') continue;
+      // In tree order the cut-out arrives before the original, so the first
+      // file is the one the user is actually looking at. Later parts are still
+      // drained — an undrained part stalls the request — but not kept.
+      photo ??= await drainFile(part.file, !photo);
+    }
+  } catch {
+    return undefined;
+  }
+  if (!photo) return undefined;
+
+  try {
+    // A JPEG, and no larger than a model can use: the cut-out on the page is a
+    // transparent webp at up to 1080px, which is more than this needs.
+    return await sharp(photo)
+      .flatten({ background: '#ffffff' })
+      .resize(768, 768, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+  } catch {
+    return undefined;
+  }
+}
 
 /**
  * Reads a share. Multipart is what a share target sends, but the same route
