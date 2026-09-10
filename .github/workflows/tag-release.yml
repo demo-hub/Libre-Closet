@@ -13,7 +13,13 @@ jobs:
             contents: write
             actions: write
         steps:
+            # Pinned: on a pull_request event checkout defaults to
+            # refs/pull/N/merge, the synthetic test-merge commit, so the tag
+            # would land on a commit that is not in main's history.
             - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.pull_request.merge_commit_sha }}
+                  fetch-depth: 0
 
             - name: Extract version from branch name
               id: version
