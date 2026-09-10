@@ -76,6 +76,22 @@ import { ViewContextModule } from './view-context/view-context.module';
         PWA_ENABLED: Joi.boolean().default(false),
         IMPORT_URL_ENABLED: Joi.boolean().default(true),
         IMPORT_URL_RATE_LIMIT: Joi.number().integer().min(1).default(10),
+        AI_PROVIDER: Joi.string()
+          .valid('none', 'anthropic', 'openai', 'ollama')
+          .default('none'),
+        AI_API_KEY: Joi.string().allow('').default(''),
+        // Required for a local server: which vision model is installed cannot
+        // be guessed, and a wrong one fails at the first press rather than at
+        // boot, which reads like a bug in the app.
+        AI_MODEL: Joi.string()
+          .allow('')
+          .default('')
+          .when('AI_PROVIDER', {
+            is: Joi.valid('openai', 'ollama'),
+            then: Joi.string().min(1).required(),
+          }),
+        AI_BASE_URL: Joi.string().allow('').default(''),
+        AI_TIMEOUT_MS: Joi.number().integer().min(1000).default(30000),
         // Development and testing: also lifts loopback and the port allowlist.
         IMPORT_ALLOW_PRIVATE_NETWORKS: Joi.boolean().default(false),
         IMPORT_FETCH_TIMEOUT_MS: Joi.number().default(10000),

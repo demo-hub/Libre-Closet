@@ -1,4 +1,4 @@
-import { ForbiddenException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import sharp from 'sharp';
 import type { I18nContext } from 'nestjs-i18n';
 import { emptyPrefill } from './garment-prefill';
@@ -6,6 +6,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ConditionalAuthGuard } from '../../auth/conditional-auth.guard';
 import { WardrobeShareService } from '../../wardrobe-share/wardrobe-share.service';
+import { GarmentEnricher } from '../../ai/garment-enricher';
 import { GarmentService } from '../garment.service';
 import { ImportController, urlImportLimit } from './import.controller';
 import { ImportService } from './import.service';
@@ -20,7 +21,12 @@ describe('ImportController', () => {
     resolveCategoryLabel: jest.Mock;
   };
   let shareService: { canManage: jest.Mock; getInboundShares: jest.Mock };
-  let reply: { redirect: jest.Mock; view: jest.Mock };
+  let enricher: {
+    host: string;
+    available: boolean;
+    analyzeImage: jest.Mock;
+  };
+  let reply: { redirect: jest.Mock; view: jest.Mock; viewPartial: jest.Mock };
 
   const i18n = {
     lang: 'en',
@@ -62,7 +68,12 @@ describe('ImportController', () => {
       canManage: jest.fn().mockResolvedValue(true),
       getInboundShares: jest.fn().mockResolvedValue([]),
     };
-    reply = { redirect: jest.fn(), view: jest.fn() };
+    enricher = {
+      host: 'api.anthropic.com',
+      available: false,
+      analyzeImage: jest.fn(),
+    };
+    reply = { redirect: jest.fn(), view: jest.fn(), viewPartial: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ImportController],
@@ -71,6 +82,7 @@ describe('ImportController', () => {
         { provide: UrlImportService, useValue: urlImportService },
         { provide: GarmentService, useValue: garmentService },
         { provide: WardrobeShareService, useValue: shareService },
+        { provide: GarmentEnricher, useValue: enricher },
       ],
     })
       // Nest instantiates the controller's guard when compiling; the chain
@@ -168,6 +180,172 @@ describe('ImportController', () => {
       undefined,
       expect.any(Function),
     );
+  });
+
+  describe('POST /wardrobe/import/analyze', () => {
+    /** A press of the Suggest button: multipart, carrying just the photo. */
+    const withPhoto = (userId: number | undefined, jpeg: Buffer) =>
+      ({
+        user: userId != null ? { userId } : undefined,
+        isMultipart: () => true,
+        parts: () =>
+          (async function* () {
+            await Promise.resolve();
+            yield {
+              type: 'file',
+              fieldname: 'photo',
+              file: Object.assign(
+                (async function* () {
+                  await Promise.resolve();
+                  yield jpeg;
+                })(),
+                { truncated: false },
+              ),
+            };
+          })(),
+      }) as unknown as FastifyRequest;
+
+    const analyze = (userId?: number, ownerId?: string) =>
+      controller.analyze(
+        {
+          user: userId != null ? { userId } : undefined,
+          isMultipart: () => false,
+        } as unknown as FastifyRequest,
+        reply as unknown as FastifyReply,
+        i18n,
+        ownerId,
+      );
+
+    const fragment = () =>
+      (reply.viewPartial.mock.calls[0] as [string, Record<string, unknown>])[1];
+
+    it('does not exist when no provider is configured', async () => {
+      // Not a disabled button behind a working route: the route is gone.
+      await expect(analyze()).rejects.toBeInstanceOf(NotFoundException);
+      expect(enricher.analyzeImage).not.toHaveBeenCalled();
+    });
+
+    it('says so rather than failing when there is no photo to read', async () => {
+      enricher.available = true;
+      await analyze();
+      expect(enricher.analyzeImage).not.toHaveBeenCalled();
+      const [view] = reply.viewPartial.mock.calls[0] as [string];
+      expect(view).toBe('partials/aiSuggestion');
+      expect(fragment().aiFailed).toBeTruthy();
+    });
+
+    describe('with a photo', () => {
+      const jpeg = () =>
+        sharp({
+          create: {
+            width: 40,
+            height: 40,
+            channels: 3,
+            background: { r: 200, g: 180, b: 140 },
+          },
+        })
+          .jpeg()
+          .toBuffer();
+
+      beforeEach(() => {
+        enricher.available = true;
+        enricher.host = 'ollama.lan:11434';
+      });
+
+      it('renders what the provider answered, and names the host', async () => {
+        enricher.analyzeImage.mockResolvedValueOnce({
+          name: 'Wool Coat',
+          colors: ['beige'],
+          confidence: { category: 0.8, colors: 0.7, brand: 0 },
+        });
+
+        await controller.analyze(
+          withPhoto(5, await jpeg()),
+          reply as unknown as FastifyReply,
+          i18n,
+          undefined,
+        );
+
+        expect(fragment()).toMatchObject({
+          suggestion: { name: 'Wool Coat' },
+          aiHost: 'ollama.lan:11434',
+          aiFailed: undefined,
+        });
+      });
+
+      it('sends the wardrobe vocabulary and the language, and a JPEG', async () => {
+        await controller.analyze(
+          withPhoto(5, await jpeg()),
+          reply as unknown as FastifyReply,
+          i18n,
+          undefined,
+        );
+
+        expect(garmentService.findAvailableFilters).toHaveBeenCalledWith(5);
+        const [photo, context] = enricher.analyzeImage.mock.calls[0] as [
+          Buffer,
+          { knownCategories: string[]; language: string },
+        ];
+        // Re-encoded before it leaves: whatever was uploaded, a JPEG goes out.
+        expect(photo.subarray(0, 3)).toEqual(Buffer.from([0xff, 0xd8, 0xff]));
+        expect(context.language).toBe('en');
+        expect(Array.isArray(context.knownCategories)).toBe(true);
+      });
+
+      it('says so rather than failing when the provider had nothing', async () => {
+        enricher.analyzeImage.mockResolvedValueOnce(undefined);
+        await controller.analyze(
+          withPhoto(5, await jpeg()),
+          reply as unknown as FastifyReply,
+          i18n,
+          undefined,
+        );
+        expect(fragment().suggestion).toBeUndefined();
+        expect(fragment().aiFailed).toBeTruthy();
+      });
+    });
+
+    describe('owner-only', () => {
+      beforeEach(() => {
+        enricher.available = true;
+      });
+
+      it("refuses to read someone else's wardrobe, manage share or not", async () => {
+        // A MANAGE share lets a guest write into this wardrobe. It does not let
+        // them decide the owner's own category names may leave this server.
+        shareService.canManage.mockResolvedValue(true);
+
+        await expect(analyze(5, '9')).rejects.toBeInstanceOf(
+          ForbiddenException,
+        );
+        expect(garmentService.findAvailableFilters).not.toHaveBeenCalled();
+        expect(enricher.analyzeImage).not.toHaveBeenCalled();
+      });
+
+      it('is unbothered by ownerId naming the signed-in user', async () => {
+        // ?ownerId=<self> is still one's own wardrobe.
+        await expect(analyze(5, '5')).resolves.not.toThrow();
+        expect(shareService.canManage).not.toHaveBeenCalled();
+        expect(reply.viewPartial).toHaveBeenCalled();
+      });
+    });
+
+    it('is rate limited to what the design record allows', () => {
+      const descriptor = Object.getOwnPropertyDescriptor(
+        ImportController.prototype,
+        'analyze',
+      )?.value as object;
+      const limit = Reflect.getMetadata(
+        'THROTTLER:LIMITdefault',
+        descriptor,
+      ) as number;
+      const ttl = Reflect.getMetadata('THROTTLER:TTLdefault', descriptor) as
+        | number
+        | (() => number);
+      expect(limit).toBe(10);
+      // Ten minutes, not one: every press costs the operator a model call.
+      expect(typeof ttl === 'function' ? ttl() : ttl).toBe(600_000);
+    });
   });
 
   describe('POST /wardrobe/import/share', () => {

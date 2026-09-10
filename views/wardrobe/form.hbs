@@ -164,6 +164,37 @@
         {{/each}}
       </div>
       {{/if}}
+      {{#if aiEnabled}}{{#unless viewOwner}}
+      {{!-- Never automatic: the label names the host the photo would go to,
+      and pressing it is the consent. Absent in someone else's wardrobe: only
+      its owner can consent to their own category names leaving this server. --}}
+      <div class="mt-2 flex flex-col gap-2">
+        <button
+          type="button"
+          id="aiSuggestBtn"
+          class="btn btn-sm btn-outline self-start"
+          hx-post="/wardrobe/import/analyze"
+          {{!-- Without hx-encoding htmx urlencodes the request and every File
+          becomes the string "[object File]", so no photo ever arrives. htmx
+          includes this button's own form on any non-GET, and hx-params is the
+          only way to keep the rest of it out of a request the provider has no
+          business seeing. --}}
+          hx-encoding="multipart/form-data"
+          hx-params="photo,nobgPhoto"
+          hx-target="#aiSuggestion"
+          hx-swap="innerHTML"
+          hx-indicator="#aiLoading"
+          hx-disabled-elt="#aiSuggestBtn"
+        >
+          {{t 'lang.AI_SUGGEST_WITH'}} {{aiHost}}
+        </button>
+        <span
+          id="aiLoading"
+          class="htmx-indicator loading loading-ring loading-sm"
+        ></span>
+        <div id="aiSuggestion"></div>
+      </div>
+      {{/unless}}{{/if}}
       {{#if importPreview}}
       {{!-- A module script, and after the picker's: htmx runs both in order,
       and the picker registers the #photoInput listener this one fires. --}}

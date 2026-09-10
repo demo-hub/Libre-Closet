@@ -112,13 +112,16 @@ test('another image from the page can be chosen without losing edits', async ({
   await page.locator('#importBtn').click();
   await expect(page.locator('#photoPreview')).toBeVisible();
   // The page offers its second image; the first is the one on screen.
-  await expect(page.locator('.btn-outline')).toHaveText(/Image 2/);
+  // Addressed by what it does, not by its styling: the AI Suggest button is
+  // also a .btn-outline on this page wherever a provider is configured.
+  const otherImage = page.locator('button[hx-post^="/wardrobe/import/url"]');
+  await expect(otherImage).toHaveText(/Image 2/);
 
   await page.locator('input[name="name"]').fill('Edited by hand');
-  await page.locator('.btn-outline').click();
+  await otherImage.click();
 
   // Now the second is shown and the first is what is offered back.
-  await expect(page.locator('.btn-outline')).toHaveText(/Image 1/);
+  await expect(otherImage).toHaveText(/Image 1/);
   await expect(page.locator('#photoPreview')).toBeVisible();
   await expect(page.locator('input[name="name"]')).toHaveValue(
     'Edited by hand',

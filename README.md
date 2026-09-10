@@ -79,6 +79,56 @@ Note, these screenshots are taken of the web application viewed as an installed 
 
 ---
 
+## Optional AI suggestions
+
+Off by default. With `AI_PROVIDER` unset or `none` the feature does not exist: no button, no code path, nothing configured to talk to.
+
+When an administrator does configure a provider, a **Suggest details** button appears on the new-garment page, labelled with the host it would talk to. Pressing it is the consent — nothing is sent before that, and nothing is sent automatically, ever.
+
+**What leaves the server when you press it:** one downscaled JPEG of the garment, the language the UI is set to, and the names of the categories your wardrobe already uses. **What never does:** a photo of any other garment, an outfit, your account, or anything else on the page.
+
+The button is your own wardrobe only. In a wardrobe someone shared with you it is absent, and the route refuses the request even if you construct one by hand: a share lets you add garments, not decide that its owner's category names may leave this server.
+
+Everything the model answers is checked before it is shown — colours and categories against the values the app actually has, confidence clamped, markup and links stripped, lengths cut to what the columns hold — and every suggestion is a button you tap to apply, never a field filled in for you.
+
+### With a local model (nothing leaves your network)
+
+Ollama needs two settings, because the address is assumed:
+
+```env
+AI_PROVIDER=ollama
+AI_MODEL=llama3.2-vision
+```
+
+The model has to be one that can see — `llama3.2-vision`, `llava`, `qwen2.5vl`, `gemma3` and friends. A text-only model will answer nothing useful, and the app will show "no suggestions" rather than pretend otherwise. `ollama pull llama3.2-vision` first.
+
+**Picking one.** This is short structured extraction from a single photo, not reasoning, so model size matters far less than fitting on the hardware. What decides it is VRAM:
+
+| VRAM | A reasonable choice | What to expect |
+| --- | --- | --- |
+| 6 GB or less | `qwen2.5vl:3b` | fits on the card; seconds per photo; thinner suggestions |
+| 8 to 12 GB | `qwen2.5vl:7b` | the sweet spot for this task |
+| 24 GB or more | `qwen2.5vl:32b` | better at reading a logo; overkill otherwise |
+| No GPU | `qwen2.5vl:3b` and `AI_TIMEOUT_MS=120000` | a minute or more per photo |
+
+A model that does not fit is split across GPU and CPU rather than refused, which reads as the feature being slow rather than as a configuration mistake. Watch for a `-vl`/`-vision` tag in the name: plain `qwen3` or `qwen2.5` cannot see, and will accept the photo and ignore it.
+
+Somewhere other than this machine, or llama.cpp / vLLM / LM Studio instead, is `AI_PROVIDER=openai` plus the endpoint:
+
+```env
+AI_PROVIDER=openai
+AI_BASE_URL=http://192.168.1.5:11434/v1
+AI_MODEL=llava
+```
+
+That host is trusted and deliberately exempt from the import fetcher's private-address rules — reaching a machine on your LAN is the entire point.
+
+Two things to expect from a local model. On CPU a vision model can take a minute or more, so raise `AI_TIMEOUT_MS` (30000 by default); and smaller models ignore the response schema more often than hosted ones, which shows up as a suggestion with fewer fields rather than as an error, because everything is checked against the app's own values before you see it. Brand is the field small models get wrong most, and a brand the model was not confident about is dropped rather than shown — so seeing it rarely is the design, not a fault.
+
+### Cost
+
+Per garment, roughly: **free** on a local model, about **$0.0035** on `claude-haiku-4-5`, about **$0.017** on `claude-opus-5`.
+
 ## Features
 
 - **Garment catalog** - name, category, brand, size, colors, notes, photo
@@ -89,6 +139,7 @@ Note, these screenshots are taken of the web application viewed as an installed 
 - **Outfit Scheduling** - schedule out multiple outfits for given days through the week and get a view of what you've worn
 - **Image Background Removal** - Images automatically have their backgrounds removed and optimized WebP upon upload
 - **Color suggestion** - once the background is gone, the garment's colors are read from the photo in your browser and ticked for you to confirm
+- **Optional AI suggestions** - off by default; when configured, one tap asks a model you chose (including one on your own network) what the photo shows
 - **Offline-ready PWA** - install to home screen, works without internet
 - **Optional auth** - run open for personal use or enable JWT accounts for multi-user
 - **S3 or local storage** - local disk by default, swap to any S3-compatible provider
@@ -154,6 +205,11 @@ npm run start:prod
 | `PWA_ENABLED`                      | Enable service worker and PWA install prompt   | `false`        | `true`                                                                                    |
 | `IMPORT_URL_ENABLED`               | Allow importing a garment from a pasted link   | `true`         | `false`                                                                                   |
 | `IMPORT_URL_RATE_LIMIT`            | Link imports allowed per minute, per address   | `10`           | `60`                                                                                      |
+| `AI_PROVIDER`                      | Optional AI suggestions: `none`, `ollama`, `openai` or `anthropic` | `none` | `ollama`                                                            |
+| `AI_MODEL`                         | Model to ask. Required for `ollama` and `openai` | `claude-opus-5` (anthropic) | `llama3.2-vision`                                             |
+| `AI_BASE_URL`                      | OpenAI-compatible endpoint. Defaults to Ollama's own address when `AI_PROVIDER=ollama` | `http://127.0.0.1:11434/v1` (ollama) | `http://192.168.1.5:11434/v1`      |
+| `AI_API_KEY`                       | API key, where the provider wants one          | -              | `sk-ant-...`                                                                              |
+| `AI_TIMEOUT_MS`                    | How long to wait for a suggestion              | `30000`        | `120000`                                                                                  |
 | `IMPORT_ALLOW_PRIVATE_NETWORKS`    | Development and testing only - let the importer reach private and loopback addresses on any port | `false` | `true`                                                          |
 | `IMPORT_FETCH_TIMEOUT_MS`          | Time budget for fetching a pasted link         | `10000`        | `20000`                                                                                   |
 | `ACCESS_TOKEN_SECRET`              | JWT signing secret - **change for production** | `ChangeMe!`    | `u9n8c2y847rfctb23468tcb689f243`                                                          |

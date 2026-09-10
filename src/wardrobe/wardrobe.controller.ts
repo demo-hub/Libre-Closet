@@ -122,7 +122,7 @@ export class WardrobeController {
     const pasted = sanitizeSourceUrl(url);
     return buildFormModel(this.garmentService, i18n, viewOwner ?? userId, {
       garment: { sourceUrl: sanitizeSourceUrl(sourceUrl) ?? pasted },
-      viewOwner,
+      viewOwner: sharedWith(viewOwner, userId),
       importUrl: pasted,
       importOpen: mode === 'link' || Boolean(pasted),
       // A share the worker kept; the page loads the replay only for this.
@@ -503,3 +503,12 @@ export class WardrobeController {
     return reply.send();
   }
 }
+
+/**
+ * Set only when writing into someone *else's* wardrobe: ?ownerId=<self> is
+ * still one's own, and the owner-only AI button hangs off this.
+ */
+const sharedWith = (
+  viewOwner: number | undefined,
+  userId: number | undefined,
+): number | undefined => (viewOwner !== userId ? viewOwner : undefined);

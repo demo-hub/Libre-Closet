@@ -5,6 +5,7 @@ import { Outfit } from '../dal/entity/outfit.entity';
 import { OutfitCalendar } from '../dal/entity/outfit-calendar.entity';
 import { User } from '../dal/entity/user.entity';
 import { FileModule } from '../file/file.module';
+import { AiModule } from '../ai/ai.module';
 import { AuthModule } from '../auth/auth.module';
 import { WardrobeShareModule } from '../wardrobe-share/wardrobe-share.module';
 import { GarmentService } from './garment.service';
@@ -20,6 +21,7 @@ import { UrlImportService } from './import/url-import.service';
 
 @Module({
   imports: [
+    AiModule,
     AuthModule,
     FileModule,
     WardrobeShareModule,
