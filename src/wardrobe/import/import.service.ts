@@ -40,19 +40,33 @@ export class ImportService {
     private readonly garmentService: GarmentService,
   ) {}
 
-  /** Creates a garment from one multipart request carrying its fields, `photo` and an optional `nobgPhoto`. */
+  /**
+   * Creates a garment from one multipart request carrying its fields, `photo`
+   * and an optional `nobgPhoto`.
+   *
+   * `chooseOwner` lets the request name its own destination: a share sheet
+   * cannot put `?ownerId` on the URL, so the form carries it as a field. It is
+   * called with whatever the body said and must answer with the owner to use,
+   * or throw — and it is awaited before the photo starts being stored, since
+   * that is when the owner is needed.
+   */
   async createFromMultipart(
     req: FastifyRequest,
     owner?: number,
-  ): Promise<Garment> {
-    const { fields, photo } = await this.consume(req, owner);
+    chooseOwner?: (ownerId: string) => Promise<number | undefined>,
+  ): Promise<{ garment: Garment; owner?: number }> {
+    const {
+      fields,
+      photo,
+      owner: chosen,
+    } = await this.consume(req, owner, chooseOwner);
     const category = first(fields.category);
     if (!category) {
       if (photo) await this.fileService.discard(photo);
       throw new BadRequestException('category is required');
     }
     try {
-      return await this.garmentService.create(
+      const garment = await this.garmentService.create(
         {
           name: first(fields.name),
           category,
@@ -65,8 +79,9 @@ export class ImportService {
           sourceUrl: first(fields.sourceUrl),
           photo,
         },
-        owner,
+        chosen,
       );
+      return { garment, owner: chosen };
     } catch (err) {
       if (photo) await this.fileService.discard(photo);
       throw err;
@@ -77,14 +92,34 @@ export class ImportService {
   private async consume(
     req: FastifyRequest,
     owner?: number,
-  ): Promise<{ fields: Fields; photo?: File }> {
+    chooseOwner?: (ownerId: string) => Promise<number | undefined>,
+  ): Promise<{ fields: Fields; photo?: File; owner?: number }> {
     const uploads: Uploads = { fileName: `${randomUUID()}.webp`, owner };
     const fields: Fields = {};
 
     try {
       for await (const part of req.parts({ limits: { files: 2 } })) {
         if (part.type === 'file') this.startUpload(part, uploads);
-        else this.addField(fields, part.fieldname, String(part.value));
+        else {
+          const value = String(part.value);
+          this.addField(fields, part.fieldname, value);
+          // Awaiting here is safe where awaiting around a file part is not: a
+          // field is fully buffered by the parser, so nothing is streaming.
+          // The form puts this control above the photo, and a form is
+          // serialised in tree order, so the answer is settled before the
+          // first byte of the photo arrives.
+          if (part.fieldname === 'ownerId' && chooseOwner && value) {
+            const chosen = await chooseOwner(value);
+            // The form puts this control above the photo so it arrives first.
+            // A request that says otherwise has already had bytes written
+            // against the wrong owner, and guessing which one was meant is
+            // worse than refusing.
+            if (uploads.photo && chosen !== uploads.owner) {
+              throw new BadRequestException('ownerId arrived after the photo');
+            }
+            uploads.owner = chosen;
+          }
+        }
       }
     } catch (err) {
       // The parser rejects on its own limits or a client abort; uploads already
@@ -94,7 +129,11 @@ export class ImportService {
       throw err;
     }
 
-    return { fields, photo: await this.settleUploads(uploads) };
+    return {
+      fields,
+      photo: await this.settleUploads(uploads),
+      owner: uploads.owner,
+    };
   }
 
   private startUpload(part: MultipartFile, uploads: Uploads) {

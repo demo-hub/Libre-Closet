@@ -42,7 +42,9 @@ describe('ImportController', () => {
 
   beforeEach(async () => {
     importService = {
-      createFromMultipart: jest.fn().mockResolvedValue({ id: 7 }),
+      createFromMultipart: jest
+        .fn()
+        .mockResolvedValue({ garment: { id: 7 }, owner: undefined }),
     };
     urlImportService = {
       importFromUrl: jest.fn().mockResolvedValue(emptyResult),
@@ -96,11 +98,17 @@ describe('ImportController', () => {
     expect(importService.createFromMultipart).toHaveBeenCalledWith(
       expect.anything(),
       5,
+      expect.any(Function),
     );
     expect(reply.redirect).toHaveBeenCalledWith('/wardrobe/7?created=1', 302);
   });
 
   it('creates into a shared wardrobe with manage permission', async () => {
+    // The service reports which wardrobe it actually saved into.
+    importService.createFromMultipart.mockResolvedValueOnce({
+      garment: { id: 7 },
+      owner: 9,
+    });
     await controller.create(
       requestAs(5),
       reply as unknown as FastifyReply,
@@ -111,11 +119,30 @@ describe('ImportController', () => {
     expect(importService.createFromMultipart).toHaveBeenCalledWith(
       expect.anything(),
       9,
+      expect.any(Function),
     );
     expect(reply.redirect).toHaveBeenCalledWith(
       '/wardrobe/7?created=1&ownerId=9',
       302,
     );
+  });
+
+  it('checks a body-supplied ownerId the same way as a query one', async () => {
+    await controller.create(
+      requestAs(5),
+      reply as unknown as FastifyReply,
+      undefined,
+    );
+    const chooseOwner = importService.createFromMultipart.mock.calls[0][2] as (
+      value: string,
+    ) => Promise<number | undefined>;
+
+    // The destination named in the body is not taken on trust.
+    await expect(chooseOwner('9')).resolves.toBe(9);
+    expect(shareService.canManage).toHaveBeenCalledWith(5, 9);
+
+    shareService.canManage.mockResolvedValueOnce(false);
+    await expect(chooseOwner('9')).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it('refuses a shared wardrobe without manage permission', async () => {
@@ -139,6 +166,7 @@ describe('ImportController', () => {
     expect(importService.createFromMultipart).toHaveBeenCalledWith(
       expect.anything(),
       undefined,
+      expect.any(Function),
     );
   });
 
@@ -336,6 +364,49 @@ describe('ImportController', () => {
           share(sharedMultipart({ title: 'Coat' }, [], true)),
         ).resolves.not.toThrow();
         expect(rendered().importFailure).toBe('IMPORT_IMAGE_INVALID');
+      });
+    });
+
+    describe('choosing which wardrobe to save into', () => {
+      it('offers nothing when nobody is signed in', async () => {
+        await share(sharedForm({ title: 'Coat' }));
+        expect(rendered().destinations).toEqual([]);
+        expect(shareService.getInboundShares).not.toHaveBeenCalled();
+      });
+
+      it('offers only the wardrobes this user may write into', async () => {
+        shareService.getInboundShares.mockResolvedValueOnce([
+          {
+            permission: 'MANAGE',
+            grantor: { unwrap: () => ({ id: 9, firstName: 'Ana' }) },
+          },
+          {
+            permission: 'VIEW',
+            grantor: { unwrap: () => ({ id: 4, firstName: 'Bo' }) },
+          },
+        ]);
+        const req = sharedForm({ title: 'Coat' });
+        (req as unknown as { user: unknown }).user = { userId: 5 };
+        await share(req);
+        // The VIEW share would be refused at Save time, so it is not offered.
+        expect(rendered().destinations).toEqual([{ id: 9, label: 'Ana' }]);
+      });
+
+      it('names a wardrobe even when its owner has no name', async () => {
+        shareService.getInboundShares.mockResolvedValueOnce([
+          {
+            permission: 'MANAGE',
+            grantor: { unwrap: () => ({ id: 9, email: 'ana@example.com' }) },
+          },
+          { permission: 'MANAGE', grantor: { unwrap: () => ({ id: 12 }) } },
+        ]);
+        const req = sharedForm({ title: 'Coat' });
+        (req as unknown as { user: unknown }).user = { userId: 5 };
+        await share(req);
+        expect(rendered().destinations).toEqual([
+          { id: 9, label: 'ana@example.com' },
+          { id: 12, label: '#12' },
+        ]);
       });
     });
 

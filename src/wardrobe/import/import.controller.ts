@@ -13,6 +13,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { I18n, I18nContext } from 'nestjs-i18n';
 import { ConditionalAuthGuard } from '../../auth/conditional-auth.guard';
 import { Payload } from '../../auth/dto/payload.dto';
+import { SharePermission } from '../../dal/entity/wardrobe-share.entity';
 import { WardrobeShareService } from '../../wardrobe-share/wardrobe-share.service';
 import { normalizeColorInput } from '../color-input';
 import {
@@ -65,10 +66,17 @@ export class ImportController {
     @Query('ownerId') ownerId: string | undefined,
   ) {
     const owner = await this.resolveOwner(req, ownerId);
-    const garment = await this.importService.createFromMultipart(req, owner);
+    // The destination can also arrive in the body, because a share sheet
+    // cannot put it on the URL. Whatever it says is checked the same way.
+    const { garment, owner: saved } =
+      await this.importService.createFromMultipart(req, owner, (chosen) =>
+        this.resolveOwner(req, chosen),
+      );
 
     const params = new URLSearchParams({ created: '1' });
-    const shared = sharedOwner(req, ownerId);
+    // The garment landed in someone else's wardrobe, so the page that shows it
+    // needs to be asked for in that wardrobe too, or it answers 403.
+    const shared = saved != null && saved !== userIdOf(req) ? saved : undefined;
     if (shared) params.set('ownerId', String(shared));
     return reply.redirect(`/wardrobe/${garment.id}?${params}`, 302);
   }
@@ -87,6 +95,7 @@ export class ImportController {
       // Every one of these can arrive repeated, which urlencoded parsing turns
       // into an array; `first` is what keeps that from reaching the template.
       imageUrl?: string | string[];
+      ownerId?: string | string[];
       importUrl?: string | string[];
       candidates?: string | string[];
       suggested?: string | string[];
@@ -107,10 +116,19 @@ export class ImportController {
     @Query('ownerId') ownerId: string | undefined,
   ) {
     const owner = await this.resolveOwner(req, ownerId);
+    // A destination chosen on the page is posted back with the fields, so it
+    // survives a candidate swap rather than resetting to "my wardrobe".
+    const chosen = ownerId ? undefined : first(body.ownerId);
     const model = await buildFormModel(this.garmentService, i18n, owner, {
       // The shared wardrobe being written into, if any — not the user's own id,
       // which would put ?ownerId=<self> on every link the form renders.
       viewOwner: sharedOwner(req, ownerId),
+      destinations: ownerId
+        ? []
+        : (await this.manageableWardrobes(req)).map((d) => ({
+            ...d,
+            selected: String(d.id) === chosen,
+          })),
     });
 
     // A candidate swap. The form comes back with the fields the user may
@@ -216,6 +234,7 @@ export class ImportController {
     // the destination is chosen on the page instead.
     const owner = await this.resolveOwner(req, undefined);
     const model = await buildFormModel(this.garmentService, i18n, owner, {
+      destinations: await this.manageableWardrobes(req),
       importOpen: true,
     });
 
@@ -311,6 +330,27 @@ export class ImportController {
     }
   }
 
+  /**
+   * The wardrobes this user may write into. Only MANAGE shares: a VIEW share
+   * would be offered and then refused on Save. "My wardrobe" is not in the
+   * list — it is the empty choice, because canManage is false for a user's
+   * own id, there being no share row to themselves.
+   */
+  private async manageableWardrobes(req: FastifyRequest) {
+    const userId = userIdOf(req);
+    if (userId == null) return [];
+    const shares = await this.shareService.getInboundShares(userId);
+    return shares
+      .filter((share) => share.permission === SharePermission.MANAGE)
+      .map((share) => {
+        const grantor = share.grantor.unwrap();
+        return {
+          id: grantor.id,
+          label: grantor.firstName || grantor.email || `#${grantor.id}`,
+        };
+      });
+  }
+
   /** The owner pattern from wardrobe.controller.ts, which every route repeats. */
   private async resolveOwner(
     req: FastifyRequest,
@@ -327,6 +367,9 @@ export class ImportController {
     return viewOwner ?? userId;
   }
 }
+
+const userIdOf = (req: FastifyRequest): number | undefined =>
+  (req['user'] as Payload | undefined)?.userId;
 
 /** Set only when writing into someone else's wardrobe. */
 const sharedOwner = (

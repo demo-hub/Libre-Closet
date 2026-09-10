@@ -27,6 +27,8 @@ export interface GarmentFormModel {
   allCandidates?: string[];
   importFailure?: string;
   importedFrom?: string;
+  /** Wardrobes this user may write into, when no ?ownerId named one. */
+  destinations?: { id: number; label: string; selected?: boolean }[];
 }
 
 export async function buildFormModel(
