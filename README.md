@@ -252,7 +252,7 @@ Upgrading is `docker compose pull && docker compose up -d`. Migrations apply the
 
 ### Publishing a new image
 
-CI builds and pushes to GHCR for `linux/amd64` and `linux/arm64` on any `v*` tag. The arm64 leg is emulated on GitHub's x86 runners and installs native modules twice, so expect it to take considerably longer than the amd64 one; drop `linux/arm64` from `platforms:` in the workflow if you only ever deploy to x86.
+CI builds and pushes to GHCR for `linux/amd64` and `linux/arm64` on any `v*` tag. The arm64 leg is emulated on GitHub's x86 runners, so a full two-platform run takes around 15 minutes.
 
 ```bash
 git tag v0.6.0 && git push origin v0.6.0
