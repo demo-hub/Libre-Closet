@@ -5,6 +5,12 @@ import { registerRoute, setCatchHandler } from 'workbox-routing';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { NetworkFirst, NetworkOnly } from 'workbox-strategies';
+import {
+  pendingShares,
+  stashedShareUrl,
+  stashShare,
+  wasBouncedToLogin,
+} from './share-stash';
 
 // https://developer.chrome.com/docs/workbox/modules/workbox-core#clients_claim
 // This clientsClaim() should be at the top level
@@ -35,6 +41,57 @@ warmStrategyCache({
 
 // SSE is a streaming connection - bypass the service worker cache entirely
 registerRoute(({ url }) => url.pathname === '/sse', new NetworkOnly());
+
+/**
+ * A shared page or photo is a one-shot POST: if the session has expired the
+ * server answers with the login page and the payload is gone, and offline it
+ * never leaves the device. Either way the user watched their photo vanish.
+ *
+ * So the share is kept first and the browser is sent somewhere that can find
+ * it again. 303 and not 307: a 307 would re-POST the body we just consumed.
+ *
+ * Every other route here is registered without a method, which files it under
+ * GET, so this is the only thing in the worker that sees a POST at all.
+ */
+registerRoute(
+  ({ url, request }) =>
+    request.method === 'POST' && url.pathname === '/wardrobe/import/share',
+  async ({ request }) => {
+    // Cloned before the body is read: a Request body can only be consumed once,
+    // and the network attempt needs its own copy.
+    const forStash = request.clone();
+    const keep = async (fallback?: Response) => {
+      try {
+        const id = crypto.randomUUID();
+        await stashShare(caches, forStash, Date.now(), id);
+        return Response.redirect(stashedShareUrl(id), 303);
+      } catch (err) {
+        // Storage refused it. Better to hand back whatever the network said
+        // than to answer a navigation with an exception.
+        console.error('[share-stash] could not keep the share:', err);
+        return fallback ?? Response.error();
+      }
+    };
+
+    try {
+      // A redirect-following copy, not the request itself: a navigation
+      // carries redirect mode "manual", so fetching it as-is yields an
+      // opaqueredirect that says nothing about where it went — and the login
+      // bounce this exists to catch would be invisible.
+      const response = await fetch(new Request(request, { redirect: 'follow' }));
+      if (wasBouncedToLogin(response)) return keep(response);
+      // A navigation refuses a response that was itself redirected, so where
+      // the server sent us has to be re-issued as our own answer.
+      return response.redirected
+        ? Response.redirect(response.url, 303)
+        : response;
+    } catch {
+      // Offline. The share is still worth keeping.
+      return keep();
+    }
+  },
+  'POST',
+);
 
 // https://jakearchibald.com/2016/caching-best-practices/
 // https://web.dev/articles/service-worker-caching-and-http-caching
@@ -113,6 +170,12 @@ setCatchHandler(async ({ event, request }) => {
 
 // AGGRESSIVE UPDATE HANDLING
 // Skip waiting immediately on install to force update
+// Sweeping is opportunistic everywhere else, so do it once on every start:
+// a share nobody came back for should not keep a photo forever.
+addEventListener('activate', (event) => {
+  event.waitUntil(pendingShares(caches, Date.now()).then(() => undefined));
+});
+
 addEventListener('install', (event) => {
   console.log('Service worker installing - skipping waiting');
   self.skipWaiting();

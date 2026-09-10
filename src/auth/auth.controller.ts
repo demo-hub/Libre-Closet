@@ -24,6 +24,7 @@ import { ResetPasswordDto } from './dto/resetPassword.dto';
 import { User } from './user.decorator';
 import { UpdateEmailDto } from './dto/updateEmail.dto';
 import { minutes, seconds, Throttle } from '@nestjs/throttler';
+import { safeReturnTo } from './return-to';
 
 @Controller('auth')
 export class AuthController {
@@ -79,7 +80,15 @@ export class AuthController {
 
   @Throttle({ default: { limit: 5, ttl: seconds(60) } })
   @Post('login')
-  async postLogin(@Body() loginDto: LoginDto, @Res() reply: FastifyReply) {
+  async postLogin(
+    @Body() loginDto: LoginDto & { returnTo?: string | string[] },
+    @Res() reply: FastifyReply,
+  ) {
+    const returnTo = safeReturnTo(
+      Array.isArray(loginDto.returnTo)
+        ? loginDto.returnTo[0]
+        : loginDto.returnTo,
+    );
     try {
       const jwt = await this.authService.signIn(
         loginDto.email,
@@ -90,12 +99,18 @@ export class AuthController {
         maxAge: 365 * 24 * 60 * 60 * 1000, // 365 days
         httpOnly: true, // Prevents client-side JS from reading it
       });
-      reply.redirect('/auth/profile', 302);
+      // HX-Redirect, not a 302: this form posts with htmx, which follows a
+      // redirect inside the request and swaps the result into the form. The
+      // browser has to be told to navigate, or it stays on the login page.
+      reply.header('HX-Redirect', returnTo ?? '/auth/profile');
+      return reply.send();
     } catch (error) {
       this.logger.warn(error);
       return reply.view('auth/login', {
         layout: 'layout',
         error,
+        // Re-emitted, or a mistyped password loses where they were going.
+        returnTo,
         ...((reply as any).locals ?? {}),
       });
     }
@@ -112,10 +127,16 @@ export class AuthController {
 
   @Get('login')
   @Render('auth/login')
-  getLogin(@I18n() i18n: I18nContext): any {
+  getLogin(
+    @I18n() i18n: I18nContext,
+    @Query('returnTo') returnTo: string | undefined,
+  ): any {
     return {
       ogTitle: i18n.t('lang.LOGIN_OG_TITLE'),
       ogDescription: i18n.t('lang.LOGIN_OG_DESC'),
+      // Validated on the way in as well as on the way out: it is rendered into
+      // the form, so it must never be anything but a path on this site.
+      returnTo: safeReturnTo(returnTo),
     };
   }
 

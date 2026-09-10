@@ -27,6 +27,13 @@
   </div>
 
   {{#unless garment.id}}
+  {{#if sharedStashId}}
+  {{!-- Only when a share is actually waiting. Not gated on pwaEnabled: a
+  worker installed while it was on can still hold one after it is turned off.
+  Loading it on every new-garment page would cost two module fetches to do
+  nothing. --}}
+  <script type="module" src="/js/share-replay.js"></script>
+  {{/if}}
   {{#if importUrlEnabled}}
   {{!-- A sibling of the save form, never nested: HTML drops a nested <form>
   and its url input would be submitted with Save. --}}
@@ -96,6 +103,29 @@
     class="flex flex-col gap-4"
   >
     {{#unless garment.id}}
+    {{#if destinations}}
+    {{!-- First in the form on purpose: a form is serialised in tree order, so
+    this field reaches the server before the photo does — and the photo has to
+    be stored against whoever this names. A share sheet cannot put ?ownerId on
+    the URL, which is why the destination is a field at all. --}}
+    <div class="form-control">
+      <label class="label"
+        ><span class="label-text">{{t 'lang.SAVE_TO_WARDROBE'}}</span></label
+      >
+      <select
+        id="destinationSelect"
+        name="ownerId"
+        class="select select-bordered"
+      >
+        <option value="">{{t 'lang.MY_WARDROBE_DESTINATION'}}</option>
+        {{#each destinations}}
+        <option value="{{this.id}}" {{#if this.selected}}selected{{/if}}>
+          {{this.label}}
+        </option>
+        {{/each}}
+      </select>
+    </div>
+    {{/if}}
     {{!-- Carried through a candidate swap, which re-posts this form's fields. --}}
     <input type="hidden" name="importUrl" value="{{importUrl}}" />
     <input

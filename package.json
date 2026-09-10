@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "nest build && npm run generate",
-    "generate": "npm run generate:tailwind && npm run generate:sw",
+    "generate": "npm run generate:tailwind && npm run generate:stash && npm run generate:sw",
     "generate:sw": "esbuild --outfile=views/assets/src-sw.js --bundle views/assets/src-sw.ts && npx workbox injectManifest",
     "generate:sw:watch": "npx workbox injectManifest --watch",
     "generate:tailwind": "npx @tailwindcss/cli -i ./views/assets/main.css -o ./public/bundle.css --minify",
@@ -36,7 +36,8 @@
     "test:load": "ts-node scripts/load-test.ts",
     "test:load:baseline": "ts-node scripts/load-test.ts --baseline",
     "test:load:compare": "ts-node scripts/load-test.ts --compare",
-    "precommit": "npm run format && npm run lint && npm run test:cov && npm run test:e2e:smoke && npm run build && npm run test:load && npm run lighthouse"
+    "precommit": "npm run format && npm run lint && npm run test:cov && npm run test:e2e:smoke && npm run build && npm run test:load && npm run lighthouse",
+    "generate:stash": "esbuild --outfile=public/js/share-stash.js --bundle --format=esm views/assets/share-stash.ts"
   },
   "dependencies": {
     "@aws-sdk/lib-storage": "^3.1009.0",

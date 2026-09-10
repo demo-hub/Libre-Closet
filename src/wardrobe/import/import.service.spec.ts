@@ -95,7 +95,7 @@ describe('ImportService', () => {
       filePart('photo', 'a.png'),
     ]);
 
-    const garment = await service.createFromMultipart(req, 3);
+    const { garment } = await service.createFromMultipart(req, 3);
 
     expect(fileService.storeImageFromFileUpload).toHaveBeenCalledTimes(1);
     const [part, owner, fileName] = fileService.storeImageFromFileUpload.mock
@@ -267,5 +267,40 @@ describe('ImportService', () => {
     const [name] = fileService.delete.mock.calls.at(-1) as [string];
     expect(name).toMatch(/^[0-9a-f-]{36}\.webp$/);
     expect(garmentService.create).not.toHaveBeenCalled();
+  });
+
+  describe('a destination named in the body', () => {
+    it('stores the photo against the wardrobe the field chose', async () => {
+      const chooseOwner = jest.fn().mockResolvedValue(9);
+      const req = request([
+        field('ownerId', '9'),
+        field('category', 'tops'),
+        filePart('photo', 'coat.png'),
+      ]);
+
+      const { owner } = await service.createFromMultipart(req, 3, chooseOwner);
+
+      expect(chooseOwner).toHaveBeenCalledWith('9');
+      // Resolved before the photo was stored, which is when the owner matters.
+      expect(fileService.storeImageFromFileUpload).toHaveBeenCalledWith(
+        expect.anything(),
+        9,
+        expect.any(String),
+      );
+      expect(owner).toBe(9);
+    });
+
+    it('keeps the session owner when the body names none', async () => {
+      const chooseOwner = jest.fn();
+      const req = request([
+        field('category', 'tops'),
+        filePart('photo', 'coat.png'),
+      ]);
+
+      const { owner } = await service.createFromMultipart(req, 3, chooseOwner);
+
+      expect(chooseOwner).not.toHaveBeenCalled();
+      expect(owner).toBe(3);
+    });
   });
 });

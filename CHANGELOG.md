@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Import a garment from a link: paste a product URL and the page's name, brand, colors, category, size options, description and photo are filled in for you to check
 - Colors are suggested from the photo once its background has been removed, on a garment whose colors you have not chosen yourself
 - Share a product page or a photo from another app straight into a new garment, where the installed app supports it
+- A share that arrives with an expired session, or with no connection, is kept and offered again instead of being lost
+- Choose which wardrobe to save into when a share did not say
 - Add a photo, with background removal, while creating a garment
 - Record where a garment came from with a source link
 
@@ -23,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
+- Signing in now returns you to the page you were trying to reach, and leaves the address bar on that page rather than on the login form
 - A request the server refused or rate limited failed silently, with nothing shown to the user
 - Closing the background touch-up window left the Save button stuck on a new garment
 - Garments could be created in another user's wardrobe when user accounts are disabled

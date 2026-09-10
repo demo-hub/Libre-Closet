@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { CanActivate, ExecutionContext } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { AuthService } from './auth.service';
+import { loginUrlFor } from './return-to';
 
 /**
  * When AUTH_ENABLED=false: passes all requests through (no auth needed).
@@ -40,7 +41,12 @@ export class ConditionalAuthGuard implements CanActivate {
     }
 
     const response = context.switchToHttp().getResponse();
-    response.redirect('/auth/login', 302);
+    // Only a GET is worth remembering: a POST cannot be repeated by following
+    // a redirect, and /wardrobe/import/share has no GET to land on at all.
+    response.redirect(
+      loginUrlFor(request.method === 'GET' ? request.url : undefined),
+      302,
+    );
     return false;
   }
 }

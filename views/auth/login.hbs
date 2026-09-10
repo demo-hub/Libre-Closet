@@ -37,6 +37,11 @@
   {{/if}}
 
   <form hx-post="/auth/login" hx-indicator="#loading" hx-trigger="submit">
+    {{#if returnTo}}
+    {{!-- Where the user was headed before being asked to sign in. Server-side
+    it is checked to be a path on this site, both here and on the way back. --}}
+    <input type="hidden" name="returnTo" value="{{returnTo}}" />
+    {{/if}}
     <fieldset
       class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4"
     >

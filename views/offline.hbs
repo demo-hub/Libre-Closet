@@ -19,7 +19,27 @@
     </svg>
   </div>
   <p>{{t 'lang.OFFLINE_DESC'}}</p>
+  {{!-- Filled in only when something really is waiting; the offline page is
+  served from the cache with no query string, so the server cannot know. --}}
+  <div id="pendingShare" class="alert alert-info hidden max-w-sm">
+    <span>{{t 'lang.SHARE_WAITING'}}</span>
+    <a id="pendingShareLink" class="btn btn-sm">{{t 'lang.SHARE_WAITING_OPEN'}}</a>
+  </div>
   <a href="/" class="btn">{{t 'lang.RETURN_TO_HOME'}}</a>
 </main>
+
+{{#if pwaEnabled}}
+<script type="module">
+  import { describePending, stashedShareUrl } from '/js/share-stash.js';
+
+  const waiting = await describePending();
+  if (waiting.length) {
+    const notice = document.getElementById('pendingShare');
+    const link = document.getElementById('pendingShareLink');
+    link.href = stashedShareUrl(waiting[0].id);
+    notice.classList.remove('hidden');
+  }
+</script>
+{{/if}}
 
 {{>dock}}
