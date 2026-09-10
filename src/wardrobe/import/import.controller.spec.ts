@@ -1,4 +1,5 @@
 import { ForbiddenException } from '@nestjs/common';
+import sharp from 'sharp';
 import type { I18nContext } from 'nestjs-i18n';
 import { emptyPrefill } from './garment-prefill';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -18,7 +19,7 @@ describe('ImportController', () => {
     findAvailableFilters: jest.Mock;
     resolveCategoryLabel: jest.Mock;
   };
-  let shareService: { canManage: jest.Mock };
+  let shareService: { canManage: jest.Mock; getInboundShares: jest.Mock };
   let reply: { redirect: jest.Mock; view: jest.Mock };
 
   const i18n = {
@@ -55,7 +56,10 @@ describe('ImportController', () => {
       }),
       resolveCategoryLabel: jest.fn((value: string) => value),
     };
-    shareService = { canManage: jest.fn().mockResolvedValue(true) };
+    shareService = {
+      canManage: jest.fn().mockResolvedValue(true),
+      getInboundShares: jest.fn().mockResolvedValue([]),
+    };
     reply = { redirect: jest.fn(), view: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -136,6 +140,223 @@ describe('ImportController', () => {
       expect.anything(),
       undefined,
     );
+  });
+
+  describe('POST /wardrobe/import/share', () => {
+    const sharedForm = (fields: Record<string, string>) =>
+      ({
+        user: undefined,
+        isMultipart: () => false,
+        body: fields,
+      }) as unknown as FastifyRequest;
+
+    /**
+     * What a share target actually sends: multipart, with the parts arriving in
+     * whatever order the sharing app chose.
+     */
+    const sharedMultipart = (
+      fields: Record<string, string>,
+      files: { bytes: Buffer; truncated?: boolean }[] = [],
+      failMidStream = false,
+    ) =>
+      ({
+        user: undefined,
+        isMultipart: () => true,
+        parts: () =>
+          (async function* () {
+            await Promise.resolve();
+            for (const [fieldname, value] of Object.entries(fields)) {
+              yield { type: 'field', fieldname, value };
+            }
+            for (const file of files) {
+              yield {
+                type: 'file',
+                fieldname: 'photo',
+                file: Object.assign(
+                  (async function* () {
+                    await Promise.resolve();
+                    if (file.truncated)
+                      throw new Error('request file too large');
+                    yield file.bytes;
+                  })(),
+                  { truncated: Boolean(file.truncated) },
+                ),
+              };
+            }
+            if (failMidStream) throw new Error('reach files limit');
+          })(),
+      }) as unknown as FastifyRequest;
+
+    const share = (req: FastifyRequest) =>
+      controller.fromShare(req, reply as unknown as FastifyReply, i18n);
+
+    const rendered = () =>
+      (reply.view.mock.calls[0] as [string, Record<string, unknown>])[1];
+
+    it('imports the link an app shared in its url field', async () => {
+      await share(sharedForm({ url: 'https://shop.example/p/coat' }));
+      expect(urlImportService.importFromUrl).toHaveBeenCalledWith(
+        'https://shop.example/p/coat',
+        expect.objectContaining({ language: 'en' }),
+      );
+      expect(reply.view).toHaveBeenCalledWith(
+        'wardrobe/form',
+        expect.anything(),
+      );
+    });
+
+    it('digs the link out of the text an app shared instead', async () => {
+      await share(
+        sharedForm({ text: 'look at this https://shop.example/p/coat' }),
+      );
+      expect(urlImportService.importFromUrl).toHaveBeenCalledWith(
+        'https://shop.example/p/coat',
+        expect.anything(),
+      );
+    });
+
+    it('opens the form with the shared title when there is no link', async () => {
+      await share(sharedForm({ title: 'Wool Blend Coat', text: 'nice' }));
+      expect(urlImportService.importFromUrl).not.toHaveBeenCalled();
+      const [, model] = reply.view.mock.calls[0] as [
+        string,
+        Record<string, unknown>,
+      ];
+      expect((model.garment as Record<string, unknown>).name).toBe(
+        'Wool Blend Coat',
+      );
+      expect(model.suggested).toEqual({ name: 'title' });
+    });
+
+    it('keeps the shared title when the shop said nothing', async () => {
+      await share(
+        sharedForm({
+          title: 'Wool Blend Coat',
+          url: 'https://shop.example/p/coat',
+        }),
+      );
+      const [, model] = reply.view.mock.calls[0] as [
+        string,
+        Record<string, unknown>,
+      ];
+      expect((model.garment as Record<string, unknown>).name).toBe(
+        'Wool Blend Coat',
+      );
+    });
+
+    it('opens the import box, since that is what the user came to do', async () => {
+      await share(sharedForm({ url: 'https://shop.example/p/coat' }));
+      const [, model] = reply.view.mock.calls[0] as [
+        string,
+        Record<string, unknown>,
+      ];
+      expect(model.importOpen).toBe(true);
+    });
+
+    describe('the multipart a share target really sends', () => {
+      const photo = async () =>
+        sharp({
+          create: {
+            width: 300,
+            height: 400,
+            channels: 3,
+            background: { r: 20, g: 40, b: 120 },
+          },
+        })
+          .png()
+          .toBuffer();
+
+      it('makes the shared photo the garment photo', async () => {
+        await share(
+          sharedMultipart({ title: 'A photo I took' }, [
+            { bytes: await photo() },
+          ]),
+        );
+        const model = rendered();
+        expect((model.importPreview as { dataUri: string }).dataUri).toContain(
+          'data:image/webp;base64,',
+        );
+        expect((model.garment as Record<string, unknown>).name).toBe(
+          'A photo I took',
+        );
+        // A photo needs no page fetched.
+        expect(urlImportService.importFromUrl).not.toHaveBeenCalled();
+      });
+
+      it('keeps the link a photo was shared alongside', async () => {
+        await share(
+          sharedMultipart({ url: 'https://shop.example/p/coat?utm_source=x' }, [
+            { bytes: await photo() },
+          ]),
+        );
+        expect((rendered().garment as Record<string, unknown>).sourceUrl).toBe(
+          'https://shop.example/p/coat',
+        );
+      });
+
+      it('takes the first of several photos rather than failing', async () => {
+        // Multi-select is one tap away in the Android share sheet.
+        await share(
+          sharedMultipart({ title: 'Two photos' }, [
+            { bytes: await photo() },
+            { bytes: await photo() },
+          ]),
+        );
+        expect(rendered().importPreview).toBeDefined();
+        expect(rendered().importFailure).toBeUndefined();
+      });
+
+      it('keeps the link when the photo is too big to accept', async () => {
+        await share(
+          sharedMultipart({ url: 'https://shop.example/p/coat' }, [
+            { bytes: Buffer.alloc(8), truncated: true },
+          ]),
+        );
+        // The oversized photo is dropped; the share is not.
+        expect(urlImportService.importFromUrl).toHaveBeenCalledWith(
+          'https://shop.example/p/coat',
+          expect.anything(),
+        );
+      });
+
+      it('says so when the shared photo cannot be read', async () => {
+        await share(
+          sharedMultipart({ title: 'Broken' }, [
+            { bytes: Buffer.from('not an image') },
+          ]),
+        );
+        expect(rendered().importFailure).toBe('IMPORT_IMAGE_INVALID');
+        expect((rendered().garment as Record<string, unknown>).name).toBe(
+          'Broken',
+        );
+      });
+
+      it('answers a stream that dies mid-part with a page', async () => {
+        await expect(
+          share(sharedMultipart({ title: 'Coat' }, [], true)),
+        ).resolves.not.toThrow();
+        expect(rendered().importFailure).toBe('IMPORT_IMAGE_INVALID');
+      });
+    });
+
+    it('answers a payload the parser refuses with a page, not a crash', async () => {
+      const req = {
+        user: undefined,
+        isMultipart: () => true,
+        parts: () => {
+          throw Object.assign(new Error('request file too large'), {
+            statusCode: 413,
+          });
+        },
+      } as unknown as FastifyRequest;
+
+      await expect(share(req)).resolves.not.toThrow();
+      const [, model] = reply.view.mock.calls[0] as [
+        string,
+        Record<string, unknown>,
+      ];
+      expect(model.importFailure).toBe('IMPORT_IMAGE_INVALID');
+    });
   });
 
   describe('POST /wardrobe/import/url', () => {

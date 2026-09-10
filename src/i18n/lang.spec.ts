@@ -49,6 +49,22 @@ describe('translations', () => {
     );
   });
 
+  it.each(LOCALES)('%s declares each key once', (locale) => {
+    // JSON.parse keeps the last of a repeated key and says nothing, so a new
+    // translation added next to the wrong neighbour is silently dead.
+    const raw = fs.readFileSync(
+      path.join(__dirname, locale, 'lang.json'),
+      'utf8',
+    );
+    const seen = new Set<string>();
+    const repeated: string[] = [];
+    for (const [, key] of raw.matchAll(/^\s*"([^"]+)"\s*:/gm)) {
+      if (seen.has(key)) repeated.push(key);
+      seen.add(key);
+    }
+    expect(repeated).toEqual([]);
+  });
+
   it.each(LOCALES)('%s leaves no value empty', (locale) => {
     const empty = flatten(load(locale))
       .filter(([, value]) => !value.trim())

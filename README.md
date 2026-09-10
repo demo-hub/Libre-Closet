@@ -83,6 +83,7 @@ Note, these screenshots are taken of the web application viewed as an installed 
 
 - **Garment catalog** - name, category, brand, size, colors, notes, photo
 - **Import from a link** - paste a product URL and the server reads the page for its name, brand, colors, category and photo, for you to check before saving
+- **Share to the app** - share a product page or a photo from any app straight into a new garment (Android and desktop Chromium; iOS Safari and Firefox do not support share targets, so paste and camera remain the universal route)
 - **Customizable categories** - custom category support with filtering and input suggestion as you type
 - **Outfit builder** - combine garments into saved looks with the Clueless inspired outfit builder
 - **Outfit Scheduling** - schedule out multiple outfits for given days through the week and get a view of what you've worn

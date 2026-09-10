@@ -105,7 +105,7 @@ export class UrlImportService {
     }
 
     const shopify = await this.tryShopify(url, options);
-    if (shopify) return this.withImage(shopify, url);
+    if (shopify) return this.withImage(shopify, url.href);
 
     let page: FetchedBody;
     try {
@@ -152,7 +152,7 @@ export class UrlImportService {
       };
     }
 
-    return this.withImage(buildDraft(meta, page.url, options), url);
+    return this.withImage(buildDraft(meta, page.url, options), page.url);
   }
 
   /**
@@ -232,12 +232,14 @@ export class UrlImportService {
   /** Takes the first candidate that downloads and survives the image checks. */
   private async withImage(
     prefill: GarmentPrefill,
-    url: URL,
+    pageUrl: string,
   ): Promise<UrlImportResult> {
     const candidates = prefill.imageCandidates.slice(0, MAX_CANDIDATES);
-    const host = hostOf(prefill.sourceUrl ?? url.href);
+    const host = hostOf(prefill.sourceUrl ?? pageUrl);
     for (const [index, candidate] of candidates.entries()) {
-      const image = await this.downloadImage(candidate, url.href);
+      // The referer is the page the image sits on — after any redirect, not
+      // the link that was pasted. Shop CDNs check it.
+      const image = await this.downloadImage(candidate, pageUrl);
       if (image) {
         return {
           prefill,
