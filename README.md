@@ -5,12 +5,17 @@
 A free, open-source, self-hosted wardrobe organizer. Catalog your clothes, upload photos, build outfits, and access everything from your phone as an offline-ready PWA - all on your own server.
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Version](https://img.shields.io/github/v/tag/lazztech/libre-closet?label=Version&color=green)](https://github.com/lazztech/libre-closet/tags)
-[![GHCR Pulls](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fipitio.github.io%2Fbackage%2FLazztech%2FLibre-Closet%2Flibre-closet.json&query=downloads&label=GHCR%20pulls&logo=github&logoColor=959da5&labelColor=333a41)](https://github.com/lazztech/libre-closet/pkgs/container/libre-closet)
-[![Docker Pulls](https://img.shields.io/docker/pulls/lazztech/libre-closet?logo=docker&logoColor=959da5&labelColor=333a41&label=Docker%20Pulls)](https://hub.docker.com/r/lazztech/libre-closet)
 [![Join the Discussion](https://img.shields.io/badge/Community-Join%20the%20Discussion-2EA44F?logo=github&logoColor=white&labelColor=1F2937)](https://github.com/Lazztech/Libre-Closet/discussions)
 
 Crafted and engineered with care and intention by [Lazztech LLC](https://lazz.tech/about) 🖤
+
+---
+
+## About this fork
+
+This is a personal fork of [lazztech/Libre-Closet](https://github.com/Lazztech/Libre-Closet). It adds importing a garment from a product link, sharing a page or photo into the app, colour suggestion from the cut-out photo, and optional AI suggestions from a model you choose — none of which are upstream.
+
+**Upstream's published images do not contain this code** — `ghcr.io/lazztech/libre-closet` and `lazztech/libre-closet` on Docker Hub are built from upstream. This fork publishes its own image to `ghcr.io/demo-hub/libre-closet` instead, which is what everything below pulls.
 
 ---
 
@@ -56,12 +61,14 @@ For full details refer to the [CHANGELOG](CHANGELOG.md).
 docker run -d \
   -p 3000:3000 \
   -v librecloset_data:/app/data \
-  ghcr.io/lazztech/libre-closet
+  ghcr.io/demo-hub/libre-closet
 ```
 
-Open [http://localhost:3000](http://localhost:3000). No account required by default.
+If the pull fails with `denied` or `unauthorized`, the GHCR package is still private: make it public once under the package's settings on GitHub, or `docker login ghcr.io` with a token that has `read:packages` — see [Publishing a new image](#publishing-a-new-image).
 
-**Want to try it without self-hosting?** A public instance is running at [https://librecloset.lazz.tech](https://librecloset.lazz.tech) - register a free account to get started. No guest login exists, but registration is instant and requires no email verification.
+Open [http://localhost:3000](http://localhost:3000). No account required by default. The database is created and migrated on first boot; there is no separate setup step.
+
+**Want to see the upstream project without building anything?** A public instance runs at [https://librecloset.lazz.tech](https://librecloset.lazz.tech). Note that it is upstream, so it has none of this fork's import or AI features.
 
 ---
 
@@ -93,14 +100,16 @@ Everything the model answers is checked before it is shown — colours and categ
 
 ### With a local model (nothing leaves your network)
 
-Ollama needs two settings, because the address is assumed:
+Running the app directly on the same machine as Ollama, two settings are enough, because the address is assumed:
 
 ```env
 AI_PROVIDER=ollama
-AI_MODEL=llama3.2-vision
+AI_MODEL=qwen2.5vl:7b
 ```
 
-The model has to be one that can see — `llama3.2-vision`, `llava`, `qwen2.5vl`, `gemma3` and friends. A text-only model will answer nothing useful, and the app will show "no suggestions" rather than pretend otherwise. `ollama pull llama3.2-vision` first.
+**In Docker it is three, and the third is not optional.** The assumed address is `http://127.0.0.1:11434/v1`, which inside a container means the container itself — so the button appears, names `127.0.0.1:11434`, and never returns anything. See [Ollama from a container](#ollama-from-a-container) below.
+
+The model has to be one that can see — `qwen2.5vl`, `llama3.2-vision`, `llava`, `gemma3` and friends. A text-only model will accept the photo, ignore it, and answer about nothing. Install Ollama first if you have not ([ollama.com/download](https://ollama.com/download), or `curl -fsSL https://ollama.com/install.sh | sh` on Linux), then `ollama pull qwen2.5vl:7b`.
 
 **Picking one.** This is short structured extraction from a single photo, not reasoning, so model size matters far less than fitting on the hardware. What decides it is VRAM:
 
@@ -113,17 +122,62 @@ The model has to be one that can see — `llama3.2-vision`, `llava`, `qwen2.5vl`
 
 A model that does not fit is split across GPU and CPU rather than refused, which reads as the feature being slow rather than as a configuration mistake. Watch for a `-vl`/`-vision` tag in the name: plain `qwen3` or `qwen2.5` cannot see, and will accept the photo and ignore it.
 
-Somewhere other than this machine, or llama.cpp / vLLM / LM Studio instead, is `AI_PROVIDER=openai` plus the endpoint:
+### Ollama from a container
+
+Two things have to be true, and each fails silently on its own.
+
+**The container has to be able to reach the host.** On Linux, `host.docker.internal` does not resolve unless you add it. Under your service in `compose.yml` (the complete file is in [docker compose](#docker-compose)):
+
+```yaml
+extra_hosts:
+  - 'host.docker.internal:host-gateway'
+environment:
+  AI_PROVIDER: 'ollama'
+  AI_BASE_URL: 'http://host.docker.internal:11434/v1'
+  AI_MODEL: 'qwen2.5vl:7b'
+```
+
+**And Ollama has to be listening for it.** Ollama binds `127.0.0.1` by default, so a perfectly configured container still gets connection-refused:
+
+```bash
+sudo systemctl edit ollama.service
+#   [Service]
+#   Environment="OLLAMA_HOST=0.0.0.0"
+sudo systemctl daemon-reload && sudo systemctl restart ollama
+```
+
+Ollama somewhere else entirely, or llama.cpp / vLLM / LM Studio instead, is the same thing with a different address:
 
 ```env
 AI_PROVIDER=openai
 AI_BASE_URL=http://192.168.1.5:11434/v1
-AI_MODEL=llava
+AI_MODEL=qwen2.5vl:7b
 ```
 
-That host is trusted and deliberately exempt from the import fetcher's private-address rules — reaching a machine on your LAN is the entire point.
+That host is trusted and deliberately exempt from the import fetcher's private-address rules — reaching a machine on your LAN is the entire point. `IMPORT_ALLOW_PRIVATE_NETWORKS` is unrelated and does not need to be set; it only loosens the pasted-link importer.
 
-Two things to expect from a local model. On CPU a vision model can take a minute or more, so raise `AI_TIMEOUT_MS` (30000 by default); and smaller models ignore the response schema more often than hosted ones, which shows up as a suggestion with fewer fields rather than as an error, because everything is checked against the app's own values before you see it. Brand is the field small models get wrong most, and a brand the model was not confident about is dropped rather than shown — so seeing it rarely is the design, not a fault.
+`AI_BASE_URL` must end in `/v1`. The code appends `/chat/completions` to it and never adds `/v1` itself, so leaving it off gives a 404 that looks exactly like a model you forgot to pull.
+
+### When it does not work
+
+Two mistakes stop the container at boot, which is the good kind — you will see them:
+
+```
+Error: Config validation error: "AI_MODEL" is required
+Error: Vapid subject is not an https: or mailto: URL. http://192.168.1.10:3000
+```
+
+The first is `AI_PROVIDER=ollama` or `openai` with no `AI_MODEL`. The second is unrelated to AI: see `SITE_URL` in [Configuration](#configuration).
+
+The rest fail almost quietly. A server that answers with an HTTP error logs one line — `enrichment refused: HTTP 404` — but **a server the app cannot reach at all produces no log line**, because the connection error is logged at `debug` while the log transports sit at `info`. A timeout is silent for the same reason, and so is an answer that was not JSON. So a yellow "no suggestions" banner with nothing in the log means only that the request never produced usable JSON; it cannot tell an unreachable server from a model that answered prose. The probe below can. The button appearing proves nothing either: it renders whenever the URL and model are non-empty, and never dials the server. Check the link directly before suspecting the app:
+
+```bash
+docker compose exec libre-closet node -e "fetch('http://host.docker.internal:11434/v1/models').then(r=>r.json()).then(d=>console.log('OK',d.data?.length)).catch(e=>console.log('FAIL',e.cause?.code||e.message))"
+```
+
+Print `e.cause?.code`, not `e.message` — every failure reads as `fetch failed` otherwise.
+
+Two things to expect from a local model. On CPU a vision model can take a minute or more, so raise `AI_TIMEOUT_MS` (30000 by default) — a timeout is silent and looks identical to an unreachable server. And smaller models ignore the response schema more often than hosted ones, which shows up as a suggestion with fewer fields rather than as an error, because everything is checked against the app's own values before you see it. Brand is the field small models get wrong most, and a brand the model was not confident about is dropped rather than shown — so seeing it rarely is the design, not a fault. The button is limited to 10 presses per 10 minutes.
 
 ### Cost
 
@@ -150,75 +204,131 @@ Per garment, roughly: **free** on a local model, about **$0.0035** on `claude-ha
 
 ## Self-hosting
 
+The server pulls a prebuilt image; it needs Docker and nothing else. No clone, no toolchain, no build.
+
 ### Docker (recommended)
 
 ```bash
-# SQLite + local storage (simplest)
 docker run -d \
   -p 3000:3000 \
   -v librecloset_data:/app/data \
-  ghcr.io/lazztech/libre-closet
+  ghcr.io/demo-hub/libre-closet
 ```
 
-### docker-compose
+### docker compose
+
+Save this as `compose.yml` anywhere on the server, then `docker compose up -d`.
 
 ```yaml
 services:
   libre-closet:
-    image: ghcr.io/lazztech/libre-closet
+    image: ghcr.io/demo-hub/libre-closet
     ports:
       - '3000:3000'
     volumes:
       - librecloset_data:/app/data
+    # Linux does not resolve host.docker.internal without this
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     environment:
       AUTH_ENABLED: 'false'
-      PWA_ENABLED: 'true'
-      DATA_PATH: /app/data
+      # Your own address. Left unset it defaults to upstream's public instance,
+      # so every share link you copy points at a server that is not yours.
+      # It must be https:// — an http:// value stops the app at boot.
+      SITE_URL: 'https://closet.example.com'
+      # Optional AI suggestions. Uncomment all four once Ollama is actually
+      # reachable from the container — see "Ollama from a container".
+      #AI_PROVIDER: 'ollama'
+      #AI_BASE_URL: 'http://host.docker.internal:11434/v1'
+      #AI_MODEL: 'qwen2.5vl:7b'
+      #AI_TIMEOUT_MS: '120000'
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '3' }
 
 volumes:
   librecloset_data:
 ```
 
-### Build from source
+`PWA_ENABLED` is deliberately absent: the service worker needs a secure context, so setting it on a plain-HTTP deployment does nothing at all, silently. Turn it on once you have HTTPS — see [Behind a reverse proxy](#behind-a-reverse-proxy).
+
+Note that compose namespaces the volume as `<project>_librecloset_data`, where the project is the directory name lowercased with anything outside `a-z0-9_-` stripped — `Libre-Closet/` gives `libre-closet_librecloset_data`. That matters when you back it up; `docker compose config --format json` prints the real name.
+
+Upgrading is `docker compose pull && docker compose up -d`. Migrations apply themselves on the new container's first boot, so back up first — see [Backups](#backups).
+
+### Publishing a new image
+
+CI builds and pushes to GHCR for `linux/amd64` and `linux/arm64` on any `v*` tag. The arm64 leg is emulated on GitHub's x86 runners, so a full two-platform run takes around 15 minutes. A tag push is also the only thing that produces the rolling `0.6` and `0` tags — `type=semver` reads a tag ref and is inert on a branch — so a `gh workflow run` on a branch publishes just the one version string you name plus `sha-<commit>`.
 
 ```bash
-git clone https://github.com/lazztech/libre-closet
-cd libre-closet
-cp .env .env.local     # override defaults locally (gitignored)
+git tag v0.6.0 && git push origin v0.6.0
+```
+
+A release branch is meant to do this for you: merging a PR from `release/0.6.0` into `main` triggers `tag-release.yml`, which creates the tag and dispatches the publish. This path has not been exercised in this fork yet — check that the tag landed on the commit you expected before trusting the image it produces.
+
+To build a commit without cutting a release:
+
+```bash
+gh workflow run docker-publish.yml --ref <your-branch> -f version=0.6.0-rc1
+```
+
+`--ref` is not optional: without it `gh` runs the workflow against the remote's default branch, so you get a build of `main` rather than of the commit you are on.
+
+**Naming a version also moves `:latest`** onto that build, prerelease strings included — the enable expression is `startsWith(github.ref, 'refs/tags/v') || inputs.version != ''`, and the second half fires on any dispatch that names a version. So this command repoints the tag the Quick start `docker run` pulls at an unreleased branch commit. Running it with no `version` publishes **only** a `sha-<commit>` tag and leaves `:latest` alone; if you just want a pullable one-off, do that and pull the `sha-` tag by its full name.
+
+A GHCR package is **private on first publish**. Either make it public once, under the package's settings on GitHub, or authenticate the server with a personal access token that has `read:packages`:
+
+```bash
+echo "$GHCR_TOKEN" | docker login ghcr.io -u <your-github-user> --password-stdin
+```
+
+### Build from source
+
+For development, or to run without Docker at all.
+
+```bash
+git clone https://github.com/demo-hub/Libre-Closet.git
+cd Libre-Closet
 npm install
+npm run build          # start:prod runs dist/main, which this creates
 npm run start:prod
 ```
+
+Configure this route with a `.env.local` (gitignored) or real environment variables. **A `.env.local` does not work under Docker** — the image copies only the committed `.env`, so pass real environment variables there instead.
+
+Building the image by hand, rather than letting CI do it, is `docker build -f docker/Dockerfile -t libre-closet .` from the repository root. It produces a ~1.9 GB image and takes several minutes — it runs `npm ci` twice and pulls a large model tarball, so do not assume it has hung, and needs outbound access to Docker Hub (for the `node:22` base images), to `registry.npmjs.org`, and to `staticimgly.com`, where the background-removal data is pinned. There is no `.dockerignore`, so build from a fresh clone rather than a working directory carrying `node_modules` and `data/`.
 
 ---
 
 ## Configuration
 
-`.env` contains committed defaults. Override any value via a `.env.local` file (gitignored) or by passing real environment variables to Docker.
+`.env` contains committed defaults, and it is baked into the Docker image. Override any value with a `.env.local` file (gitignored) when running from source, or with real environment variables — which win over both, and are the only way that works under Docker.
 
 | Variable                           | Description                                    | Default        | Example                                                                                   |
 | ---------------------------------- | ---------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------- |
 | `APP_NAME`                         | Display name shown in the UI and navbar        | `Libre Closet` | `My awesome Closet manager`                                                               |
 | `DATA_PATH`                        | Directory for SQLite DB and uploaded files     | `./data`       | `./libre-closet-data`                                                                     |
-| `AUTH_ENABLED`                     | Enable JWT user accounts and login             | `false`        | `true`                                                                                    |
+| `AUTH_ENABLED`                     | Enable JWT user accounts and login. With `false`, everyone reaching the port shares one wardrobe with full write access | `false` | `true`                                             |
 | `DISABLE_REGISTRATION`             | Disallows user sign ups when true              | `false`        | `true`                                                                                    |
 | `PWA_ENABLED`                      | Enable service worker and PWA install prompt   | `false`        | `true`                                                                                    |
 | `IMPORT_URL_ENABLED`               | Allow importing a garment from a pasted link   | `true`         | `false`                                                                                   |
 | `IMPORT_URL_RATE_LIMIT`            | Link imports allowed per minute, per address   | `10`           | `60`                                                                                      |
 | `AI_PROVIDER`                      | Optional AI suggestions: `none`, `ollama`, `openai` or `anthropic` | `none` | `ollama`                                                            |
-| `AI_MODEL`                         | Model to ask. Required for `ollama` and `openai` | `claude-opus-5` (anthropic) | `llama3.2-vision`                                             |
-| `AI_BASE_URL`                      | OpenAI-compatible endpoint. Defaults to Ollama's own address when `AI_PROVIDER=ollama` | `http://127.0.0.1:11434/v1` (ollama) | `http://192.168.1.5:11434/v1`      |
+| `AI_MODEL`                         | Model to ask. Required for `ollama` and `openai` — the app exits at boot without it | `claude-opus-5` (anthropic) | `qwen2.5vl:7b`                            |
+| `AI_BASE_URL`                      | OpenAI-compatible endpoint, including the `/v1`. Defaults to Ollama's own address, which inside a container is the container | `http://127.0.0.1:11434/v1` (ollama) | `http://host.docker.internal:11434/v1` |
 | `AI_API_KEY`                       | API key, where the provider wants one          | -              | `sk-ant-...`                                                                              |
 | `AI_TIMEOUT_MS`                    | How long to wait for a suggestion              | `30000`        | `120000`                                                                                  |
 | `IMPORT_ALLOW_PRIVATE_NETWORKS`    | Development and testing only - let the importer reach private and loopback addresses on any port | `false` | `true`                                                          |
 | `IMPORT_FETCH_TIMEOUT_MS`          | Time budget for fetching a pasted link         | `10000`        | `20000`                                                                                   |
-| `ACCESS_TOKEN_SECRET`              | JWT signing secret - **change for production** | `ChangeMe!`    | `u9n8c2y847rfctb23468tcb689f243`                                                          |
+| `SITE_URL`                         | Public address, used for share links and page metadata. **Must be `https://` — an `http://` value stops the app at boot** | `https://librecloset.lazz.tech` | `https://closet.example.com`             |
+| `ACCESS_TOKEN_SECRET`              | JWT signing secret - **change for production**, nothing enforces it | `ChangeMe!`    | `u9n8c2y847rfctb23468tcb689f243`                                       |
 | `DATABASE_TYPE`                    | `sqlite` or `postgres`                         | `sqlite`       | `postgres`                                                                                |
 | `DATABASE_HOST`                    | Postgres host                                  | -              | `192.168.10.5`                                                                            |
 | `DATABASE_PORT`                    | Postgres port                                  | `5432`         | `9867`                                                                                    |
 | `DATABASE_USER`                    | Postgres user                                  | -              | `postgres`                                                                                |
 | `DATABASE_PASS`                    | Postgres password                              | -              | `7yfhcn2349cr32f`                                                                         |
-| `DATABASE_SCHEMA`                  | Postgres schema                                | `postgres`     | `libre-closet-schema`                                                                     |
+| `DATABASE_SCHEMA`                  | Postgres schema. **Required when `DATABASE_TYPE=postgres`** — there is no default | -              | `libre-closet-schema`                                                                     |
 | `DATABASE_SSL`                     | Use SSL for Postgres                           | `false`        | `true`                                                                                    |
 | `FILE_STORAGE_TYPE`                | `local` or `object` (S3)                       | `local`        | `object`                                                                                  |
 | `OBJECT_STORAGE_ACCESS_KEY_ID`     | S3 access key                                  | -              | `AKIAIOSFODNN7EXAMPLE`                                                                    |
@@ -229,8 +339,8 @@ npm run start:prod
 | `EMAIL_FROM_ADDRESS`               | From address for password reset emails         | -              | `LibreCloset@example.com`                                                                 |
 | `EMAIL_TRANSPORT`                  | `gmail` or `mailgun`                           | `gmail`        | `mailgun`                                                                                 |
 | `EMAIL_API_KEY`                    | Mailgun API key                                | -              | `fyhn2437cryb248cbrdc32`                                                                  |
-| `PUBLIC_VAPID_KEY`                 | Web push - generate for production             | -              | `BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U` |
-| `PRIVATE_VAPID_KEY`                | Web push - generate for production             | -              | `UUxI4O8-FbRouAevSmBQ6o18hgE4nSG3qwvJTfKc-ls`                                             |
+| `PUBLIC_VAPID_KEY`                 | Web push - generate for production. A shared default ships in `.env` | (committed default) | `BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U` |
+| `PRIVATE_VAPID_KEY`                | Web push - generate for production. A shared default ships in `.env` | (committed default) | `UUxI4O8-FbRouAevSmBQ6o18hgE4nSG3qwvJTfKc-ls`                                 |
 
 Generate JWT secret:
 
@@ -273,6 +383,10 @@ npm run precommit       # lint + test + lighthouse (run before committing)
 
 ### Migrations
 
+Pending migrations are applied automatically on every boot, so deploying an upgrade needs no migration step — but a failing migration aborts startup, so back up before upgrading rather than after.
+
+The commands below *author* a new migration during development; they are not part of deploying.
+
 ```bash
 # SQLite (build first due to config differences)
 npm run build
@@ -281,6 +395,8 @@ npx mikro-orm migration:create --config mikro-orm.sqlite.cli-config.ts
 # PostgreSQL
 npx mikro-orm migration:create --config mikro-orm.postgres.cli-config.ts
 ```
+
+Never author a SQLite migration that rebuilds the `garment` table: `outfit_garments` carries `on delete cascade`, so the rebuild silently empties every saved outfit. Use add column / update / drop column / rename column instead.
 
 ### Docker build
 
@@ -294,11 +410,47 @@ docker buildx build --platform linux/amd64 --no-cache -f docker/Dockerfile . -t 
 
 ---
 
+## Backups
+
+Everything that matters is one directory — `DATA_PATH` holds the SQLite database, every uploaded photo, and an `app.log` that nothing rotates. Back the database and the photos up together: restoring one without the other gives you garment pages whose images 404.
+
+SQLite runs in WAL mode and the app never closes the connection cleanly, so **copying `sqlite3.db` on its own can restore as a database with no tables.** Stop the app and take the whole directory:
+
+```bash
+docker compose stop
+docker run --rm \
+  --volumes-from "$(docker compose ps -aq libre-closet)" \
+  -v "$PWD":/out alpine \
+  tar czf /out/closet-backup.tgz -C /app/data .
+docker compose start
+```
+
+Do not spell the volume name by hand. Compose namespaces it as `<project>_librecloset_data`, and the project is the directory name **lowercased, with anything outside `a-z0-9_-` stripped** — the `Libre-Closet` directory the clone above creates gives `libre-closet_librecloset_data`, not `Libre-Closet_librecloset_data`. A name that does not match silently creates and archives a new empty volume instead, and you only find out at restore time. `docker compose config --format json` prints the real name if you want to check it.
+
+---
+
+## Behind a reverse proxy
+
+The app trusts forwarded headers from loopback only, which no container deployment satisfies — a proxy in another container connects from the bridge network. Left alone, per-address rate limiting collapses into a single shared bucket, and generated share links come out with the wrong scheme. There is no setting for this: the trusted list is hardcoded at `src/main.ts:20` and no environment variable overrides it. The published image ships only `dist/`, so changing it means building your own — clone the repo, widen `trustProxy` to the address your proxy connects from (`'172.16.0.0/12'` covers the default Docker bridge ranges), and `docker build -f docker/Dockerfile -t libre-closet .`. Until you do, expect the shared rate-limit bucket and the wrong-scheme share links described above.
+
+Two proxy defaults will bite regardless:
+
+- **Body size.** The app accepts garment photo uploads up to 100 MB (15 MB applies only to the AI-analyze and share-target routes); nginx defaults to 1 MB and rejects real phone photos with a 413 before the request reaches the app. Set `client_max_body_size 25m;`, or whatever ceiling you have chosen on purpose — just make it a number you picked, not nginx's 1 MB default.
+- **Read timeout.** nginx defaults to 60 s, which cuts off a slow local vision model even when `AI_TIMEOUT_MS` allows longer. Raise `proxy_read_timeout` above your `AI_TIMEOUT_MS`.
+
+Use `$http_host` rather than `$host` when setting the forwarded host, so a non-standard external port survives into the links the app generates.
+
+HTTPS plus `PWA_ENABLED=true` is what unlocks the PWA layer — install to home screen, offline, and sharing into the app from another app — because service workers require a secure context and the app only registers one when the flag is on. Add `PWA_ENABLED: 'true'` to the compose environment at the same time you terminate TLS; either one alone leaves those features absent, with no error anywhere. Note that `localhost` counts as a secure context, so testing on the server itself looks like it works while the same build fails on your phone.
+
+---
+
 ## Deployment recommendations
 
-For most self-hosters: deploy to a VPS via [Coolify](https://coolify.io/) or Portainer using the docker-compose above with SQLite + local storage. SQLite handles thousands of users without issue - see [DjangoCon 2023: Use SQLite in Production](https://youtu.be/yTicYJDT1zE).
+For most self-hosters: a small VPS or a machine on your own network, built from the compose file above with SQLite + local storage. SQLite handles thousands of users without issue - see [DjangoCon 2023: Use SQLite in Production](https://youtu.be/yTicYJDT1zE).
 
-If you need horizontal scaling later, switch to S3-compatible storage and add [Litestream](https://litestream.io/) for streaming SQLite backups before considering a PostgreSQL migration.
+With `AUTH_ENABLED=false` there is no access control of any kind, so keep such an instance on a private network — a VPN like Tailscale is the least work — note that a bare tailnet address is still plain HTTP, so you need `tailscale serve` (or any other TLS terminator) plus `PWA_ENABLED=true` before the PWA features appear. If you would rather expose it publicly, turn `AUTH_ENABLED` on **before** adding any garments: with auth off every garment is stored unowned, and enabling it afterwards leaves the existing wardrobe orphaned and invisible to your new account. Set a real `ACCESS_TOKEN_SECRET` and `DISABLE_REGISTRATION=true` at the same time.
+
+If you need horizontal scaling later, switch to S3-compatible storage and consider a PostgreSQL migration. [Litestream](https://litestream.io/) can stream the SQLite file offsite, but it replicates only the database — your photos still need backing up separately.
 
 ---
 
