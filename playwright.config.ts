@@ -23,6 +23,15 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
+  expect: {
+    /*
+     * The import specs wait on a server round trip that fetches a page, fetches
+     * an image and re-encodes it — the app's own budget for that is
+     * IMPORT_FETCH_TIMEOUT_MS (10 s). Playwright's 5 s default is under it, so
+     * on a loaded runner the assertion gave up before the server was ever late.
+     */
+    timeout: 15_000,
+  },
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
