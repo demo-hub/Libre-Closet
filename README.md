@@ -118,7 +118,7 @@ The model has to be one that can see — `qwen2.5vl`, `llama3.2-vision`, `llava`
 | 6 GB or less | `qwen2.5vl:3b` | fits on the card; seconds per photo; thinner suggestions |
 | 8 to 12 GB | `qwen2.5vl:7b` | the sweet spot for this task |
 | 24 GB or more | `qwen2.5vl:32b` | better at reading a logo; overkill otherwise |
-| No GPU | `qwen2.5vl:3b` and `AI_TIMEOUT_MS=120000` | a minute or more per photo |
+| No GPU | `qwen2.5vl:3b` and `AI_TIMEOUT_MS=180000` | a minute or more per photo; the 7b is three to five, which is past useful |
 
 A model that does not fit is split across GPU and CPU rather than refused, which reads as the feature being slow rather than as a configuration mistake. Watch for a `-vl`/`-vision` tag in the name: plain `qwen3` or `qwen2.5` cannot see, and will accept the photo and ignore it.
 
@@ -137,14 +137,33 @@ environment:
   AI_MODEL: 'qwen2.5vl:7b'
 ```
 
-**And Ollama has to be listening for it.** Ollama binds `127.0.0.1` by default, so a perfectly configured container still gets connection-refused:
+**And Ollama has to be listening for it.** Ollama binds `127.0.0.1` — "this machine only" — and a container is not on the host's loopback, so a perfectly configured container still gets connection-refused. `OLLAMA_HOST=0.0.0.0` makes it accept connections from elsewhere.
+
+Ollama runs as a systemd service, and the way to change how a service starts is to drop an override file beside its unit rather than edit the unit itself, which the next Ollama upgrade would overwrite:
 
 ```bash
-sudo systemctl edit ollama.service
-#   [Service]
-#   Environment="OLLAMA_HOST=0.0.0.0"
-sudo systemctl daemon-reload && sudo systemctl restart ollama
+sudo mkdir -p /etc/systemd/system/ollama.service.d
+
+sudo tee /etc/systemd/system/ollama.service.d/override.conf >/dev/null <<'EOF'
+[Service]
+Environment="OLLAMA_HOST=0.0.0.0"
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl restart ollama
 ```
+
+`daemon-reload` re-reads the config and `restart` applies it; the `[Service]` header says which section of the unit you are adding to. Confirm it took:
+
+```bash
+ss -tlnp | grep 11434
+```
+
+That must print `0.0.0.0:11434`. If it still says `127.0.0.1:11434` the override did not apply, and the container will get a connection refused that the app does not log at all.
+
+Note that `0.0.0.0` opens Ollama to your whole network, not just to Docker. On a home network that is usually fine; anywhere less trusted, allow port `11434` from the Docker bridge range only and drop it elsewhere.
+
+On CPU, add `Environment="OLLAMA_KEEP_ALIVE=-1"` to the same file. Ollama unloads an idle model after five minutes, so without it every suggestion pays the model load again — the difference between a slow feature and an unusable one. It costs a few GB of RAM permanently; `30m` is the compromise if the machine is short of it.
 
 Ollama somewhere else entirely, or llama.cpp / vLLM / LM Studio instead, is the same thing with a different address:
 
@@ -177,7 +196,7 @@ docker compose exec libre-closet node -e "fetch('http://host.docker.internal:114
 
 Print `e.cause?.code`, not `e.message` — every failure reads as `fetch failed` otherwise.
 
-Two things to expect from a local model. On CPU a vision model can take a minute or more, so raise `AI_TIMEOUT_MS` (30000 by default) — a timeout is silent and looks identical to an unreachable server. And smaller models ignore the response schema more often than hosted ones, which shows up as a suggestion with fewer fields rather than as an error, because everything is checked against the app's own values before you see it. Brand is the field small models get wrong most, and a brand the model was not confident about is dropped rather than shown — so seeing it rarely is the design, not a fault. The button is limited to 10 presses per 10 minutes.
+Two things to expect from a local model. On CPU a vision model can take a minute or more, so raise `AI_TIMEOUT_MS` (30000 by default) — a timeout is silent and looks identical to an unreachable server. Keep it under 300000: past that Node's own request timeout cuts the connection first, so your setting never fires. And smaller models ignore the response schema more often than hosted ones, which shows up as a suggestion with fewer fields rather than as an error, because everything is checked against the app's own values before you see it. Brand is the field small models get wrong most, and a brand the model was not confident about is dropped rather than shown — so seeing it rarely is the design, not a fault. The button is limited to 10 presses per 10 minutes.
 
 ### Cost
 
@@ -241,7 +260,7 @@ services:
       #AI_PROVIDER: 'ollama'
       #AI_BASE_URL: 'http://host.docker.internal:11434/v1'
       #AI_MODEL: 'qwen2.5vl:7b'
-      #AI_TIMEOUT_MS: '120000'
+      #AI_TIMEOUT_MS: '180000'
     restart: unless-stopped
     logging:
       driver: json-file
@@ -318,7 +337,7 @@ Building the image by hand, rather than letting CI do it, is `docker build -f do
 | `AI_MODEL`                         | Model to ask. Required for `ollama` and `openai` — the app exits at boot without it | `claude-opus-5` (anthropic) | `qwen2.5vl:7b`                            |
 | `AI_BASE_URL`                      | OpenAI-compatible endpoint, including the `/v1`. Defaults to Ollama's own address, which inside a container is the container | `http://127.0.0.1:11434/v1` (ollama) | `http://host.docker.internal:11434/v1` |
 | `AI_API_KEY`                       | API key, where the provider wants one          | -              | `sk-ant-...`                                                                              |
-| `AI_TIMEOUT_MS`                    | How long to wait for a suggestion              | `30000`        | `120000`                                                                                  |
+| `AI_TIMEOUT_MS`                    | How long to wait for a suggestion. Keep it under 300000, Node's own request timeout | `30000` | `180000`                                                 |
 | `IMPORT_ALLOW_PRIVATE_NETWORKS`    | Development and testing only - let the importer reach private and loopback addresses on any port | `false` | `true`                                                          |
 | `IMPORT_FETCH_TIMEOUT_MS`          | Time budget for fetching a pasted link         | `10000`        | `20000`                                                                                   |
 | `SITE_URL`                         | Public address, used for share links and page metadata. **Must be `https://` — an `http://` value stops the app at boot** | `https://librecloset.lazz.tech` | `https://closet.example.com`             |
