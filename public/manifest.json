@@ -38,6 +38,12 @@
       "short_name": "Add Garment",
       "description": "Catalog a new clothing item",
       "url": "/wardrobe/new"
+    },
+    {
+      "name": "Import from link",
+      "short_name": "Import",
+      "description": "Paste a product link and fill in a garment",
+      "url": "/wardrobe/new?mode=link"
     }
   ],
   "description": "A free, open-source digital wardrobe organizer. Catalog your clothing, build outfits, and share looks — self-hostable and privacy-first.",
@@ -60,5 +66,28 @@
   "categories": [
     "lifestyle",
     "utilities"
-  ]
+  ],
+  "share_target": {
+    "action": "/wardrobe/import/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "photo",
+          "accept": [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/gif",
+            "image/avif",
+            "image/heic"
+          ]
+        }
+      ]
+    }
+  }
 }

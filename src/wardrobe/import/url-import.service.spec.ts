@@ -112,6 +112,21 @@ describe('UrlImportService', () => {
       ]);
     });
 
+    it('sends the page it landed on as the referer, not the link pasted', async () => {
+      fetchHtml.mockResolvedValueOnce(
+        body({
+          // The shop redirected; the image sits on the page we ended up at.
+          url: 'https://northwind.example/p/wool-coat',
+          body: Buffer.from(PRODUCT_PAGE),
+        }),
+      );
+      await service.importFromUrl('https://northwind.example/p/moved');
+      expect(fetchImage).toHaveBeenCalledWith(
+        'https://cdn.northwind.example/coat-1.jpg',
+        'https://northwind.example/p/wool-coat',
+      );
+    });
+
     it('sends the page as the referer, which shop CDNs check', async () => {
       await service.importFromUrl('https://northwind.example/p/wool-coat');
       expect(fetchImage).toHaveBeenCalledWith(

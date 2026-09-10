@@ -35,7 +35,11 @@ test('a pasted product link fills the form in', async ({ page }) => {
     'Wool Blend Coat',
   );
   await expect(page.locator('input[name="brand"]')).toHaveValue('Northwind');
-  await expect(page.locator('input[name="category"]')).toHaveValue('outerwear');
+  // Not pinned to a value: a category this wardrobe already uses deliberately
+  // beats the built-in guess, and the suite never resets the database. The
+  // exact mapping is asserted in url-import.service.spec.ts instead.
+  await expect(page.locator('input[name="category"]')).not.toHaveValue('');
+  await expect(page.locator('[data-suggested="category"]')).toBeVisible();
   await expect(page.locator('input[name="size"]')).toHaveValue('M');
   await expect(page.locator('textarea[name="notes"]')).toContainText(
     'A midweight coat',
@@ -66,6 +70,8 @@ test('a pasted product link fills the form in', async ({ page }) => {
 });
 
 test('the shop is asked the way a browser would ask', async ({ page }) => {
+  // The log is shared by every test this worker runs, so start from empty.
+  shop.requests.length = 0;
   await openImportBox(page);
   await page.locator('#importUrl').fill(`${shop.origin}/p/moved`);
   await page.locator('#importBtn').click();

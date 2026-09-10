@@ -15,11 +15,24 @@ import { ConditionalAuthGuard } from '../../auth/conditional-auth.guard';
 import { Payload } from '../../auth/dto/payload.dto';
 import { WardrobeShareService } from '../../wardrobe-share/wardrobe-share.service';
 import { normalizeColorInput } from '../color-input';
-import { buildFormModel, customOf, prefillToForm } from '../garment-form';
+import {
+  buildFormModel,
+  customOf,
+  GarmentFormModel,
+  prefillToForm,
+} from '../garment-form';
+import { truncate } from './garment-prefill';
 import { GarmentService } from '../garment.service';
 import { sanitizeSourceUrl } from '../source-url';
 import { cleanSourceUrl } from './garment-prefill';
+import { intakeImage, toDataUri } from './image-intake';
 import { ImportService } from './import.service';
+import { MAX_IMAGE_BYTES } from './safe-fetch.service';
+import {
+  pickSharedTitle,
+  pickSharedUrl,
+  type SharePayload,
+} from './shared-payload';
 import { SameOriginGuard } from './same-origin.guard';
 import { UrlImportService } from './url-import.service';
 
@@ -184,6 +197,120 @@ export class ImportController {
     });
   }
 
+  /**
+   * Where an OS share sheet lands. The payload is whatever the sharing app felt
+   * like sending, so nothing is assumed: a photo becomes the preview, a link is
+   * imported, and a share with neither still opens a form with its title in it.
+   *
+   * Renders rather than redirects, because the payload only exists in this
+   * request — PR 7b adds the service-worker stash that survives a redirect.
+   */
+  @Throttle({ default: { limit: urlImportLimit, ttl: minutes(1) } })
+  @Post('share')
+  async fromShare(
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+    @I18n() i18n: I18nContext,
+  ) {
+    // An OS share carries no query string, so there is no ?ownerId to read:
+    // the destination is chosen on the page instead.
+    const owner = await this.resolveOwner(req, undefined);
+    const model = await buildFormModel(this.garmentService, i18n, owner, {
+      importOpen: true,
+    });
+
+    let shared: { payload: SharePayload; photo?: Buffer };
+    try {
+      shared = await readSharedPayload(req);
+    } catch {
+      // The parser refuses a payload over its limits mid-stream, and a share is
+      // a top-level navigation: without this the user gets a browser error page.
+      return reply.view('wardrobe/form', {
+        ...model,
+        importFailure: 'IMPORT_IMAGE_INVALID',
+        importFailureMessage: i18n.t('lang.IMPORT_IMAGE_INVALID'),
+      });
+    }
+
+    const link = pickSharedUrl(shared.payload);
+    // A photo is the garment itself, so it wins over fetching the page — but
+    // the link it came with is still kept as the source.
+    if (shared.photo) return this.sharedPhoto(reply, model, shared, i18n, link);
+
+    if (!link) {
+      // Nothing to fetch, but the share still opens the form: whatever the app
+      // called the page is a better start than an empty box.
+      const name = pickSharedTitle(shared.payload);
+      return reply.view('wardrobe/form', {
+        ...model,
+        garment: { name: name && truncate(name) },
+        suggested: name ? { name: 'title' } : {},
+        suggestedFields: name ? 'name' : '',
+      });
+    }
+
+    const filters = await this.garmentService.findAvailableFilters(owner);
+    const result = await this.urlImportService.importFromUrl(link, {
+      knownCategories: filters.categories,
+      knownBrands: filters.brands,
+      language: i18n.lang,
+    });
+    const form = prefillToForm(result.prefill);
+    const fallbackName = pickSharedTitle(shared.payload);
+    return reply.view('wardrobe/form', {
+      ...model,
+      ...form,
+      garment: {
+        ...form.garment,
+        // The shop said nothing, but the sharing app did.
+        name: form.garment.name ?? (fallbackName && truncate(fallbackName)),
+        sourceUrl: form.garment.sourceUrl ?? pastedLink(link),
+      },
+      importPreview: result.image,
+      importCandidates: labelled(result.allCandidates, result.image?.url),
+      allCandidates: result.allCandidates,
+      importFailure: result.failure,
+      importFailureMessage: result.failure && i18n.t(`lang.${result.failure}`),
+      importedFrom: result.host,
+      importedFromMessage:
+        result.host &&
+        i18n.t('lang.IMPORTED_FROM_ALERT', { args: { host: result.host } }),
+      importUrl: link,
+    });
+  }
+
+  /** A shared photo is the garment itself: no fetching, straight to the preview. */
+  private async sharedPhoto(
+    reply: FastifyReply,
+    model: GarmentFormModel,
+    shared: { payload: SharePayload; photo?: Buffer },
+    i18n: I18nContext,
+    link?: string,
+  ) {
+    const name = pickSharedTitle(shared.payload);
+    try {
+      const image = await intakeImage(shared.photo!);
+      return reply.view('wardrobe/form', {
+        ...model,
+        garment: { name: name && truncate(name), sourceUrl: pastedLink(link) },
+        suggested: name ? { name: 'title' } : {},
+        suggestedFields: name ? 'name' : '',
+        importPreview: {
+          dataUri: toDataUri(image),
+          hasAlpha: image.hasAlpha,
+          url: '',
+        },
+      });
+    } catch {
+      return reply.view('wardrobe/form', {
+        ...model,
+        garment: { name: name && truncate(name), sourceUrl: pastedLink(link) },
+        importFailure: 'IMPORT_IMAGE_INVALID',
+        importFailureMessage: i18n.t('lang.IMPORT_IMAGE_INVALID'),
+      });
+    }
+  }
+
   /** The owner pattern from wardrobe.controller.ts, which every route repeats. */
   private async resolveOwner(
     req: FastifyRequest,
@@ -226,6 +353,62 @@ const listOf = (value: string | string[] | undefined, separator = ' ') =>
 /** The date input renders through a helper that throws on anything else. */
 const renderableDate = (value: string | undefined): string =>
   value && !Number.isNaN(new Date(value).getTime()) ? value : '';
+
+/**
+ * Reads a share. Multipart is what a share target sends, but the same route
+ * takes a plain form post so the flow can be driven without an installed PWA.
+ */
+async function readSharedPayload(
+  req: FastifyRequest,
+): Promise<{ payload: SharePayload; photo?: Buffer }> {
+  if (!req.isMultipart()) {
+    const body = (req.body ?? {}) as Record<string, string | string[]>;
+    return {
+      payload: {
+        title: first(body.title),
+        text: first(body.text),
+        url: first(body.url),
+      },
+    };
+  }
+
+  const payload: SharePayload = {};
+  let photo: Buffer | undefined;
+  // The file cap is per request, because the global one allows 100 MB and a
+  // share should never buffer that. The COUNT is deliberately generous: a
+  // `files: 1` limit does not skip the second photo, it aborts the whole
+  // request, and multi-select is one tap away in the Android share sheet.
+  for await (const part of req.parts({
+    limits: { files: 20, fileSize: MAX_IMAGE_BYTES },
+  })) {
+    if (part.type === 'file') {
+      // Every part must be drained or the request stalls, even the ones past
+      // the first, and even the one that turns out to be too big.
+      const chunks: Buffer[] = [];
+      try {
+        for await (const chunk of part.file) {
+          if (!photo) chunks.push(Buffer.from(chunk));
+        }
+      } catch {
+        // Over the size cap. The shared link is still worth having, so this
+        // is not the end of the share.
+        continue;
+      }
+      if (!photo && !part.file.truncated && chunks.length) {
+        photo = Buffer.concat(chunks);
+      }
+    } else if (
+      part.fieldname === 'title' ||
+      part.fieldname === 'text' ||
+      part.fieldname === 'url'
+    ) {
+      payload[part.fieldname] ??= String(part.value);
+    }
+  }
+  // Nothing is decided until the loop ends: the order of the parts is the
+  // sharing app's choice, not ours.
+  return { payload, photo };
+}
 
 /**
  * The alternatives, each keeping the number it has in the page's own image
