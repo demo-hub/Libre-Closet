@@ -109,6 +109,7 @@ export class WardrobeController {
     @Query('sourceUrl') sourceUrl: string | undefined,
     @Query('url') url: string | undefined,
     @Query('mode') mode: string | undefined,
+    @Query('shared') shared: string | undefined,
   ) {
     const userId = this.userId(req);
     const viewOwner =
@@ -124,6 +125,8 @@ export class WardrobeController {
       viewOwner,
       importUrl: pasted,
       importOpen: mode === 'link' || Boolean(pasted),
+      // A share the worker kept; the page loads the replay only for this.
+      sharedStashId: typeof shared === 'string' ? shared : undefined,
     });
   }
 
