@@ -440,6 +440,8 @@ tailscale serve status          # prints your https://<host>.<tailnet>.ts.net UR
 
 Tailscale terminates TLS with a real certificate for your machine's tailnet name and proxies to `127.0.0.1:3000`. Nothing to renew, nothing to install on your phone.
 
+Type the `https://` — `serve` listens on 443 only, so `http://` gets no answer and no redirect, which looks like the server being down. It is a first-visit problem: the app sends a year-long HSTS header, so after one successful load the browser upgrades `http://` on its own, and once you add the app to your home screen there is no address to type at all.
+
 **One prerequisite that is not obvious:** HTTPS certificates must be enabled for the tailnet first — admin console, Settings, DNS, enable MagicDNS and then HTTPS Certificates. It is a one-time switch per tailnet, and without it `serve` fails outright rather than falling back to something.
 
 Then two changes to the compose file:
