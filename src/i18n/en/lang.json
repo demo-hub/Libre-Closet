@@ -102,6 +102,7 @@
   "AI_SUGGEST_WITH": "Suggest details with AI via",
   "AI_SUGGESTED_VIA": "Suggested by AI via",
   "AI_CHECK_BEFORE_SAVING": "Tap a suggestion to use it. Check everything before saving.",
+  "AI_WAITING": "Asking the model. On a server without a GPU this can take a minute or two.",
   "AI_NO_SUGGESTION": "No suggestions this time. Fill the details in yourself.",
   "PRIVACY_AI_DESC": "When an administrator has configured an AI provider, and only then, a \"Suggest details\" button appears on the new-garment page — in your own wardrobe only, never in one shared with you. Pressing it sends one downscaled photo of the garment, the language the app is set to, and the names of the categories your wardrobe already uses to the host named on the button — nothing else, and nothing until you press it. No photo of any other garment, no outfit and no account detail is ever sent. The feature is off by default (AI_PROVIDER=none) and a self-hosted instance may point it at a model running on its own network instead.",
   "SAVE_TO_WARDROBE": "Save to",

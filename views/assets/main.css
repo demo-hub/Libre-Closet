@@ -348,3 +348,12 @@ body {
     box-shadow: 0 1px color-mix(in oklab, var(--input-color) calc(var(--depth) * 10%), #0000);
   }
 }
+
+/* htmx fades indicators with opacity, which leaves their text readable to
+   assistive tech while idle. This one carries a sentence, so hide it outright. */
+#aiLoading {
+  display: none;
+}
+#aiLoading.htmx-request {
+  display: flex;
+}

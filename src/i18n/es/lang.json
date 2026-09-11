@@ -102,6 +102,7 @@
   "AI_SUGGEST_WITH": "Sugerir detalles con IA mediante",
   "AI_SUGGESTED_VIA": "Sugerido por IA mediante",
   "AI_CHECK_BEFORE_SAVING": "Toca una sugerencia para usarla. Revísalo todo antes de guardar.",
+  "AI_WAITING": "Consultando al modelo. En un servidor sin GPU puede tardar uno o dos minutos.",
   "AI_NO_SUGGESTION": "Esta vez no hay sugerencias. Rellena los datos tú mismo.",
   "PRIVACY_AI_DESC": "Cuando quien administra ha configurado un proveedor de IA, y solo entonces, aparece el botón «Sugerir detalles con IA» en la página de prenda nueva, solo en tu propio armario y nunca en uno compartido contigo. Al pulsarlo se envían una foto reducida de la prenda, el idioma configurado y los nombres de las categorías que ya usa tu armario al host indicado en el botón: nada más, y nada hasta que lo pulses. Nunca se envía ninguna foto de otra prenda, ningún conjunto ni ningún dato de tu cuenta. La función está desactivada por defecto (AI_PROVIDER=none) y una instancia autoalojada puede apuntarla a un modelo de su propia red.",
   "SAVE_TO_WARDROBE": "Guardar en",

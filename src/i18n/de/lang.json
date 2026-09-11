@@ -102,6 +102,7 @@
   "AI_SUGGEST_WITH": "Details per KI vorschlagen über",
   "AI_SUGGESTED_VIA": "Von der KI vorgeschlagen über",
   "AI_CHECK_BEFORE_SAVING": "Tippe einen Vorschlag an, um ihn zu übernehmen. Prüfe alles vor dem Speichern.",
+  "AI_WAITING": "Das Modell wird gefragt. Auf einem Server ohne GPU kann das ein bis zwei Minuten dauern.",
   "AI_NO_SUGGESTION": "Diesmal keine Vorschläge. Bitte die Angaben selbst ausfüllen.",
   "PRIVACY_AI_DESC": "Wenn die Administration einen KI-Anbieter eingerichtet hat – und nur dann – erscheint auf der Seite für neue Kleidungsstücke die Schaltfläche „Details per KI vorschlagen“ – nur in deiner eigenen Garderobe, nie in einer, die mit dir geteilt wurde. Ein Tippen darauf sendet ein verkleinertes Foto des Kleidungsstücks, die eingestellte Sprache und die Namen der Kategorien, die deine Garderobe bereits verwendet, an den auf der Schaltfläche genannten Host – sonst nichts, und nichts, bevor du tippst. Kein Foto eines anderen Kleidungsstücks, kein Outfit und keine Kontodaten werden je gesendet. Die Funktion ist standardmäßig aus (AI_PROVIDER=none), und eine selbst gehostete Instanz kann stattdessen ein Modell im eigenen Netz verwenden.",
   "SAVE_TO_WARDROBE": "Speichern in",

@@ -188,10 +188,16 @@
         >
           {{t 'lang.AI_SUGGEST_WITH'}} {{aiHost}}
         </button>
-        <span
+        {{!-- A sentence, not just a ring: on a CPU-only server a press can
+        take two minutes, and a small spinner beside a greyed button reads as
+        nothing happening. --}}
+        <div
           id="aiLoading"
-          class="htmx-indicator loading loading-ring loading-sm"
-        ></span>
+          class="htmx-indicator items-center gap-2 text-sm text-base-content/70"
+        >
+          <span class="loading loading-ring loading-sm"></span>
+          <span>{{t 'lang.AI_WAITING'}}</span>
+        </div>
         <div id="aiSuggestion"></div>
       </div>
       {{/unless}}{{/if}}
