@@ -45,6 +45,7 @@ We've [refactored the server](https://github.com/Lazztech/Libre-Closet/pull/79) 
 
 #### Release
 
+- `v0.6.0 - September 10, 2026` (this fork): Import a garment from a link, share a page or photo into the app, colour suggestion from the photo, optional AI suggestions
 - `v0.5.0 - June 26, 2026`: Added garment color combination support, washing details, acquisition date, archival, and cloning
 - `v0.4.1 - June 15, 2026`: Fixed disable register functionality
 - `v0.4.0 - June 13, 2026`: Added wardrobe sharing from one user to another with either view only or edit permissions
@@ -64,7 +65,7 @@ docker run -d \
   ghcr.io/demo-hub/libre-closet
 ```
 
-If the pull fails with `denied` or `unauthorized`, the GHCR package is still private: make it public once under the package's settings on GitHub, or `docker login ghcr.io` with a token that has `read:packages` — see [Publishing a new image](#publishing-a-new-image).
+The image is public and needs no login, so a `denied` or `unauthorized` on pull is not about access: check the image name, and if the server has an old `docker login ghcr.io` credential, `docker logout ghcr.io` before pulling again. (Pulling your own build after re-forking is different — GHCR makes a package private on first publish; see [Publishing a new image](#publishing-a-new-image).)
 
 Open [http://localhost:3000](http://localhost:3000). No account required by default. The database is created and migrated on first boot; there is no separate setup step.
 
@@ -126,7 +127,7 @@ A model that does not fit is split across GPU and CPU rather than refused, which
 
 Two things have to be true, and each fails silently on its own.
 
-**The container has to be able to reach the host.** On Linux, `host.docker.internal` does not resolve unless you add it. Under your service in `compose.yml` (the complete file is in [docker compose](#docker-compose)):
+**The container has to be able to reach the host.** On Linux, `host.docker.internal` does not resolve unless you add it. The compose file in [docker compose](#docker-compose) already carries all of this — `extra_hosts` live, the `AI_*` lines commented out — so there the whole edit is uncommenting them; pasting this block in as well fails with `mapping key "extra_hosts" already defined`. For a compose file of your own, under the service:
 
 ```yaml
 extra_hosts:
@@ -161,9 +162,17 @@ ss -tlnp | grep 11434
 
 That must print `0.0.0.0:11434`. If it still says `127.0.0.1:11434` the override did not apply, and the container will get a connection refused that the app does not log at all.
 
-Note that `0.0.0.0` opens Ollama to your whole network, not just to Docker. On a home network that is usually fine; anywhere less trusted, allow port `11434` from the Docker bridge range only and drop it elsewhere.
+Note that `0.0.0.0` opens Ollama to your whole network, not just to Docker. On a home network that is usually fine; anywhere less trusted, allow it from the Docker bridge range only — with ufw, `sudo ufw allow from 172.16.0.0/12 to any port 11434` — and drop it elsewhere. If `ufw` is already active on the server you need that rule regardless: its default deny also blocks the container's connection to the host, and the probe below then prints `FAIL UND_ERR_CONNECT_TIMEOUT`.
 
-On CPU, add `Environment="OLLAMA_KEEP_ALIVE=-1"` to the same file. Ollama unloads an idle model after five minutes, so without it every suggestion pays the model load again — the difference between a slow feature and an unusable one. It costs a few GB of RAM permanently; `30m` is the compromise if the machine is short of it.
+On CPU, the override needs a second line, so the file should read:
+
+```ini
+[Service]
+Environment="OLLAMA_HOST=0.0.0.0"
+Environment="OLLAMA_KEEP_ALIVE=-1"
+```
+
+Put it in the `tee` block above before you run it, or append it now with `echo 'Environment="OLLAMA_KEEP_ALIVE=-1"' | sudo tee -a /etc/systemd/system/ollama.service.d/override.conf` and run the `daemon-reload` and `restart` again — an edited drop-in does nothing until both. `systemctl show ollama -p Environment` should then list both values. Ollama unloads an idle model after five minutes, so without it every suggestion pays the model load again — the difference between a slow feature and an unusable one. It costs a few GB of RAM permanently; `30m` is the compromise if the machine is short of it.
 
 Ollama somewhere else entirely, or llama.cpp / vLLM / LM Studio instead, is the same thing with a different address:
 
@@ -179,7 +188,7 @@ That host is trusted and deliberately exempt from the import fetcher's private-a
 
 ### When it does not work
 
-Two mistakes stop the container at boot, which is the good kind — you will see them:
+Two mistakes stop the container at boot, which is the good kind — but only `docker compose logs libre-closet` shows them. `docker compose up -d` reports `Started` even when the process exits a second later, and with `restart: unless-stopped` the container then loops, so `docker compose ps` shows it as `Up` between restarts. Look at the log first:
 
 ```
 Error: Config validation error: "AI_MODEL" is required
@@ -188,15 +197,15 @@ Error: Vapid subject is not an https: or mailto: URL. http://192.168.1.10:3000
 
 The first is `AI_PROVIDER=ollama` or `openai` with no `AI_MODEL`. The second is unrelated to AI: see `SITE_URL` in [Configuration](#configuration).
 
-The rest fail almost quietly. A server that answers with an HTTP error logs one line — `enrichment refused: HTTP 404` — but **a server the app cannot reach at all produces no log line**, because the connection error is logged at `debug` while the log transports sit at `info`. A timeout is silent for the same reason, and so is an answer that was not JSON. So a yellow "no suggestions" banner with nothing in the log means only that the request never produced usable JSON; it cannot tell an unreachable server from a model that answered prose. The probe below can. The button appearing proves nothing either: it renders whenever the URL and model are non-empty, and never dials the server. Check the link directly before suspecting the app:
+The rest fail almost quietly. A server that answers with an HTTP error logs `enrichment refused: HTTP 404` — twice for a 4xx, because the app retries once in an older request format; once for a 5xx — but **a server the app cannot reach at all produces no log line**, because the connection error is logged at `debug` while the log transports sit at `info`. A timeout is silent for the same reason, and so is an answer that was not JSON. So a yellow "no suggestions" banner with nothing in the log means only that the request never produced usable JSON; it cannot tell an unreachable server from a model that answered prose. The probe below can. The button appearing proves nothing either: it renders whenever the URL and model are non-empty, and never dials the server. Check the link directly before suspecting the app:
 
 ```bash
 docker compose exec libre-closet node -e "fetch('http://host.docker.internal:11434/v1/models').then(r=>r.json()).then(d=>console.log('OK',d.data?.length)).catch(e=>console.log('FAIL',e.cause?.code||e.message))"
 ```
 
-Print `e.cause?.code`, not `e.message` — every failure reads as `fetch failed` otherwise.
+Print `e.cause?.code`, not `e.message` — every failure reads as `fetch failed` otherwise. `FAIL ENOTFOUND` means `extra_hosts` is missing; `FAIL ECONNREFUSED` means Ollama is not listening on `0.0.0.0` (or not running); `FAIL UND_ERR_CONNECT_TIMEOUT` means something is dropping the connection, usually a host firewall; `OK 0` means Ollama answered but no model has been pulled.
 
-Two things to expect from a local model. On CPU a vision model can take a minute or more, so raise `AI_TIMEOUT_MS` (30000 by default) — a timeout is silent and looks identical to an unreachable server. Keep it under 300000: past that Node's own request timeout cuts the connection first, so your setting never fires. And smaller models ignore the response schema more often than hosted ones, which shows up as a suggestion with fewer fields rather than as an error, because everything is checked against the app's own values before you see it. Brand is the field small models get wrong most, and a brand the model was not confident about is dropped rather than shown — so seeing it rarely is the design, not a fault. The button is limited to 10 presses per 10 minutes.
+Two things to expect from a local model. On CPU a vision model can take a minute or more, so raise `AI_TIMEOUT_MS` (30000 by default) — a timeout is silent and looks identical to an unreachable server. There is no ceiling in the app: Fastify disables Node's request timeout, and that timeout only ever covered receiving the request, not waiting for the answer. If a long wait still dies early, look at whatever sits in front — nginx's `proxy_read_timeout` is 60 s by default. And smaller models ignore the response schema more often than hosted ones, which shows up as a suggestion with fewer fields rather than as an error, because everything is checked against the app's own values before you see it. Brand is the field small models get wrong most, and a brand the model was not confident about is dropped rather than shown — so seeing it rarely is the design, not a fault. The button is limited to 10 presses per 10 minutes.
 
 ### Cost
 
@@ -223,9 +232,11 @@ Per garment, roughly: **free** on a local model, about **$0.0035** on `claude-ha
 
 ## Self-hosting
 
-The server pulls a prebuilt image; it needs Docker and nothing else. No clone, no toolchain, no build.
+The server pulls a prebuilt image; it needs Docker with the compose plugin and nothing else — `docker compose version` should answer. On Ubuntu the `docker.io` package does not bring the plugin along; `sudo apt install docker-compose-v2` adds it. No clone, no toolchain, no build.
 
-### Docker (recommended)
+### Docker, for a first look
+
+The Quick start command again. Everything after this point — the Ollama probe, backups, the Tailscale changes — assumes the compose file below, so use that for anything you keep running: it adds a restart policy, log rotation and your own `SITE_URL`. If you ran this first, stop it before starting compose (`docker ps` shows it; `docker stop <id>`) or the port is already allocated, and note that its `librecloset_data` volume is not the one compose creates, so garments added here do not carry over.
 
 ```bash
 docker run -d \
@@ -236,13 +247,15 @@ docker run -d \
 
 ### docker compose
 
-Save this as `compose.yml` anywhere on the server, then `docker compose up -d`.
+Save this as `compose.yml` in a directory of its own on the server, then `docker compose up -d`. Every `docker compose` command in this guide has to run from that directory — elsewhere it fails with `No configuration file provided: not found` — and an edit to the file (uncommenting the AI lines, the Tailscale changes below) takes effect only after another `docker compose up -d`, which recreates the container with the new settings.
 
 ```yaml
 services:
   libre-closet:
     image: ghcr.io/demo-hub/libre-closet
     ports:
+      # With AUTH_ENABLED=false this is your whole LAN, read and write.
+      # '127.0.0.1:3000:3000' keeps it to this machine — see "HTTPS with Tailscale".
       - '3000:3000'
     volumes:
       - librecloset_data:/app/data
@@ -251,15 +264,21 @@ services:
       - 'host.docker.internal:host-gateway'
     environment:
       AUTH_ENABLED: 'false'
-      # Your own address. Left unset it defaults to upstream's public instance,
-      # so every share link you copy points at a server that is not yours.
-      # It must be https:// — an http:// value stops the app at boot.
+      # Replace with your own address, https:// only — an http:// value stops
+      # the app at boot. Share links and page metadata are built from it and
+      # nothing warns you if it is wrong; left unset it defaults to upstream's
+      # public instance, so every share link you copy points at a server that
+      # is not yours. No HTTPS yet? Leave the placeholder: only the links the
+      # Share buttons copy are wrong until you have one.
       SITE_URL: 'https://closet.example.com'
-      # Optional AI suggestions. Uncomment all four once Ollama is actually
+      # Optional AI suggestions. Uncomment these once Ollama is actually
       # reachable from the container — see "Ollama from a container".
+      # 3b + 180000 is the CPU-only pairing from the VRAM table under "Optional
+      # AI suggestions". With an 8 GB+ GPU use 'qwen2.5vl:7b' and drop the timeout
+      # line; the 7b on CPU takes longer than 180 s and times out silently every press.
       #AI_PROVIDER: 'ollama'
       #AI_BASE_URL: 'http://host.docker.internal:11434/v1'
-      #AI_MODEL: 'qwen2.5vl:7b'
+      #AI_MODEL: 'qwen2.5vl:3b'
       #AI_TIMEOUT_MS: '180000'
     restart: unless-stopped
     logging:
@@ -270,7 +289,7 @@ volumes:
   librecloset_data:
 ```
 
-`PWA_ENABLED` is deliberately absent: the service worker needs a secure context, so setting it on a plain-HTTP deployment does nothing at all, silently. Turn it on once you have HTTPS — see [Behind a reverse proxy](#behind-a-reverse-proxy).
+`PWA_ENABLED` is deliberately absent: the service worker needs a secure context, so setting it on a plain-HTTP deployment does nothing at all, silently. Turn it on once you have HTTPS — [HTTPS with Tailscale](#https-with-tailscale) sets it, along with a tighter port mapping; [Behind a reverse proxy](#behind-a-reverse-proxy) is for bringing your own.
 
 Note that compose namespaces the volume as `<project>_librecloset_data`, where the project is the directory name lowercased with anything outside `a-z0-9_-` stripped — `Libre-Closet/` gives `libre-closet_librecloset_data`. That matters when you back it up; `docker compose config --format json` prints the real name.
 
@@ -278,7 +297,7 @@ Upgrading is `docker compose pull && docker compose up -d`. Migrations apply the
 
 ### Publishing a new image
 
-CI builds and pushes to GHCR for `linux/amd64` and `linux/arm64` on any `v*` tag. The arm64 leg is emulated on GitHub's x86 runners, so a full two-platform run takes around 15 minutes. A tag push is also the only thing that produces the rolling `0.6` and `0` tags — `type=semver` reads a tag ref and is inert on a branch — so a `gh workflow run` on a branch publishes just the one version string you name plus `sha-<commit>`.
+CI builds and pushes to GHCR for `linux/amd64` and `linux/arm64` on any `v*` tag. The arm64 leg is emulated on GitHub's x86 runners, so a full two-platform run takes around 15 minutes. A tag push is also the only thing that produces the rolling `0.6` and `0` tags — `type=semver` reads a tag ref and is inert on a branch — so a `gh workflow run` on a branch publishes the version string you name, `sha-<short commit>` (the 7-character abbreviation, e.g. `sha-59935e6`) and — see below — `latest`.
 
 ```bash
 git tag v0.6.0 && git push origin v0.6.0
@@ -294,7 +313,7 @@ gh workflow run docker-publish.yml --ref <your-branch> -f version=0.6.0-rc1
 
 `--ref` is not optional: without it `gh` runs the workflow against the remote's default branch, so you get a build of `main` rather than of the commit you are on.
 
-**Naming a version also moves `:latest`** onto that build, prerelease strings included — the enable expression is `startsWith(github.ref, 'refs/tags/v') || inputs.version != ''`, and the second half fires on any dispatch that names a version. So this command repoints the tag the Quick start `docker run` pulls at an unreleased branch commit. Running it with no `version` publishes **only** a `sha-<commit>` tag and leaves `:latest` alone; if you just want a pullable one-off, do that and pull the `sha-` tag by its full name.
+**Naming a version also moves `:latest`** onto that build, prerelease strings included — the enable expression is `startsWith(github.ref, 'refs/tags/v') || inputs.version != ''`, and the second half fires on any dispatch that names a version. So this command repoints the tag the Quick start `docker run` pulls at an unreleased branch commit. Running it with no `version` publishes **only** a `sha-<commit>` tag and leaves `:latest` alone; if you just want a pullable one-off, do that and pull it as `ghcr.io/demo-hub/libre-closet:sha-<short commit>` — the 7-character abbreviation, never the full hash.
 
 A GHCR package is **private on first publish**. Either make it public once, under the package's settings on GitHub, or authenticate the server with a personal access token that has `read:packages`:
 
@@ -337,14 +356,14 @@ Building the image by hand, rather than letting CI do it, is `docker build -f do
 | `AI_MODEL`                         | Model to ask. Required for `ollama` and `openai` — the app exits at boot without it | `claude-opus-5` (anthropic) | `qwen2.5vl:7b`                            |
 | `AI_BASE_URL`                      | OpenAI-compatible endpoint, including the `/v1`. Defaults to Ollama's own address, which inside a container is the container | `http://127.0.0.1:11434/v1` (ollama) | `http://host.docker.internal:11434/v1` |
 | `AI_API_KEY`                       | API key, where the provider wants one          | -              | `sk-ant-...`                                                                              |
-| `AI_TIMEOUT_MS`                    | How long to wait for a suggestion. Keep it under 300000, Node's own request timeout | `30000` | `180000`                                                 |
+| `AI_TIMEOUT_MS`                    | How long to wait for a suggestion, in ms; 1000 or more. Nothing in the app cuts a longer wait — only a proxy in front does | `30000` | `180000`                                                 |
 | `IMPORT_ALLOW_PRIVATE_NETWORKS`    | Development and testing only - let the importer reach private and loopback addresses on any port | `false` | `true`                                                          |
 | `IMPORT_FETCH_TIMEOUT_MS`          | Time budget for fetching a pasted link         | `10000`        | `20000`                                                                                   |
 | `SITE_URL`                         | Public address, used for share links and page metadata. **Must be `https://` — an `http://` value stops the app at boot** | `https://librecloset.lazz.tech` | `https://closet.example.com`             |
 | `ACCESS_TOKEN_SECRET`              | JWT signing secret - **change for production**, nothing enforces it | `ChangeMe!`    | `u9n8c2y847rfctb23468tcb689f243`                                       |
 | `DATABASE_TYPE`                    | `sqlite` or `postgres`                         | `sqlite`       | `postgres`                                                                                |
 | `DATABASE_HOST`                    | Postgres host                                  | -              | `192.168.10.5`                                                                            |
-| `DATABASE_PORT`                    | Postgres port                                  | `5432`         | `9867`                                                                                    |
+| `DATABASE_PORT`                    | Postgres port. **Required when `DATABASE_TYPE=postgres`** — there is no default | - | `5432`                                                                     |
 | `DATABASE_USER`                    | Postgres user                                  | -              | `postgres`                                                                                |
 | `DATABASE_PASS`                    | Postgres password                              | -              | `7yfhcn2349cr32f`                                                                         |
 | `DATABASE_SCHEMA`                  | Postgres schema. **Required when `DATABASE_TYPE=postgres`** — there is no default | -              | `libre-closet-schema`                                                                     |
@@ -354,12 +373,14 @@ Building the image by hand, rather than letting CI do it, is `docker build -f do
 | `OBJECT_STORAGE_SECRET_ACCESS_KEY` | S3 secret key                                  | -              | `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY`                                                |
 | `OBJECT_STORAGE_ENDPOINT`          | S3-compatible endpoint URL                     | -              | `https://s3.example.com:8443`                                                             |
 | `OBJECT_STORAGE_REGION`            | S3 region                                      | `us-east-1`    | `us-west-1`                                                                               |
-| `OBJECT_STORAGE_BUCKET_NAME`       | S3 bucket name                                 | `libre-closet` | `my-awesome-closet-manager-bucket`                                                        |
+| `OBJECT_STORAGE_BUCKET_NAME`       | S3 bucket name. **Required when `FILE_STORAGE_TYPE=object`** — there is no default | - | `my-awesome-closet-manager-bucket`                                     |
 | `EMAIL_FROM_ADDRESS`               | From address for password reset emails         | -              | `LibreCloset@example.com`                                                                 |
-| `EMAIL_TRANSPORT`                  | `gmail` or `mailgun`                           | `gmail`        | `mailgun`                                                                                 |
+| `EMAIL_TRANSPORT`                  | `gmail` or `mailgun`. Unset, no transport is created and password-reset mail is never sent | - | `mailgun`                                                        |
+| `EMAIL_PASSWORD`                   | Gmail app password, for `EMAIL_TRANSPORT=gmail` | -             | `abcd efgh ijkl mnop`                                                                     |
+| `EMAIL_DOMAIN`                     | Mailgun sending domain, for `EMAIL_TRANSPORT=mailgun` | -       | `mg.example.com`                                                                          |
 | `EMAIL_API_KEY`                    | Mailgun API key                                | -              | `fyhn2437cryb248cbrdc32`                                                                  |
-| `PUBLIC_VAPID_KEY`                 | Web push - generate for production. A shared default ships in `.env` | (committed default) | `BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U` |
-| `PRIVATE_VAPID_KEY`                | Web push - generate for production. A shared default ships in `.env` | (committed default) | `UUxI4O8-FbRouAevSmBQ6o18hgE4nSG3qwvJTfKc-ls`                                 |
+| `PUBLIC_VAPID_KEY`                 | Web push - generate for production. A shared default ships in `.env` | (committed default) | output of `npx web-push generate-vapid-keys`                                                |
+| `PRIVATE_VAPID_KEY`                | Web push - generate for production. A shared default ships in `.env` | (committed default) | output of `npx web-push generate-vapid-keys`                                                |
 
 Generate JWT secret:
 
@@ -444,7 +465,7 @@ docker run --rm \
 docker compose start
 ```
 
-Do not spell the volume name by hand. Compose namespaces it as `<project>_librecloset_data`, and the project is the directory name **lowercased, with anything outside `a-z0-9_-` stripped** — the `Libre-Closet` directory the clone above creates gives `libre-closet_librecloset_data`, not `Libre-Closet_librecloset_data`. A name that does not match silently creates and archives a new empty volume instead, and you only find out at restore time. `docker compose config --format json` prints the real name if you want to check it.
+Do not spell the volume name by hand. Compose namespaces it as `<project>_librecloset_data`, and the project is the directory name **lowercased, with anything outside `a-z0-9_-` stripped** — a directory named `Libre-Closet` gives `libre-closet_librecloset_data`, not `Libre-Closet_librecloset_data`. A name that does not match silently creates and archives a new empty volume instead, and you only find out at restore time. `docker compose config --format json` prints the real name if you want to check it.
 
 ---
 
@@ -452,18 +473,18 @@ Do not spell the volume name by hand. Compose namespaces it as `<project>_librec
 
 The least work by a distance, and the option that also solves access control. Verified against Tailscale 1.102.
 
+Before the command below: Tailscale has to be installed and up on the server (`curl -fsSL https://tailscale.com/install.sh | sh`, then `sudo tailscale up` and open the login link it prints; until then `serve` refuses with `Logged out.` or `Tailscale is stopped.`), and every device you will open the app from, your phone included, needs the Tailscale app signed in to the same tailnet, because a `.ts.net` address is reachable only from inside it. **And one prerequisite that is not obvious:** HTTPS certificates must be enabled for the tailnet first — on the DNS page of the admin console (<https://console.tailscale.com/admin/dns>), enable MagicDNS, then under HTTPS Certificates click Enable HTTPS. It is a one-time switch per tailnet. Without it `serve` does not fall back to plain HTTP: it prints a link to that page and either exits or sits there until you flip the switch, which reads as a hang if you did not know the switch existed.
+
 ```bash
 sudo tailscale serve --bg 3000
 tailscale serve status          # prints your https://<host>.<tailnet>.ts.net URL
 ```
 
-Tailscale terminates TLS with a real certificate for your machine's tailnet name and proxies to `127.0.0.1:3000`. Nothing to renew, nothing to install on your phone.
+Tailscale terminates TLS with a real certificate for your machine's tailnet name and proxies to `127.0.0.1:3000`. Nothing to renew, and no certificate to install on your phone — only the Tailscale app.
 
 Type the `https://` — `serve` listens on 443 only, so `http://` gets no answer and no redirect, which looks like the server being down. It is a first-visit problem: the app sends a year-long HSTS header, so after one successful load the browser upgrades `http://` on its own, and once you add the app to your home screen there is no address to type at all.
 
-**One prerequisite that is not obvious:** HTTPS certificates must be enabled for the tailnet first — admin console, Settings, DNS, enable MagicDNS and then HTTPS Certificates. It is a one-time switch per tailnet, and without it `serve` fails outright rather than falling back to something.
-
-Then two changes to the compose file:
+Then, in the compose file, change the `ports:` line and add two lines under `environment:` — keep the ones already there — using the address `tailscale serve status` printed, and run `docker compose up -d` again:
 
 ```yaml
     ports:
@@ -477,13 +498,13 @@ Then two changes to the compose file:
 
 `PWA_ENABLED` matters because HTTPS alone does not give you the PWA: the service worker is gated on the flag as well, and it defaults to false.
 
-What stays imperfect: `og:image` on a shared link still says `http://`, because the app trusts forwarded headers from loopback only and Tailscale connects from elsewhere. That affects how a link previews in a chat app, nothing in normal use — and with `AUTH_ENABLED=false` the sharing routes do not exist anyway. Garment photos are unaffected: every rendered `<img>` uses a relative `/file/...` path, so there is no mixed content to block.
+What stays imperfect: `og:image` and `og:url` on a `/share` page still say `http://`, because the app trusts forwarded headers from loopback only and, inside the container, every connection — Tailscale's included — arrives from Docker's bridge gateway rather than loopback. It is the same limitation described under [Behind a reverse proxy](#behind-a-reverse-proxy), and the `trustProxy` rebuild there fixes it here too. That affects how a link previews in a chat app, nothing in normal use. It does apply with `AUTH_ENABLED=false`: the Share button on every garment and outfit page copies a `/share?shareableId=…` link, built from `SITE_URL`, and that route is public — only account-to-account wardrobe sharing needs accounts. Garment photos are unaffected: every rendered `<img>` uses a relative `/file/...` path, so there is no mixed content to block.
 
 ---
 
 ## Behind a reverse proxy
 
-Only if you are not using the section above. The app trusts forwarded headers from loopback only, which no container deployment satisfies — a proxy in another container connects from the bridge network. Left alone, per-address rate limiting collapses into a single shared bucket, and generated share links come out with the wrong scheme. There is no setting for this: the trusted list is hardcoded at `src/main.ts:20` and no environment variable overrides it. The published image ships only `dist/`, so changing it means building your own — clone the repo, widen `trustProxy` to the address your proxy connects from (`'172.16.0.0/12'` covers the default Docker bridge ranges), and `docker build -f docker/Dockerfile -t libre-closet .`. Until you do, expect the shared rate-limit bucket and the wrong-scheme share links described above.
+Only if you are not using the section above. The app trusts forwarded headers from loopback only, which no port-published container satisfies — a proxy on the host itself, or in another container, arrives from the Docker bridge gateway rather than loopback. (`network_mode: host` on the service — drop `ports:`, set `PORT` — does satisfy it with no rebuild, but the app then binds `0.0.0.0` on the host itself, undoing the `127.0.0.1:3000:3000` protection, so only with `AUTH_ENABLED=true` or a firewall rule in front.) Left alone, per-address rate limiting collapses into a single shared bucket, and the `og:url`/`og:image` tags on the `/share` preview page — and, with auth on, wardrobe-share invite links — come out `http://` (the link the Share button copies is built from `SITE_URL` and is fine). There is no setting for this: the trusted list is hardcoded at `src/main.ts:20` and no environment variable overrides it. The published image ships only `dist/`, so changing it means building your own — clone the repo, widen `trustProxy` to the address your proxy connects from (`'172.16.0.0/12'` covers the default Docker bridge ranges), and `docker build -f docker/Dockerfile -t libre-closet .`. Until you do, expect the shared rate-limit bucket and the wrong-scheme link previews described above.
 
 Two proxy defaults will bite regardless:
 
@@ -500,7 +521,7 @@ HTTPS plus `PWA_ENABLED=true` is what unlocks the PWA layer — install to home 
 
 For most self-hosters: a small VPS or a machine on your own network, built from the compose file above with SQLite + local storage. SQLite handles thousands of users without issue - see [DjangoCon 2023: Use SQLite in Production](https://youtu.be/yTicYJDT1zE).
 
-With `AUTH_ENABLED=false` there is no access control of any kind, so keep such an instance on a private network. [HTTPS with Tailscale](#https-with-tailscale) is the least work and covers both concerns at once — a bare tailnet address is still plain HTTP, so `tailscale serve` plus `PWA_ENABLED=true` is what actually gets you the PWA. If you would rather expose it publicly, turn `AUTH_ENABLED` on **before** adding any garments: with auth off every garment is stored unowned, and enabling it afterwards leaves the existing wardrobe orphaned and invisible to your new account. Set a real `ACCESS_TOKEN_SECRET` and `DISABLE_REGISTRATION=true` at the same time.
+With `AUTH_ENABLED=false` there is no access control of any kind, so keep such an instance on a private network. [HTTPS with Tailscale](#https-with-tailscale) is the least work and covers both concerns at once — a bare tailnet address is still plain HTTP, so `tailscale serve` plus `PWA_ENABLED=true` is what actually gets you the PWA. If you would rather expose it publicly, turn `AUTH_ENABLED` on **before** adding any garments: with auth off every garment is stored unowned, and enabling it afterwards leaves the existing wardrobe orphaned and invisible to your new account. Set a real `ACCESS_TOKEN_SECRET` at the same time. Register your own account **before** setting `DISABLE_REGISTRATION=true`: the guard redirects every sign-up to the login page, the first one included, so setting it on a fresh instance locks you out.
 
 If you need horizontal scaling later, switch to S3-compatible storage and consider a PostgreSQL migration. [Litestream](https://litestream.io/) can stream the SQLite file offsite, but it replicates only the database — your photos still need backing up separately.
 
