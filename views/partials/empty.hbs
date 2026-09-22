@@ -1,0 +1,6 @@
+{{!-- {{> empty icon="tray" text=… href=… cta=…}} --}}
+<div class="flex flex-col items-center gap-4 py-16 text-center">
+  {{icon this.icon class="size-16 text-haze"}}
+  <p class="text-graphite">{{text}}</p>
+  {{#if href}}<a href="{{href}}" class="btn btn-primary">{{cta}}</a>{{/if}}
+</div>

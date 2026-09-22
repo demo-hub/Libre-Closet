@@ -32,6 +32,8 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",
     "test:e2e:smoke": "playwright test test/smoke.spec.ts --project=chromium",
+    "test:visual": "npm run build && sh scripts/screenshots/visual.sh",
+    "test:visual:update": "npm run build && sh scripts/screenshots/visual.sh --update-snapshots",
     "postinstall": "patch-package",
     "test:load": "ts-node scripts/load-test.ts",
     "test:load:baseline": "ts-node scripts/load-test.ts --baseline",

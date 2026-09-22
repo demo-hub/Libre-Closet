@@ -2,12 +2,7 @@ import { readFileSync } from 'fs';
 import { globSync } from 'glob';
 import { join } from 'path';
 
-/**
- * Holds the redesign to the mandatiq brand guidelines v2.0 (docs/REDESIGN.md).
- * tokens.json is vendored from the brand repository; it is the only source of
- * truth for which colours may meet which, so a pairing the theme produces has
- * to appear there rather than merely pass a contrast calculation.
- */
+/** tokens.json (vendored from the brand repo) decides which colours may meet; passing a contrast ratio is not enough. */
 
 const root = join(__dirname, '..', '..');
 const tokens = JSON.parse(
@@ -29,11 +24,7 @@ type Tokens = {
   avoid: Pairing[];
 };
 
-/**
- * Files that still break rule 4 and the PR that clears each. The array only
- * shrinks: PR 12 asserts it is empty. A file listed here is skipped entirely,
- * so removing it is what proves a page PR finished its sweep.
- */
+/** Skipped files, each tagged with the PR that sweeps it; only ever shrinks, and PR 12 asserts it is empty. */
 const KNOWN_DEBT = [
   'views/index.hbs', // PR 11a
   'views/about.hbs', // PR 11a
@@ -44,7 +35,7 @@ const KNOWN_DEBT = [
   'views/chat.hbs', // PR 10
   'views/files.hbs', // PR 10
   'views/share.hbs', // PR 10
-  'views/layout.hbs', // PR 3
+  'views/layout.hbs', // PR 5 (the apple-touch-icon still points at lazztech_icon.png)
   'views/auth/login.hbs', // PR 7
   'views/auth/register.hbs', // PR 7
   'views/auth/reset.hbs', // PR 7
@@ -201,9 +192,7 @@ describe('every pairing the theme produces', () => {
     }
   }
 
-  // Surface is the one background the brand does not pair with Steel, the
-  // status colours or Haze in light mode. The dark palette does list all of
-  // them on Night surface, so the check is light-only.
+  // Light only: the dark palette does list these colours on Night surface.
   for (const fgRole of [
     '--mq-border',
     '--color-success',
@@ -271,6 +260,10 @@ describe('templates and client scripts', () => {
     ],
     [/\b(input-xs|badge-xs|range-xs)\b/, 'below the 12 px floor'],
     [/text-\[\d+px\]/, 'off the type scale'],
+    [
+      /<h[1-3][^>]*\btext-(xs|sm|base|lg)(?![\w-])/,
+      'a heading below the h3 size, where Plus Jakarta Sans runs its words together',
+    ],
     [/\buppercase\b/, 'ch. 09: sentence case, no all-caps labels'],
     [/\bdark:/, 'dark mode comes from the theme, not a variant'],
     [
@@ -298,6 +291,13 @@ describe('templates and client scripts', () => {
   ]
     .map((f) => f.split('\\').join('/'))
     .filter((f) => !KNOWN_DEBT.includes(f));
+
+  it('flags a small heading but not a heading in the text colour', () => {
+    const [heading] = forbidden.find(([, why]) => why.startsWith('a heading'))!;
+    expect(heading.test('<h2 class="card-title text-lg">')).toBe(true);
+    expect(heading.test('<h3 class="text-base">')).toBe(true);
+    expect(heading.test('<h2 class="text-h3 text-base-content">')).toBe(false);
+  });
 
   it('checks the files that have been swept', () => {
     // Guards the guard: a typo in KNOWN_DEBT would silently empty this suite.

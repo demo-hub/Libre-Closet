@@ -14,6 +14,7 @@ import { AppModule } from './app.module';
 import { Logger } from 'nestjs-pino';
 import { ViewContextService } from './view-context/view-context.service';
 import { GarmentColor } from './wardrobe/garment-color.enum';
+import { renderIcon } from './icons';
 
 async function bootstrap() {
   // https://docs.nestjs.com/security/rate-limiting#proxies
@@ -209,6 +210,15 @@ async function bootstrap() {
       if (!Array.isArray(arr)) return options.inverse(this);
       return arr.includes(value) ? options.fn(this) : options.inverse(this);
     },
+  );
+
+  // {{icon "name" class="size-5"}}
+  hbs.registerHelper(
+    'icon',
+    (name: string, options: HelperOptions) =>
+      new hbs.handlebars.SafeString(
+        renderIcon(name, (options.hash as { class?: string }).class),
+      ),
   );
 
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');

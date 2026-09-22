@@ -31,9 +31,7 @@ https://nestjs-i18n.com/quick-start --}}
     <meta name="twitter:image" content="{{ogImage}}" />
     <meta property="og:site_name" content="{{appName}}" />
 
-    {{!-- The browser UI follows the header's background in each mode. Static per
-    full load, which is enough: hx-boost never swaps <head>, and the media
-    attribute does the switching. --}}
+    {{!-- Static per full load: hx-boost never swaps <head>, and the media attribute switches them. --}}
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#161d38" media="(prefers-color-scheme: dark)" />
@@ -44,13 +42,11 @@ https://nestjs-i18n.com/quick-start --}}
     https://developer.chrome.com/docs/lighthouse/pwa/apple-touch-icon --}}
     <link rel="apple-touch-icon" href="/assets/lazztech_icon.png" />
 
-    {{!-- https://htmx.org/reference/#config --}} {{!--
-    https://htmx.org/attributes/hx-swap/#modifiers --}}
-    <meta name="htmx-config" content='{"globalViewTransitions": "true"}' />
-    {{!-- https://htmx.org/quirks/#attribute-inheritance --}}
-    <meta name="htmx-config" content='{"disableInheritance":true}' />
+    {{!-- htmx reads only the first htmx-config meta, so there is exactly one. --}}
+    <meta name="htmx-config" content='{"globalViewTransitions": true, "includeIndicatorStyles": false}' />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
-    <title>{{#if pageTitle}}{{pageTitle}}{{else}}{{appName}} — Free Self-Hosted Wardrobe Organizer{{/if}}</title>
+    <title>{{#if pageTitle}}{{pageTitle}}{{else}}{{appName}}{{/if}}</title>
     {{! Used inconjunction with service worker sw.js to enable PWA (Progressive
     Web App) functionality. }}
     <link rel="manifest" href="/manifest.json" />
@@ -79,12 +75,28 @@ https://nestjs-i18n.com/quick-start --}}
     TailwindCSS/DaisyUI }}
     <link href="/bundle.css" rel="preload" as="style" />
     <link href="/bundle.css" rel="stylesheet" />
-    {{!-- The two faces every first paint needs. Font requests are CORS-mode even
-    from the same origin, so without crossorigin each file is fetched twice. --}}
+    {{!-- crossorigin, or each font is fetched twice. --}}
     <link rel="preload" href="/assets/fonts/inter-v20-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/assets/fonts/plus-jakarta-sans-v12-latin.woff2" as="font" type="font/woff2" crossorigin />
     <script>
       window.KNOWN_COLORS = new Set({{{knownColors}}});
+    </script>
+    <script>
+      if (!window.__lcToastBound) {
+        window.__lcToastBound = true;
+        document.addEventListener('htmx:responseError', function () {
+          var toast = document.getElementById('requestErrorToast');
+          if (!toast) return;
+          if (toast.classList.contains('hidden')) return toast.classList.remove('hidden');
+          // Already up: hide and re-show so a repeated failure is announced again.
+          toast.classList.add('hidden');
+          setTimeout(function () { toast.classList.remove('hidden'); }, 100);
+        });
+        document.addEventListener('htmx:beforeHistorySave', function () {
+          var toast = document.getElementById('requestErrorToast');
+          if (toast) toast.classList.add('hidden');
+        });
+      }
     </script>
   </head>
 
@@ -106,23 +118,7 @@ https://nestjs-i18n.com/quick-start --}}
     https://htmx.org/essays/web-security-basics-with-htmx/ }} {{{body}}} {{!
     htmx does not swap a 4xx or 5xx response, so without this a refused or
     rate-limited request looks to the user like nothing happened at all. }}
-    <div
-      id="requestErrorToast"
-      class="toast toast-top toast-center z-50 hidden"
-      aria-live="polite"
-    >
-      <div role="alert" class="alert alert-error">
-        <span>{{t 'lang.REQUEST_FAILED'}}</span>
-      </div>
-    </div>
-    <script>
-      document.addEventListener('htmx:responseError', function () {
-        const toast = document.getElementById('requestErrorToast');
-        if (!toast) return;
-        toast.classList.remove('hidden');
-        setTimeout(function () { toast.classList.add('hidden'); }, 5000);
-      });
-    </script>
+    {{> toast id="requestErrorToast" kind="error" text=(t 'lang.REQUEST_FAILED') hidden=true dismiss=true}}
     {{! The
     service worker is used in conjunction with the manifest.json to enable PWA
     (Progressive Web App) functionality. This script tag uses JavaScript
