@@ -1,5 +1,5 @@
 {{>navbar}}
-<main class="p-20">
+<main id="main" tabindex="-1" class="page pb-36!">
   <div class="flex flex-wrap gap-4 p-4 items-center justify-center">
     {{#each files}}
     <div class="card bg-base-100 w-96 shadow-sm">
@@ -29,7 +29,7 @@
   </div>
 
   <div
-    class="fixed bottom-15 left-0 right-0 p-4 shadow-lg bg-gradient-to-t from-base-100 via-base-100/50 to-transparent"
+    class="fixed bottom-15 lg:bottom-0 left-0 right-0 p-4 shadow-lg bg-gradient-to-t from-base-100 via-base-100/50 to-transparent"
   >
     <form
       id="form"

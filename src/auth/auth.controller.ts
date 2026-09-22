@@ -26,6 +26,13 @@ import { UpdateEmailDto } from './dto/updateEmail.dto';
 import { minutes, seconds, Throttle } from '@nestjs/throttler';
 import { safeReturnTo } from './return-to';
 
+/** htmx would follow a 302 inside the request and swap the next page into the form, so it is told to navigate instead. */
+function navigate(reply: FastifyReply, url: string) {
+  if (!reply.request.headers['hx-request']) return reply.redirect(url, 302);
+  reply.header('HX-Redirect', url);
+  return reply.send();
+}
+
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
@@ -56,7 +63,7 @@ export class AuthController {
       maxAge: 365 * 24 * 60 * 60 * 1000, // 365 days
       httpOnly: true, // Prevents client-side JS from reading it
     });
-    return reply.redirect('/auth/profile', 302);
+    return navigate(reply, '/auth/profile');
   }
 
   @UseGuards(RegistrationGuard)
@@ -99,11 +106,7 @@ export class AuthController {
         maxAge: 365 * 24 * 60 * 60 * 1000, // 365 days
         httpOnly: true, // Prevents client-side JS from reading it
       });
-      // HX-Redirect, not a 302: this form posts with htmx, which follows a
-      // redirect inside the request and swaps the result into the form. The
-      // browser has to be told to navigate, or it stays on the login page.
-      reply.header('HX-Redirect', returnTo ?? '/auth/profile');
-      return reply.send();
+      return navigate(reply, returnTo ?? '/auth/profile');
     } catch (error) {
       this.logger.warn(error);
       return reply.view('auth/login', {
@@ -154,7 +157,10 @@ export class AuthController {
   async postReset(@Body() emailDto: EmailDto, @Res() reply: FastifyReply) {
     try {
       await this.authService.sendPasswordResetEmail(emailDto.email);
-      return reply.redirect(`/auth/reset-code?email=${emailDto.email}`, 302);
+      return navigate(
+        reply,
+        `/auth/reset-code?email=${encodeURIComponent(emailDto.email)}`,
+      );
     } catch (error) {
       this.logger.warn(error);
       return reply.view('auth/reset', {
@@ -213,7 +219,7 @@ export class AuthController {
     }
 
     await this.authService.resetPassword(body);
-    return reply.redirect('/auth/login', 302);
+    return navigate(reply, '/auth/login');
   }
 
   @UseGuards(RegistrationGuard)
@@ -247,7 +253,7 @@ export class AuthController {
       await this.authService.signIn(loginDto.email, loginDto.password);
       await this.authService.deleteUser(payload.userId);
       reply.clearCookie('access_token', { path: '/' });
-      return reply.redirect('/', 302);
+      return navigate(reply, '/');
     } catch (error) {
       this.logger.warn(error);
       return reply.view('auth/delete-account', {
@@ -301,6 +307,6 @@ export class AuthController {
     }
 
     await this.authService.changeEmail(payload.userId, body.confirmEmail);
-    return reply.redirect('/auth/profile', 302);
+    return navigate(reply, '/auth/profile');
   }
 }

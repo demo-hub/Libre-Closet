@@ -82,7 +82,7 @@ https://nestjs-i18n.com/quick-start --}}
       window.KNOWN_COLORS = new Set({{{knownColors}}});
     </script>
     <script>
-      if (!window.__lcToastBound) {
+      if (!window.__lcToastBound) (function () {
         window.__lcToastBound = true;
         document.addEventListener('htmx:responseError', function () {
           var toast = document.getElementById('requestErrorToast');
@@ -95,8 +95,45 @@ https://nestjs-i18n.com/quick-start --}}
         document.addEventListener('htmx:beforeHistorySave', function () {
           var toast = document.getElementById('requestErrorToast');
           if (toast) toast.classList.add('hidden');
+          document.querySelectorAll('details.dropdown[open]').forEach(function (d) { d.removeAttribute('open'); });
         });
-      }
+        // A <details> menu closes only when its own summary is pressed.
+        function closeMenusOutside(e) {
+          document.querySelectorAll('details.dropdown[open]').forEach(function (d) {
+            if (!d.contains(e.target)) d.removeAttribute('open');
+          });
+        }
+        document.addEventListener('click', closeMenusOutside);
+        document.addEventListener('focusin', closeMenusOutside);
+        document.addEventListener('keydown', function (e) {
+          if (e.key !== 'Escape') return;
+          document.querySelectorAll('details.dropdown[open]').forEach(function (d) {
+            var hadFocus = d.contains(document.activeElement);
+            d.removeAttribute('open');
+            if (hadFocus) d.querySelector('summary').focus();
+          });
+        });
+        // A live-validation swap brings back the values the request carried; keep what was typed since.
+        var typed = null;
+        document.addEventListener('htmx:beforeSwap', function (e) {
+          typed = null;
+          var fs = e.detail.target;
+          if (!fs || !fs.hasAttribute || !fs.hasAttribute('data-live-validation')) return;
+          var active = document.activeElement;
+          typed = { values: {}, focus: fs.contains(active) ? active.id : null };
+          try { typed.start = active.selectionStart; typed.end = active.selectionEnd; } catch (err) {}
+          fs.querySelectorAll('input[id]').forEach(function (i) { typed.values[i.id] = i.value; });
+        });
+        document.addEventListener('htmx:afterSwap', function (e) {
+          if (!typed || !e.target.hasAttribute('data-live-validation')) return;
+          e.target.querySelectorAll('input[id]').forEach(function (i) {
+            if (i.id in typed.values) i.value = typed.values[i.id];
+          });
+          var el = typed.focus && document.getElementById(typed.focus);
+          if (el && typed.start != null) { try { el.setSelectionRange(typed.start, typed.end); } catch (err) {} }
+          typed = null;
+        });
+      })();
     </script>
   </head>
 
@@ -108,8 +145,9 @@ https://nestjs-i18n.com/quick-start --}}
   <body
     hx-boost="true"
     hx-ext="sse"
-    class="h-screen flex flex-col"
+    class="min-h-dvh flex flex-col"
   >
+    <a href="#main" class="skip-link">{{t 'lang.SKIP_TO_CONTENT'}}</a>
     {{! Caution: Triple brackets in handlebarsjs disables auto-escaping and may
     pose a XSS risk with HTMX. However the exception to this rule is when
     loading hbs rendered content which is pre-santized by the handlebars
@@ -186,15 +224,24 @@ https://nestjs-i18n.com/quick-start --}}
       }
 
       // https://stackoverflow.com/questions/75972895/ios-pwa-how-to-re-enable-pull-to-refresh
-      const iosStandalone = window.navigator.standalone === true;
-      if (iosStandalone) {
-        // If iosStandalone; pull to refresh is needed
-        PullToRefresh.init({
-          mainElement: 'main',
+      // Boosted navigation re-runs this script and replaces <main>, so bind once, on <body>.
+      if (window.navigator.standalone === true && !window.__lcPtrBound) {
+        window.__lcPtrBound = true;
+        const ptr = PullToRefresh.init({
+          mainElement: 'body',
+          instructionsPullToRefresh: "{{t 'lang.PTR_PULL'}}",
+          instructionsReleaseToRefresh: "{{t 'lang.PTR_RELEASE'}}",
+          instructionsRefreshing: "{{t 'lang.PTR_REFRESHING'}}",
           onRefresh() {
             location.reload();
           },
         });
+        // A swap can take the bar out mid-reset, and the library only rebuilds it once it has let go.
+        const dropDetachedBar = () => {
+          if (ptr.ptrElement && !ptr.ptrElement.isConnected) ptr.ptrElement = null;
+        };
+        document.addEventListener('htmx:afterSwap', dropDetachedBar);
+        document.addEventListener('htmx:historyRestore', dropDetachedBar);
       }
     </script>
     <pwa-install id="pwa-install" manifest-url="/manifest.json"></pwa-install>

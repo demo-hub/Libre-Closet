@@ -12,38 +12,40 @@
   }
 </script>
 
-<main class="flex flex-col justify-center items-center h-full">
+<main id="main" tabindex="-1" class="page page--center justify-items-center">
   <h1 class="text-2xl font-bold mb-4">{{t 'lang.LOGIN_OG_TITLE'}}</h1>
   {{#if error}}
-  <div
-    role="alert"
-    class="alert alert-error fixed top-20 left-1/2 -translate-x-1/2 w-[80%] z-50 shadow-lg"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      class="h-6 w-6 shrink-0 stroke-current"
-      fill="none"
-      viewBox="0 0 24 24"
+  <div class="toast toast-top toast-center">
+    <div
+      role="alert"
+      class="alert alert-error shadow-lg"
     >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
-    <span>{{t 'lang.ERROR'}}</span>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6 shrink-0 stroke-current"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      <span>{{t 'lang.ERROR'}}</span>
+    </div>
   </div>
   {{/if}}
 
-  <form hx-post="/auth/login" hx-indicator="#loading" hx-trigger="submit">
+  <form hx-post="/auth/login" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-indicator="#loading" hx-trigger="submit">
     {{#if returnTo}}
     {{!-- Where the user was headed before being asked to sign in. Server-side
     it is checked to be a path on this site, both here and on the way back. --}}
     <input type="hidden" name="returnTo" value="{{returnTo}}" />
     {{/if}}
     <fieldset
-      class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4"
+      class="fieldset bg-base-200 border-base-300 rounded-box w-xs max-w-[calc(100vw-2rem)] border p-4"
     >
       <legend class="fieldset-legend">{{t 'lang.LOGIN'}}</legend>
 

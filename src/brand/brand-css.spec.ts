@@ -53,8 +53,6 @@ const KNOWN_DEBT = [
   'views/wardrobe-share/invite.hbs', // PR 7
   'views/wardrobe-share/manage.hbs', // PR 10
   'views/wardrobe-share/partials/invite-link-result.hbs', // PR 10
-  'views/partials/navbar.hbs', // PR 4
-  'views/partials/dock.hbs', // PR 4
   'views/partials/aiSuggestion.hbs', // PR 8b
   'views/partials/photoPicker.hbs', // PR 8c
   'views/partials/maskEditor.hbs', // PR 8c

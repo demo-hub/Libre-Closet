@@ -1,6 +1,6 @@
 {{!-- Load navbar partial --}} {{>navbar}}
-<main class="flex flex-col h-screen">
-  <div class="w-full p-2 gap-2 pt-20 shadow-md bg-base-200 flex justify-center">
+<main id="main" tabindex="-1" class="page flex flex-col h-[calc(100dvh-var(--spacing-header))]">
+  <div class="w-full p-2 gap-2 shadow-md bg-base-200 flex justify-center">
     {{#if user}}
     <button
       hx-post="/notification/test"
@@ -13,7 +13,7 @@
     {{/if}}
   </div>
 
-  <div class="flex-1 overflow-y-auto p-20">
+  <div class="flex-1 min-h-0 overflow-y-auto p-4 pb-20">
     <div id="chat" class="flex flex-col justify-center items-center">
       <!-- Chat messages will be displayed here -->
     </div>
@@ -28,7 +28,7 @@
   ></div>
 
   <div
-    class="fixed bottom-15 left-0 right-0 p-4 shadow-lg bg-gradient-to-t from-base-100 via-base-100/50 to-transparent"
+    class="fixed bottom-15 lg:bottom-0 left-0 right-0 p-4 shadow-lg bg-gradient-to-t from-base-100 via-base-100/50 to-transparent"
   >
     <div class="flex flex-row gap-2 items-center justify-center">
       <form

@@ -1,6 +1,6 @@
 {{>navbar}}
 
-<main class="p-4 pt-20 pb-24 max-w-lg mx-auto flex flex-col items-center gap-6">
+<main id="main" tabindex="-1" class="page page--narrow pb-36! flex flex-col items-center gap-6">
   {{#if file}}
   <div class="card bg-base-100 w-full max-w-sm shadow-sm">
     <figure>
@@ -63,7 +63,7 @@
   {{/if}}
 
   <div
-    class="fixed bottom-15 left-0 right-0 p-4 shadow-lg bg-gradient-to-t from-base-100 via-base-100/50 to-transparent">
+    class="fixed bottom-15 lg:bottom-0 left-0 right-0 p-4 shadow-lg bg-gradient-to-t from-base-100 via-base-100/50 to-transparent">
     <div class="flex flex-row gap-2 items-center justify-center">
       {{#if createdBy}}
       <p>{{t 'lang.SHARED_BY'}} {{createdBy.email}}</p>
