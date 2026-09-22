@@ -1,10 +1,11 @@
 {{>navbar}}
 
 <main id="main" tabindex="-1" class="page page--center">
-  <form hx-post="/auth/reset-code" hx-indicator="#loading" hx-trigger="submit">
+  <form hx-post="/auth/reset-code" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-indicator="#loading" hx-trigger="submit">
     <fieldset
       class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4"
       hx-post="/auth/validate/reset-code"
+      hx-target="this" hx-select="fieldset.fieldset" hx-swap="outerHTML"
       hx-indicator="#loading"
       hx-trigger="change, blur delay:500ms"
       hx-include="input"

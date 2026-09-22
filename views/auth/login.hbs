@@ -38,7 +38,7 @@
   </div>
   {{/if}}
 
-  <form hx-post="/auth/login" hx-indicator="#loading" hx-trigger="submit">
+  <form hx-post="/auth/login" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-indicator="#loading" hx-trigger="submit">
     {{#if returnTo}}
     {{!-- Where the user was headed before being asked to sign in. Server-side
     it is checked to be a path on this site, both here and on the way back. --}}

@@ -26,6 +26,9 @@
 
   <form
     hx-post="/auth/delete-account"
+    hx-target="main"
+    hx-select="main"
+    hx-swap="outerHTML"
     hx-indicator="#loading"
     hx-trigger="submit"
     hx-confirm="{{t 'lang.DELETE_ACCOUNT_CONFIRMATION'}}"
