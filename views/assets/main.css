@@ -195,7 +195,7 @@ lose to daisyUI or beat a template's own utility class. */
   :where(.btn-outline:not(:disabled, [disabled], .btn-disabled)) { --btn-border: var(--mq-border); --btn-fg: var(--color-base-content); }
   :where(.menu) { font-size: 1rem; }
   :where(.card-body) { --card-fs: 1rem; }
-  :where(.card-title) { --cardtitle-fs: var(--text-h3); font-family: var(--font-heading); letter-spacing: var(--tracking-display); }
+  :where(.card-title) { --cardtitle-fs: var(--text-h3); }
   :where(.card) { background: var(--color-base-100); box-shadow: none; border: 1px solid var(--color-base-300); }
   :where(.alert) { font-size: 1rem; line-height: 1.5; background: var(--color-base-100); color: var(--color-base-content);
     --alert-border-color: var(--color-base-300); box-shadow: inset 4px 0 0 var(--alert-status, var(--color-base-content)); }

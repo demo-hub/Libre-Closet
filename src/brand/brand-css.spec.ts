@@ -271,6 +271,10 @@ describe('templates and client scripts', () => {
     ],
     [/\b(input-xs|badge-xs|range-xs)\b/, 'below the 12 px floor'],
     [/text-\[\d+px\]/, 'off the type scale'],
+    [
+      /<h[1-3][^>]*\btext-(xs|sm|base)\b/,
+      'a heading below the h3 size, where Plus Jakarta Sans runs its words together',
+    ],
     [/\buppercase\b/, 'ch. 09: sentence case, no all-caps labels'],
     [/\bdark:/, 'dark mode comes from the theme, not a variant'],
     [
