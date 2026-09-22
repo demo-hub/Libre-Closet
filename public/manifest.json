@@ -16,8 +16,8 @@
   ],
   "id": "/wardrobe",
   "start_url": "/wardrobe",
-  "theme_color": "#222428",
-  "background_color": "#fafafa",
+  "theme_color": "#ffffff",
+  "background_color": "#f7f8fb",
   "display": "standalone",
   "scope": "/",
   "shortcuts": [

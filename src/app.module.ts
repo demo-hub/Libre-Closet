@@ -104,6 +104,7 @@ import { ViewContextModule } from './view-context/view-context.module';
         ),
         SITE_URL: Joi.string().default('https://librecloset.lazz.tech'),
         ICON_NAME: Joi.string().default('lazztech_icon.webp'),
+        THROTTLE_LIMIT: Joi.number().default(600),
         DATA_PATH: Joi.string().default(path.join(process.cwd(), 'data')),
         DATABASE_TYPE: Joi.string()
           .valid('sqlite', 'postgres')
@@ -197,7 +198,16 @@ import { ViewContextModule } from './view-context/view-context.module';
     }),
     MikroOrmModule.forFeature([User]),
     // https://docs.nestjs.com/security/rate-limiting
-    ThrottlerModule.forRoot([{ name: 'default', ttl: minutes(1), limit: 600 }]),
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => [
+        {
+          name: 'default',
+          ttl: minutes(1),
+          limit: config.get<number>('THROTTLE_LIMIT') ?? 600,
+        },
+      ],
+    }),
     DalModule,
     AuthModule,
     FileModule,

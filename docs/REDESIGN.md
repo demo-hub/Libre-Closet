@@ -134,7 +134,8 @@ The rules below are the ones the code currently breaks, with the smallest change
 
 ```css
 @import "tailwindcss";
-@source not "../../docs";          /* Markdown under docs/ (this record included) is not a class source */
+@source not "../../docs";          /* Markdown under docs/ is not a class source */
+@source not "../../src/brand";      /* nor the brand spec, which names the classes it forbids */
 @plugin "daisyui" { themes: false; }
 
 @plugin "daisyui/theme" {

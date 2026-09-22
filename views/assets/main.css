@@ -1,14 +1,159 @@
-/* Used by the npm run build:tailwind script to "compile" tailwind usage into a static, pruned down css output
-that only contains the relivant tailwind code used in the application source. This is to minimize the bundle size
-and response bandwidth/latency. */
+/* Compiled by `npm run generate:tailwind` into public/bundle.css, which is a build
+output and never committed. The mandatiq design system lives here: the two theme
+blocks below carry every brand colour, @theme carries the type scale, and the one
+@layer utilities block corrects the daisyUI component defaults that break the
+guide. See docs/REDESIGN.md section 5.1 for why each of those has to be where it
+is; the short version is that a @theme colour would lose to daisyUI's layer and
+could not follow dark mode, and an override outside @layer utilities would either
+lose to daisyUI or beat a template's own utility class. */
 @import "tailwindcss";
-@plugin "daisyui";
+@source not "../../docs";          /* Markdown under docs/ is not a class source */
+@source not "../../src/brand";      /* nor the brand spec, which names the classes it forbids */
+@plugin "daisyui" { themes: false; }
+
+@plugin "daisyui/theme" {
+  name: "light"; default: true; color-scheme: light;
+  --color-base-100: #ffffff;        /* card: White */
+  --color-base-200: #eceff5;        /* surface: Surface */
+  --color-base-300: #dde2ec;        /* divider: Hairline */
+  --color-base-content: #101838;    /* text: Ink */
+  --color-primary: #2a44d4;         /* Cobalt */
+  --color-primary-content: #ffffff;
+  --color-secondary: #2a44d4;       /* no brand secondary: alias of primary */
+  --color-secondary-content: #ffffff;
+  --color-accent: #2a44d4;          /* Signal is never text on light: alias of primary */
+  --color-accent-content: #ffffff;
+  --color-neutral: #101838;         /* Ink fill, White text (approved) */
+  --color-neutral-content: #ffffff;
+  --color-info: #eceff5;            /* "there is no info colour": Ink on Surface */
+  --color-info-content: #101838;
+  --color-success: #0e7a4a;  --color-success-content: #ffffff;
+  --color-warning: #a35800;  --color-warning-content: #ffffff;
+  --color-error: #c42b2b;    --color-error-content: #ffffff;
+  --root-bg: #f7f8fb;               /* page: Paper */
+  --mq-text-secondary: #4a5468;     /* Graphite */
+  --mq-border: #7a8398;             /* Steel */
+  --mq-decorative: #a4acbd;         /* Haze */
+  --mq-focus: #2a44d4;              /* Cobalt */
+  --radius-selector: 0.5rem; --radius-field: 0.25rem; --radius-box: 0.5rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.275rem;           /* .btn/.input = 10 × this = 44px */
+  --border: 1px; --depth: 0; --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: "dark"; prefersdark: true; color-scheme: dark;
+  --color-base-100: #161d38;        /* card: Night surface */
+  --color-base-200: #161d38;        /* surface: Night surface (tokens.json maps both here) */
+  --color-base-300: #262e4d;        /* divider: Night hairline */
+  --color-base-content: #e8ebf4;    /* Night text */
+  --color-primary: #8ea4ff;         /* Periwinkle */
+  --color-primary-content: #101838; /* Ink on Periwinkle 7.36:1 */
+  --color-secondary: #8ea4ff;  --color-secondary-content: #101838;
+  --color-accent: #8ea4ff;     --color-accent-content: #101838;
+  --color-neutral: #8ea4ff;    --color-neutral-content: #101838; /* alias of primary: Ink on Periwinkle (approved) */
+  --color-info: #161d38;       --color-info-content: #e8ebf4;
+  --color-success: #4fd49b;    --color-success-content: #0a0f22;
+  --color-warning: #ffbe5c;    --color-warning-content: #0a0f22;
+  --color-error: #ff8f86;      --color-error-content: #0a0f22;
+  --root-bg: #0a0f22;               /* page: Night */
+  --mq-text-secondary: #a8b1c7;     /* Night graphite */
+  --mq-border: #646f8f;             /* Night steel */
+  --mq-decorative: #646f8f;         /* no dark Haze token */
+  --mq-focus: #8ea4ff;
+  --radius-selector: 0.5rem; --radius-field: 0.25rem; --radius-box: 0.5rem;
+  --size-selector: 0.25rem; --size-field: 0.275rem;
+  --border: 1px; --depth: 0; --noise: 0;
+}
+
+@theme {
+  --font-sans: "Inter", "Inter Fallback", system-ui, sans-serif;
+  --font-heading: "Plus Jakarta Sans", "PJS Fallback", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --tracking-display: -0.02em;
+  --text-display: 2.5rem;  --text-display--line-height: 1.1;  --text-display--letter-spacing: -0.02em; --text-display--font-weight: 700;
+  --text-h1: 2rem;         --text-h1--line-height: 1.15;      --text-h1--letter-spacing: -0.02em;      --text-h1--font-weight: 700;
+  --text-h2: 1.5rem;       --text-h2--line-height: 1.25;      --text-h2--letter-spacing: -0.02em;      --text-h2--font-weight: 600;
+  --text-h3: 1.1875rem;    --text-h3--line-height: 1.3;       --text-h3--letter-spacing: -0.02em;      --text-h3--font-weight: 600;
+  --text-base--line-height: 1.55; --text-sm--line-height: 1.5; --text-xs--line-height: 1.45;
+  --spacing-header: 3.5rem; --spacing-dock: 4rem;
+}
+@theme inline {
+  --color-graphite: var(--mq-text-secondary);
+  --color-steel: var(--mq-border);
+  --color-haze: var(--mq-decorative);
+  --color-focus: var(--mq-focus);
+}
 
 /* https://stackoverflow.com/questions/2989263/disable-auto-zoom-in-input-text-tag-safari-on-iphone */
 @supports (-webkit-overflow-scrolling: touch) {
     input {
         font-size: 16px;
     }
+}
+
+@layer base {
+  h1, h2, h3 { font-family: var(--font-heading); letter-spacing: var(--tracking-display); }
+  h1 { font-size: var(--text-h1); line-height: var(--text-h1--line-height); font-weight: 700; }
+  h2 { font-size: var(--text-h2); line-height: var(--text-h2--line-height); font-weight: 600; }
+  h3 { font-size: var(--text-h3); line-height: var(--text-h3--line-height); font-weight: 600; }
+  body { line-height: 1.55; }
+  code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.875rem; line-height: 1.5; }
+  table { font-variant-numeric: tabular-nums; }
+}
+
+/* Zero specificity, so this outranks daisyUI's nested daisyui.l1.l2.l3 sub-layers
+   while still losing to any utility class a template applies. Do not move it into
+   @layer components (it would lose to daisyUI) and do not unlayer it (it would
+   beat the templates). The .alert rail is an inset box-shadow because daisyUI
+   declares .alert's border-width and border-color outside its sub-layer, at class
+   specificity, where a :where() rule cannot reach it. */
+@layer utilities {
+  :where(:focus-visible) { outline: 2px solid var(--mq-focus); outline-offset: 2px; }
+  :where(.btn, .btn-ghost, .btn-outline, .link) { outline-color: var(--mq-focus); }
+  :where(.input, .select, .textarea, .file-input) { --input-color: var(--mq-border); font-size: 1rem; }
+  :where(.input, .select, .textarea, .file-input):is(:focus, :focus-within) { --input-color: var(--mq-focus); }
+  :where(.checkbox) { border-color: var(--mq-border); }
+  :where(.toggle:not(:checked, [aria-checked=true], :has(> input:checked))) { --input-color: var(--mq-border); }
+  :where(.card):focus-visible { outline: 2px solid var(--mq-focus); outline-offset: 2px; }
+  :where(.collapse) { outline-color: var(--mq-focus); }
+  :where(.collapse > summary):focus-visible { outline: none; }
+  :where(.menu li > *):focus-visible { outline: 2px solid var(--mq-focus); outline-offset: 2px; background: transparent; }
+  :where(.dock > *):focus-visible, :where(.checkbox, .toggle):focus-visible { outline: 2px solid var(--mq-focus); outline-offset: 2px; }
+  :where(.btn) { --fontsize: 1rem; }
+  :where(.btn-sm) { --fontsize: 0.875rem; }
+  @media (pointer: coarse) { :where(.btn-sm, .input-sm, .select-sm, .file-input-sm) { --size: calc(var(--size-field) * 10); } }
+  :where(.btn-lg) { --fontsize: 1.125rem; }
+  :where(.btn-outline:not(:disabled, [disabled], .btn-disabled)) { --btn-border: var(--mq-border); --btn-fg: var(--color-base-content); }
+  :where(.menu) { font-size: 1rem; }
+  :where(.card-body) { --card-fs: 1rem; }
+  :where(.card-title) { --cardtitle-fs: var(--text-h3); font-family: var(--font-heading); letter-spacing: var(--tracking-display); }
+  :where(.card) { background: var(--color-base-100); box-shadow: none; border: 1px solid var(--color-base-300); }
+  :where(.alert) { font-size: 1rem; line-height: 1.5; background: var(--color-base-100); color: var(--color-base-content);
+    --alert-border-color: var(--color-base-300); box-shadow: inset 4px 0 0 var(--alert-status, var(--color-base-content)); }
+  :where(.alert-success) { --alert-status: var(--color-success); }
+  :where(.alert-warning) { --alert-status: var(--color-warning); }
+  :where(.alert-error)   { --alert-status: var(--color-error); }
+  :where(.alert > svg:first-child) { color: var(--alert-status, currentColor); }
+  :where(.badge) { font-size: 0.875rem; --size: calc(var(--size-selector) * 7); background: var(--color-base-200); color: var(--color-base-content); border-color: var(--color-base-300); }
+  :where(.badge-outline) { background: transparent; border-color: var(--mq-border); }
+  :where(.fieldset) { font-size: 1rem; }
+  :where(.fieldset-legend) { font-family: var(--font-heading); font-size: var(--text-h3); letter-spacing: var(--tracking-display); }
+  :where(.label) { color: var(--mq-text-secondary); font-size: 0.875rem; }
+  :where(.dock) { border-top: 1px solid var(--color-base-300); background: var(--color-base-100); view-transition-name: app-dock; }
+  :where(.dock-label) { font-size: 0.875rem; }
+  :where(.dock-active) { color: var(--color-primary); font-weight: 600; }
+  :where(.chat-bubble) { background: var(--color-base-200); }
+  :where(.chat-header, .chat-footer) { font-size: 0.875rem; color: var(--mq-text-secondary); }
+  :where(.modal-box) { border: 1px solid var(--color-base-300); }
+  :where(.toast.toast-top) { top: calc(var(--spacing-header) + 0.5rem); z-index: 60; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+  .htmx-indicator, .htmx-request .htmx-indicator { transition: none !important; }
 }
 
 .navbar {
@@ -19,29 +164,23 @@ and response bandwidth/latency. */
   z-index: 1000;
 }
 
-/* ── Calendar: outfit chip colors (outfit.id % 6) ─────────────────────── */
-.chip-0 { background-color: color-mix(in oklch, var(--color-primary)   20%, transparent); color: var(--color-primary);   }
-.chip-1 { background-color: color-mix(in oklch, var(--color-secondary) 20%, transparent); color: var(--color-secondary); }
-.chip-2 { background-color: color-mix(in oklch, var(--color-accent)    20%, transparent); color: var(--color-accent);    }
-.chip-3 { background-color: color-mix(in oklch, var(--color-info)      20%, transparent); color: var(--color-info);      }
-.chip-4 { background-color: color-mix(in oklch, var(--color-success)   20%, transparent); color: var(--color-success);   }
-.chip-5 { background-color: color-mix(in oklch, var(--color-warning)   20%, transparent); color: var(--color-warning);   }
-
 /* ── Calendar: mini calendar cell states ──────────────────────────────── */
-.cal-today    { background-color: var(--color-primary); color: var(--color-primary-content); font-weight: 700; }
-.cal-in-week  { color: var(--color-primary); background-color: color-mix(in oklch, var(--color-primary) 12%, transparent); font-weight: 600; }
-.cal-out-month { color: color-mix(in oklch, var(--color-base-content) 25%, transparent); }
-/* 
+/* Unlayered on purpose, as the rest of this file is; .cal-in-week uses an inset
+   box-shadow rather than an outline so it cannot mask the focus ring. */
+.cal-today { background: var(--color-primary); color: var(--color-primary-content); font-weight: 600; }
+.cal-in-week { box-shadow: inset 0 0 0 1px var(--mq-border); font-weight: 600; }
+.cal-out-month { color: var(--mq-text-secondary); }
+/*
  * pulltorefresh.js styling to pin refresh UI elements
- * under navbar and match the daisyui theme  
+ * under navbar and match the brand theme
  */
 .ptr--ptr {
   position: fixed !important;
-  top: 4rem !important; /* pin below the fixed navbar */
+  top: 4rem !important; /* pin below the fixed navbar, until PR 4 makes it sticky */
   left: 0;
   right: 0;
   z-index: 999;
-  background-color: var(--color-base-300) !important;
+  background-color: var(--color-base-100) !important;
 }
 .ptr--text,
 .ptr--icon {
@@ -63,7 +202,7 @@ body {
   isolation: isolate;
   width: 100%;
   min-width: 0;
-  border: 1px solid color-mix(in oklch, var(--color-base-content) 20%, transparent);
+  border: 1px solid var(--mq-border);
   border-radius: var(--radius-field);
   background: var(--color-base-100);
 }
@@ -71,7 +210,7 @@ body {
 .color-ms[open],
 .color-ms:focus-within {
   z-index: 20;
-  border-color: color-mix(in oklch, var(--color-base-content) 40%, transparent);
+  border-color: var(--mq-focus);
 }
 
 .color-ms summary {
@@ -94,7 +233,7 @@ body {
 }
 
 .ms-placeholder {
-  color: color-mix(in oklch, var(--color-base-content) 40%, transparent);
+  color: var(--mq-text-secondary);
   font-size: 0.875rem;
 }
 
@@ -114,11 +253,11 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   padding: 0.125rem 0.375rem 0.125rem 0.5rem;
   border-radius: var(--radius-selector, 1.9rem);
   background: var(--color-base-200);
-  border: 1px solid color-mix(in oklch, var(--color-base-content) 15%, transparent);
+  border: 1px solid var(--color-base-300);
   color: var(--color-base-content);
   line-height: 1.4;
   min-width: 0;
@@ -137,17 +276,17 @@ body {
   min-height: 1.4rem;
   margin: -0.125rem -0.375rem -0.125rem 0;
   border-radius: 0 var(--radius-selector, 1.9rem) var(--radius-selector, 1.9rem) 0;
-  background: color-mix(in oklch, var(--color-base-content) 10%, transparent);
+  background: var(--color-base-200);
   align-self: stretch;
 }
 
 .ms-pill-remove:hover {
   opacity: 1;
-  background: color-mix(in oklch, var(--color-base-content) 20%, transparent);
+  background: var(--mq-decorative);
 }
 
 .ms-chevron {
-  color: color-mix(in oklch, var(--color-base-content) 40%, transparent);
+  color: var(--mq-text-secondary);
   flex-shrink: 0;
   transition: transform 0.15s ease;
 }
@@ -168,7 +307,7 @@ body {
   right: 0;
   top: calc(100% + 0.25rem);
   z-index: 30;
-  border: 1px solid color-mix(in oklch, var(--color-base-content) 20%, transparent);
+  border: 1px solid var(--mq-border);
   border-radius: 0 0 var(--radius-field) var(--radius-field);
   box-shadow: 0 4px 12px color-mix(in oklch, var(--color-base-content) 10%, transparent);
   background: var(--color-base-100);
@@ -182,18 +321,18 @@ body {
   display: flex;
   align-items: center;
   gap: 0.375rem;
-  border: 1px solid color-mix(in oklch, var(--color-base-content) 20%, transparent);
+  border: 1px solid var(--mq-border);
   border-radius: var(--radius-field);
   padding: 0.25rem 0.5rem;
   background: var(--color-base-200);
-  color: color-mix(in oklch, var(--color-base-content) 40%, transparent);
+  color: var(--mq-text-secondary);
 }
 
 .ms-search-input {
   border: none;
   background: transparent;
   outline: none;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--color-base-content);
   width: 100%;
   padding: 0;
@@ -207,6 +346,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.625rem;
+  min-height: 2.75rem;
   padding: 0.4375rem 0.75rem;
   cursor: pointer;
   font-size: 0.875rem;
@@ -240,7 +380,7 @@ body {
   max-width: 0.75rem;
   max-height: 0.75rem;
   border-radius: 50%;
-  border: 1px solid color-mix(in oklch, var(--color-base-content) 20%, transparent);
+  border: 1px solid var(--mq-border);
   flex-shrink: 0;
 }
 
@@ -270,14 +410,14 @@ body {
 }
 /* other + any custom value = neutral fallback */
 .ms-swatch--other {
-  background: color-mix(in oklch, var(--color-base-content) 20%, transparent);
+  background: var(--mq-decorative);
 }
 
 /* Empty state */
 .ms-empty {
   padding: 0.625rem 0.75rem;
-  font-size: 0.8125rem;
-  color: color-mix(in oklch, var(--color-base-content) 40%, transparent);
+  font-size: 0.875rem;
+  color: var(--mq-text-secondary);
   text-align: center;
 }
 
@@ -290,17 +430,17 @@ body {
   cursor: pointer;
   font-size: 0.875rem;
   color: var(--color-primary);
-  border-top: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+  border-top: 1px solid var(--color-base-300);
   margin-top: 0.25rem;
 }
 
 .ms-create:hover {
-  background: color-mix(in oklch, var(--color-success) 10%, transparent);
+  background: var(--color-base-200);
 }
 
 /* Footer */
 .ms-footer {
-  border-top: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+  border-top: 1px solid var(--color-base-300);
   padding: 0.375rem 0.75rem;
   display: flex;
   justify-content: space-between;
@@ -308,17 +448,17 @@ body {
 }
 
 .ms-count {
-  font-size: 0.75rem;
-  color: color-mix(in oklch, var(--color-base-content) 50%, transparent);
+  font-size: 0.875rem;
+  color: var(--mq-text-secondary);
 }
 
 .ms-clear {
   cursor: pointer;
-  border: 1px solid color-mix(in oklch, var(--color-primary) 30%, transparent);
+  border: 1px solid var(--mq-border);
   border-radius: var(--radius-field);
-  background: color-mix(in oklch, var(--color-primary) 10%, transparent);
+  background: var(--color-base-100);
   color: var(--color-primary);
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: 1;
   padding: 0.25rem 0.5rem;
@@ -326,25 +466,11 @@ body {
 }
 
 .ms-clear:hover {
-  background: color-mix(in oklch, var(--color-primary) 18%, transparent);
-  border-color: color-mix(in oklch, var(--color-primary) 45%, transparent);
+  background: var(--color-base-200);
+  border-color: var(--mq-focus);
 }
 
 .ms-clear:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--mq-focus);
   outline-offset: 2px;
-}
-
-/* REPLACE with this */
-.color-ms:focus-within {
-  --input-color: var(--color-base-content);
-  outline: 2px solid var(--input-color);
-  outline-offset: 2px;
-  isolation: isolate;
-}
-
-@supports (color: color-mix(in lab, red, red)) {
-  .color-ms:focus-within {
-    box-shadow: 0 1px color-mix(in oklab, var(--input-color) calc(var(--depth) * 10%), #0000);
-  }
 }
