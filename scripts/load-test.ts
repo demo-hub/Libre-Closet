@@ -17,7 +17,13 @@ async function main() {
   let stderr = '';
   const server = spawn('node', ['dist/main.js'], {
     stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, NODE_ENV: 'production' },
+    // The global throttler answers 429 after THROTTLE_LIMIT requests a minute,
+    // which autocannon exhausts in seconds; lift it for the measurement only.
+    env: {
+      ...process.env,
+      NODE_ENV: 'production',
+      THROTTLE_LIMIT: process.env.THROTTLE_LIMIT ?? '100000',
+    },
   });
   server.stderr.on('data', (data: Buffer) => {
     stderr += data.toString();

@@ -360,6 +360,7 @@ Building the image by hand, rather than letting CI do it, is `docker build -f do
 | `IMPORT_ALLOW_PRIVATE_NETWORKS`    | Development and testing only - let the importer reach private and loopback addresses on any port | `false` | `true`                                                          |
 | `IMPORT_FETCH_TIMEOUT_MS`          | Time budget for fetching a pasted link         | `10000`        | `20000`                                                                                   |
 | `SITE_URL`                         | Public address, used for share links and page metadata. **Must be `https://` — an `http://` value stops the app at boot** | `https://librecloset.lazz.tech` | `https://closet.example.com`             |
+| `THROTTLE_LIMIT`                   | Requests allowed per minute per client before the app answers 429. Raise it only to load test; the default protects the import fetcher and the sign-in limits | `600` | `100000` |
 | `ACCESS_TOKEN_SECRET`              | JWT signing secret - **change for production**, nothing enforces it | `ChangeMe!`    | `u9n8c2y847rfctb23468tcb689f243`                                       |
 | `DATABASE_TYPE`                    | `sqlite` or `postgres`                         | `sqlite`       | `postgres`                                                                                |
 | `DATABASE_HOST`                    | Postgres host                                  | -              | `192.168.10.5`                                                                            |
