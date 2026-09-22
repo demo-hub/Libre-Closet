@@ -255,6 +255,27 @@ lose to daisyUI or beat a template's own utility class. */
   color: var(--color-base-content) !important;
 }
 
+/* htmx's own indicator styles are off (includeIndicatorStyles: false), so they live here. */
+.htmx-indicator { opacity: 0; visibility: hidden; }
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator { opacity: 1; visibility: visible; }
+
+.spinner {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--color-base-300);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spinner-turn 0.8s linear infinite;
+}
+@keyframes spinner-turn { to { rotate: 1turn; } }
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; border-style: dotted; border-color: var(--color-primary); }
+}
+
 /* Prevent iOS from collapsing the viewport on scroll */
 body {
   min-height: 100vh;

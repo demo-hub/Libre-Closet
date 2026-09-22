@@ -44,13 +44,11 @@ https://nestjs-i18n.com/quick-start --}}
     https://developer.chrome.com/docs/lighthouse/pwa/apple-touch-icon --}}
     <link rel="apple-touch-icon" href="/assets/lazztech_icon.png" />
 
-    {{!-- https://htmx.org/reference/#config --}} {{!--
-    https://htmx.org/attributes/hx-swap/#modifiers --}}
-    <meta name="htmx-config" content='{"globalViewTransitions": "true"}' />
-    {{!-- https://htmx.org/quirks/#attribute-inheritance --}}
-    <meta name="htmx-config" content='{"disableInheritance":true}' />
+    {{!-- htmx reads only the first htmx-config meta, so there is exactly one. --}}
+    <meta name="htmx-config" content='{"globalViewTransitions": true, "includeIndicatorStyles": false}' />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
-    <title>{{#if pageTitle}}{{pageTitle}}{{else}}{{appName}} — Free Self-Hosted Wardrobe Organizer{{/if}}</title>
+    <title>{{#if pageTitle}}{{pageTitle}}{{else}}{{appName}}{{/if}}</title>
     {{! Used inconjunction with service worker sw.js to enable PWA (Progressive
     Web App) functionality. }}
     <link rel="manifest" href="/manifest.json" />
@@ -86,6 +84,15 @@ https://nestjs-i18n.com/quick-start --}}
     <script>
       window.KNOWN_COLORS = new Set({{{knownColors}}});
     </script>
+    <script>
+      if (!window.__lcToastBound) {
+        window.__lcToastBound = true;
+        document.addEventListener('htmx:responseError', function () {
+          var toast = document.getElementById('requestErrorToast');
+          if (toast) toast.classList.remove('hidden');
+        });
+      }
+    </script>
   </head>
 
   {{! hx-boost 'automagically' replaces all anchor tags with htmx logic that
@@ -106,23 +113,7 @@ https://nestjs-i18n.com/quick-start --}}
     https://htmx.org/essays/web-security-basics-with-htmx/ }} {{{body}}} {{!
     htmx does not swap a 4xx or 5xx response, so without this a refused or
     rate-limited request looks to the user like nothing happened at all. }}
-    <div
-      id="requestErrorToast"
-      class="toast toast-top toast-center z-50 hidden"
-      aria-live="polite"
-    >
-      <div role="alert" class="alert alert-error">
-        <span>{{t 'lang.REQUEST_FAILED'}}</span>
-      </div>
-    </div>
-    <script>
-      document.addEventListener('htmx:responseError', function () {
-        const toast = document.getElementById('requestErrorToast');
-        if (!toast) return;
-        toast.classList.remove('hidden');
-        setTimeout(function () { toast.classList.add('hidden'); }, 5000);
-      });
-    </script>
+    {{> toast id="requestErrorToast" kind="error" text=(t 'lang.REQUEST_FAILED') hidden=true dismiss=true}}
     {{! The
     service worker is used in conjunction with the manifest.json to enable PWA
     (Progressive Web App) functionality. This script tag uses JavaScript

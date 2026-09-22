@@ -1,0 +1,18 @@
+{{!-- {{> alert kind="error|success|warning|neutral" text=… alertId=… dismiss=true}}; not `id`: partials inherit the caller's context. Playwright selects on alert-*. --}}
+<div{{#if alertId}} id="{{alertId}}"{{/if}}
+  role="{{#ifEquals kind 'error'}}alert{{else}}status{{/ifEquals}}"
+  class="alert{{#ifEquals kind 'neutral'}}{{else}} alert-{{kind}}{{/ifEquals}}">
+  {{#ifEquals kind 'error'}}{{icon "x-circle" class="size-5 shrink-0"}}{{/ifEquals}}
+  {{#ifEquals kind 'success'}}{{icon "check-circle" class="size-5 shrink-0"}}{{/ifEquals}}
+  {{#ifEquals kind 'warning'}}{{icon "exclamation-triangle" class="size-5 shrink-0"}}{{/ifEquals}}
+  {{#ifEquals kind 'neutral'}}{{icon "information-circle" class="size-5 shrink-0"}}{{/ifEquals}}
+  <div>{{text}}</div>
+  {{#if dismiss}}
+  <button
+    type="button"
+    class="btn btn-ghost btn-square"
+    aria-label="{{t 'lang.DISMISS'}}"
+    _="on click set t to closest .toast then if t add .hidden to t else remove closest .alert end"
+  >{{icon "x-mark" class="size-5"}}</button>
+  {{/if}}
+</div>

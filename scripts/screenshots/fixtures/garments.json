@@ -1,0 +1,110 @@
+[
+  {
+    "file": "white-tee.png",
+    "name": "White tee",
+    "category": "tops",
+    "colors": [
+      "white"
+    ],
+    "size": "M"
+  },
+  {
+    "file": "navy-polo.png",
+    "name": "Navy polo",
+    "category": "tops",
+    "colors": [
+      "blue"
+    ],
+    "size": "M"
+  },
+  {
+    "file": "olive-overshirt.png",
+    "name": "Olive overshirt",
+    "category": "tops",
+    "colors": [
+      "green"
+    ],
+    "size": "L"
+  },
+  {
+    "file": "grey-hoodie.png",
+    "name": "Grey hoodie",
+    "category": "tops",
+    "colors": [
+      "grey"
+    ],
+    "size": "L"
+  },
+  {
+    "file": "indigo-jeans.png",
+    "name": "Indigo jeans",
+    "category": "bottoms",
+    "colors": [
+      "blue"
+    ],
+    "size": "32"
+  },
+  {
+    "file": "stone-chinos.png",
+    "name": "Stone chinos",
+    "category": "bottoms",
+    "colors": [
+      "beige"
+    ],
+    "size": "32"
+  },
+  {
+    "file": "black-shorts.png",
+    "name": "Black shorts",
+    "category": "bottoms",
+    "colors": [
+      "black"
+    ],
+    "size": "M"
+  },
+  {
+    "file": "red-midi-dress.png",
+    "name": "Red midi dress",
+    "category": "dresses",
+    "colors": [
+      "red"
+    ],
+    "size": "S"
+  },
+  {
+    "file": "camel-coat.png",
+    "name": "Camel coat",
+    "category": "outerwear",
+    "colors": [
+      "brown"
+    ],
+    "size": "M"
+  },
+  {
+    "file": "white-trainers.png",
+    "name": "White trainers",
+    "category": "footwear",
+    "colors": [
+      "white"
+    ],
+    "size": "42"
+  },
+  {
+    "file": "brown-boots.png",
+    "name": "Brown boots",
+    "category": "footwear",
+    "colors": [
+      "brown"
+    ],
+    "size": "42"
+  },
+  {
+    "file": "canvas-tote.png",
+    "name": "Canvas tote",
+    "category": "bags",
+    "colors": [
+      "beige"
+    ],
+    "size": "One size"
+  }
+]

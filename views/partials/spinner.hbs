@@ -1,0 +1,2 @@
+{{!-- {{> spinner spinnerId=… indicator=true class=… decorative=true}}; not `id`: partials inherit the caller's context. --}}
+<span{{#if spinnerId}} id="{{spinnerId}}"{{/if}} class="spinner{{#if indicator}} htmx-indicator{{/if}}{{#if class}} {{class}}{{/if}}"{{#if decorative}} aria-hidden="true"{{else}} role="status"{{/if}}>{{#unless decorative}}<span class="sr-only">{{t 'lang.LOADING'}}</span>{{/unless}}</span>
