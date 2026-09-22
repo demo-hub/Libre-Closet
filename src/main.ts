@@ -67,6 +67,15 @@ async function bootstrap() {
     decorateReply: false,
   });
 
+  // The font file names carry their upstream version, so they never change in place.
+  app.useStaticAssets({
+    root: join(__dirname, '..', 'public', 'assets', 'fonts'),
+    prefix: '/assets/fonts/',
+    decorateReply: false,
+    maxAge: '1y',
+    immutable: true,
+  });
+
   /** Serve htmx and other libraries from node_modules
    * https://htmx.org/docs/#installing
    * https://blog.wesleyac.com/posts/why-not-javascript-cdn */
