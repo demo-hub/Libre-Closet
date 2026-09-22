@@ -79,6 +79,10 @@ https://nestjs-i18n.com/quick-start --}}
     TailwindCSS/DaisyUI }}
     <link href="/bundle.css" rel="preload" as="style" />
     <link href="/bundle.css" rel="stylesheet" />
+    {{!-- The two faces every first paint needs. Font requests are CORS-mode even
+    from the same origin, so without crossorigin each file is fetched twice. --}}
+    <link rel="preload" href="/assets/fonts/inter-v20-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/assets/fonts/plus-jakarta-sans-v12-latin.woff2" as="font" type="font/woff2" crossorigin />
     <script>
       window.KNOWN_COLORS = new Set({{{knownColors}}});
     </script>

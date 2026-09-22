@@ -439,6 +439,16 @@ npx mikro-orm migration:create --config mikro-orm.postgres.cli-config.ts
 
 Never author a SQLite migration that rebuilds the `garment` table: `outfit_garments` carries `on delete cascade`, so the rebuild silently empties every saved outfit. Use add column / update / drop column / rename column instead.
 
+### Fonts
+
+Inter, Plus Jakarta Sans and JetBrains Mono are committed under `public/assets/fonts/` and served from the app itself, never from Google's servers. They are the variable `latin` files of all three and the `cyrillic` files of Inter and JetBrains Mono (Plus Jakarta Sans has no Cyrillic; Russian headings fall through to Inter), from `@fontsource-variable/*` 5.3.0, each under the SIL Open Font License beside it.
+
+The upstream version is part of each file name because the files are served with `Cache-Control: immutable`. To update one, give the new file a new name and change it in `views/assets/main.css` and the two preloads in `views/layout.hbs`; overwriting a file in place would leave browsers holding the old one for a year.
+
+```bash
+npm pack @fontsource-variable/inter@<version>   # then take files/inter-latin-wght-normal.woff2 and LICENSE
+```
+
 ### Docker build
 
 ```bash

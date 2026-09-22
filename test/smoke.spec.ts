@@ -39,3 +39,30 @@ test('garment with several colors saves and lists them', async ({ page }) => {
   await page.goto(showPath);
   await expect(page.locator('body')).toContainText('red, blue');
 });
+
+test('brand fonts are self-hosted, cached for good, and actually used', async ({
+  page,
+}) => {
+  const font = await page.request.get('/assets/fonts/inter-v20-latin.woff2');
+  expect(font.ok()).toBeTruthy();
+  expect(font.headers()['content-type']).toBe('font/woff2');
+  // The file names carry the upstream version, so they never change in place.
+  expect(font.headers()['cache-control']).toBe(
+    'public, max-age=31536000, immutable',
+  );
+
+  // bundle.css is not content-hashed, so it must keep revalidating.
+  const css = await page.request.get('/bundle.css');
+  expect(css.headers()['cache-control']).toBe('public, max-age=0');
+
+  await page.goto('/');
+  await page.evaluate(() => document.fonts.ready);
+  const loaded = await page.evaluate(() =>
+    [...document.fonts]
+      .filter((face) => face.status === 'loaded')
+      .map((face) => face.family.replace(/"/g, '')),
+  );
+  expect(loaded).toEqual(
+    expect.arrayContaining(['Inter', 'Plus Jakarta Sans']),
+  );
+});
