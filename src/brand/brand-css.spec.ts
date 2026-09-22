@@ -2,12 +2,7 @@ import { readFileSync } from 'fs';
 import { globSync } from 'glob';
 import { join } from 'path';
 
-/**
- * Holds the redesign to the mandatiq brand guidelines v2.0 (docs/REDESIGN.md).
- * tokens.json is vendored from the brand repository; it is the only source of
- * truth for which colours may meet which, so a pairing the theme produces has
- * to appear there rather than merely pass a contrast calculation.
- */
+/** tokens.json (vendored from the brand repo) decides which colours may meet; passing a contrast ratio is not enough. */
 
 const root = join(__dirname, '..', '..');
 const tokens = JSON.parse(
@@ -29,11 +24,7 @@ type Tokens = {
   avoid: Pairing[];
 };
 
-/**
- * Files that still break rule 4 and the PR that clears each. The array only
- * shrinks: PR 12 asserts it is empty. A file listed here is skipped entirely,
- * so removing it is what proves a page PR finished its sweep.
- */
+/** Skipped files, each tagged with the PR that sweeps it; only ever shrinks, and PR 12 asserts it is empty. */
 const KNOWN_DEBT = [
   'views/index.hbs', // PR 11a
   'views/about.hbs', // PR 11a
@@ -201,9 +192,7 @@ describe('every pairing the theme produces', () => {
     }
   }
 
-  // Surface is the one background the brand does not pair with Steel, the
-  // status colours or Haze in light mode. The dark palette does list all of
-  // them on Night surface, so the check is light-only.
+  // Light only: the dark palette does list these colours on Night surface.
   for (const fgRole of [
     '--mq-border',
     '--color-success',

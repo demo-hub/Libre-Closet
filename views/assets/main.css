@@ -1,11 +1,4 @@
-/* Compiled by `npm run generate:tailwind` into public/bundle.css, which is a build
-output and never committed. The mandatiq design system lives here: the two theme
-blocks below carry every brand colour, @theme carries the type scale, and the one
-@layer utilities block corrects the daisyUI component defaults that break the
-guide. See docs/REDESIGN.md section 5.1 for why each of those has to be where it
-is; the short version is that a @theme colour would lose to daisyUI's layer and
-could not follow dark mode, and an override outside @layer utilities would either
-lose to daisyUI or beat a template's own utility class. */
+/* Compiled into public/bundle.css by `npm run generate:tailwind`; why each part lives where it does: docs/REDESIGN.md 5.1. */
 @import "tailwindcss";
 @source not "../../docs";          /* Markdown under docs/ is not a class source */
 @source not "../../src/brand";      /* nor the brand spec, which names the classes it forbids */
@@ -85,10 +78,7 @@ lose to daisyUI or beat a template's own utility class. */
   --color-focus: var(--mq-focus);
 }
 
-/* Self-hosted, never from Google's servers (guide ch. 09). Variable files from
-   @fontsource-variable/* 5.3.0; the version in each name is the upstream build,
-   so the files can be cached immutably. URLs are root-absolute because the
-   Tailwind CLI does not rebase url() into public/bundle.css. */
+/* Self-hosted (guide ch. 09); root-absolute because the Tailwind CLI does not rebase url(). */
 @font-face {
   font-family: "Inter";
   font-style: normal;
@@ -130,10 +120,7 @@ lose to daisyUI or beat a template's own utility class. */
   unicode-range: U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;
 }
 
-/* Local faces sized to the web fonts' metrics (capsize), so text does not jump
-   when the files arrive. Each carries its web face's unicode-range: without it a
-   local face covers every code point, is available at once, and would catch the
-   Cyrillic that should fall through to Inter. */
+/* Metric-matched fallbacks, each limited to its web face's unicode-range so Cyrillic still falls through to Inter. */
 @font-face {
   font-family: "Inter Fallback";
   src: local("Arial"), local("Liberation Sans"), local("Roboto");
@@ -170,12 +157,7 @@ lose to daisyUI or beat a template's own utility class. */
   table { font-variant-numeric: tabular-nums; }
 }
 
-/* Zero specificity, so this outranks daisyUI's nested daisyui.l1.l2.l3 sub-layers
-   while still losing to any utility class a template applies. Do not move it into
-   @layer components (it would lose to daisyUI) and do not unlayer it (it would
-   beat the templates). The .alert rail is an inset box-shadow because daisyUI
-   declares .alert's border-width and border-color outside its sub-layer, at class
-   specificity, where a :where() rule cannot reach it. */
+/* Keep in @layer utilities: :where() beats daisyUI's sub-layers yet loses to template utilities. */
 @layer utilities {
   :where(:focus-visible) { outline: 2px solid var(--mq-focus); outline-offset: 2px; }
   :where(.btn, .btn-ghost, .btn-outline, .link) { outline-color: var(--mq-focus); }
@@ -198,7 +180,7 @@ lose to daisyUI or beat a template's own utility class. */
   :where(.card-title) { --cardtitle-fs: var(--text-h3); }
   :where(.card) { background: var(--color-base-100); box-shadow: none; border: 1px solid var(--color-base-300); }
   :where(.alert) { font-size: 1rem; line-height: 1.5; background: var(--color-base-100); color: var(--color-base-content);
-    --alert-border-color: var(--color-base-300); box-shadow: inset 4px 0 0 var(--alert-status, var(--color-base-content)); }
+    --alert-border-color: var(--color-base-300); box-shadow: inset 4px 0 0 var(--alert-status, var(--color-base-content)); } /* a rail, not a border: daisyUI sets .alert's border outside its sub-layer */
   :where(.alert-success) { --alert-status: var(--color-success); }
   :where(.alert-warning) { --alert-status: var(--color-warning); }
   :where(.alert-error)   { --alert-status: var(--color-error); }
@@ -233,8 +215,7 @@ lose to daisyUI or beat a template's own utility class. */
 }
 
 /* ── Calendar: mini calendar cell states ──────────────────────────────── */
-/* Unlayered on purpose, as the rest of this file is; .cal-in-week uses an inset
-   box-shadow rather than an outline so it cannot mask the focus ring. */
+/* An inset box-shadow, not an outline, so .cal-in-week cannot hide the focus ring. */
 .cal-today { background: var(--color-primary); color: var(--color-primary-content); font-weight: 600; }
 .cal-in-week { box-shadow: inset 0 0 0 1px var(--mq-border); font-weight: 600; }
 .cal-out-month { color: var(--mq-text-secondary); }
@@ -282,8 +263,7 @@ body {
   min-height: 100dvh; /* Use dynamic viewport height */
 }
 
-/* color-multiselect.css
-   DaisyUI v5 compatible — uses --color-* variables throughout */
+/* Colour multiselect: its class names are hooks for public/js/color-multiselect.js and the Playwright specs. */
 
 .color-ms {
   position: relative;

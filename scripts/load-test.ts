@@ -17,8 +17,7 @@ async function main() {
   let stderr = '';
   const server = spawn('node', ['dist/main.js'], {
     stdio: ['ignore', 'pipe', 'pipe'],
-    // The global throttler answers 429 after THROTTLE_LIMIT requests a minute,
-    // which autocannon exhausts in seconds; lift it for the measurement only.
+    // autocannon spends the default THROTTLE_LIMIT in seconds and then only measures 429s.
     env: {
       ...process.env,
       NODE_ENV: 'production',
