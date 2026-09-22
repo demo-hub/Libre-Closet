@@ -41,14 +41,50 @@ export async function seed(request: APIRequestContext): Promise<void> {
     // The photo is already cut out, so it is its own background-removed copy.
     form.append('photo', new Blob([photo], { type: 'image/png' }), g.file);
     form.append('nobgPhoto', new Blob([photo], { type: 'image/png' }), g.file);
-    await ok(g.name, await request.post('/wardrobe/import', { multipart: form }));
+    await ok(
+      g.name,
+      await request.post('/wardrobe/import', { multipart: form }),
+    );
   }
 
   const outfits: [string, string | null, [string, number][]][] = [
-    ['Office Monday', '2026-03-02', [['tops', 2], ['bottoms', 6], ['footwear', 11]]],
-    ['Weekend walk', '2026-03-04', [['tops', 4], ['bottoms', 5], ['footwear', 10], ['bags', 12]]],
-    ['Dinner out', '2026-03-06', [['dresses', 8], ['outerwear', 9], ['footwear', 11]]],
-    ['Summer errand', null, [['tops', 1], ['bottoms', 7], ['footwear', 10]]],
+    [
+      'Office Monday',
+      '2026-03-02',
+      [
+        ['tops', 2],
+        ['bottoms', 6],
+        ['footwear', 11],
+      ],
+    ],
+    [
+      'Weekend walk',
+      '2026-03-04',
+      [
+        ['tops', 4],
+        ['bottoms', 5],
+        ['footwear', 10],
+        ['bags', 12],
+      ],
+    ],
+    [
+      'Dinner out',
+      '2026-03-06',
+      [
+        ['dresses', 8],
+        ['outerwear', 9],
+        ['footwear', 11],
+      ],
+    ],
+    [
+      'Summer errand',
+      null,
+      [
+        ['tops', 1],
+        ['bottoms', 7],
+        ['footwear', 10],
+      ],
+    ],
   ];
   for (const [name, scheduleDate, slots] of outfits) {
     const body = new URLSearchParams({ name });

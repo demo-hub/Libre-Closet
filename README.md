@@ -424,7 +424,7 @@ npm run test:visual     # screenshot comparison, needs Docker
 npm run test:visual:update  # re-record the screenshots after an intended change
 ```
 
-The screenshot tests seed a throwaway wardrobe on port 3100 and compare every page against `test/__screenshots__/`. Chromium runs inside the pinned `mcr.microsoft.com/playwright` image while the app stays on your own Node, so the pixels match on any machine and in CI; the same page rendered by a different browser build or font stack would not. When a change is meant to alter how a page looks, re-record with `test:visual:update` and commit the new images: the diff between the old and new PNGs is what the reviewer looks at.
+The screenshot tests seed a throwaway wardrobe on port 3100 and compare nine key pages (listed in `test/visual.spec.ts`) against `test/__screenshots__/`. Chromium runs inside the pinned `mcr.microsoft.com/playwright` image while the app stays on your own Node, so the pixels match from run to run and in CI; the same page rendered by a different browser build or font stack would not. When a change is meant to alter how a page looks, re-record with `test:visual:update` and commit the new images: the diff between the old and new PNGs is what the reviewer looks at. The script needs Docker with host networking (Docker Engine on Linux, or Docker Desktop with host networking turned on) and free ports 3100 and 3333.
 
 ### Migrations
 

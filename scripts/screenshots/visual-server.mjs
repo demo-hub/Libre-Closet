@@ -10,6 +10,9 @@ const server = spawn(process.execPath, ['dist/main.js'], {
   env: {
     ...process.env,
     DATA_PATH: dataPath,
+    DATABASE_TYPE: 'sqlite',
+    DATABASE_SCHEMA: join(dataPath, 'sqlite3.db'),
+    FILE_STORAGE_TYPE: 'local',
     PORT: '3100',
     APP_NAME: 'Libre Closet',
     AUTH_ENABLED: 'false',
@@ -21,7 +24,7 @@ const server = spawn(process.execPath, ['dist/main.js'], {
 const stop = () => server.kill('SIGTERM');
 process.on('SIGTERM', stop);
 process.on('SIGINT', stop);
-server.on('exit', (code) => {
+server.on('exit', (code, signal) => {
   rmSync(dataPath, { recursive: true, force: true });
-  process.exit(code ?? 0);
+  process.exit(code ?? (signal === 'SIGTERM' ? 0 : 1));
 });

@@ -544,8 +544,7 @@ body {
   outline-offset: 2px;
 }
 
-/* htmx fades indicators with opacity, which leaves their text readable to
-   assistive tech while idle. This one carries a sentence, so hide it outright. */
+/* Collapsed while idle, not only hidden: it is a whole line of text under the button. */
 #aiLoading {
   display: none;
 }

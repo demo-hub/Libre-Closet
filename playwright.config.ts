@@ -47,7 +47,6 @@ export default defineConfig({
       animations: 'disabled',
       caret: 'hide',
       scale: 'css',
-      maxDiffPixelRatio: 0.005,
     },
   },
   snapshotPathTemplate: 'test/__screenshots__/{projectName}/{arg}{ext}',
@@ -140,6 +139,7 @@ export default defineConfig({
         command: 'node scripts/screenshots/visual-server.mjs',
         url: visualUrl,
         reuseExistingServer: false,
+        gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 },
         stderr: 'pipe',
       }
     : {

@@ -86,7 +86,15 @@ https://nestjs-i18n.com/quick-start --}}
         window.__lcToastBound = true;
         document.addEventListener('htmx:responseError', function () {
           var toast = document.getElementById('requestErrorToast');
-          if (toast) toast.classList.remove('hidden');
+          if (!toast) return;
+          if (toast.classList.contains('hidden')) return toast.classList.remove('hidden');
+          // Already up: hide and re-show so a repeated failure is announced again.
+          toast.classList.add('hidden');
+          setTimeout(function () { toast.classList.remove('hidden'); }, 100);
+        });
+        document.addEventListener('htmx:beforeHistorySave', function () {
+          var toast = document.getElementById('requestErrorToast');
+          if (toast) toast.classList.add('hidden');
         });
       }
     </script>

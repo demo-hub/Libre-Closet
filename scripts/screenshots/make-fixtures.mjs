@@ -20,7 +20,7 @@ const shapes = {
   tote: 'M22 40 L78 40 L74 90 L26 90 Z M36 40 Q36 16 50 16 Q64 16 64 40 L60 40 Q60 21 50 21 Q40 21 40 40 Z',
 };
 
-export const garments = [
+const garments = [
   { file: 'white-tee.png', shape: 'tee', fill: '#f2f1ec', name: 'White tee', category: 'tops', colors: ['white'], size: 'M' },
   { file: 'navy-polo.png', shape: 'polo', fill: '#27345c', name: 'Navy polo', category: 'tops', colors: ['blue'], size: 'M' },
   { file: 'olive-overshirt.png', shape: 'overshirt', fill: '#6b6f3a', name: 'Olive overshirt', category: 'tops', colors: ['green'], size: 'L' },
@@ -37,11 +37,9 @@ export const garments = [
 
 const darker = (hex) => '#' + hex.slice(1).match(/../g).map((c) => Math.round(parseInt(c, 16) * 0.72).toString(16).padStart(2, '0')).join('');
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  for (const g of garments) {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="600" height="600"><path d="${shapes[g.shape]}" fill="${g.fill}" fill-rule="evenodd" stroke="${darker(g.fill)}" stroke-width="0.8" stroke-linejoin="round"/></svg>`;
-    await sharp(Buffer.from(svg)).png({ compressionLevel: 9, palette: true }).toFile(join(dir, g.file));
-  }
-  writeFileSync(join(dir, 'garments.json'), JSON.stringify(garments.map(({ shape, fill, ...rest }) => rest), null, 2) + '\n');
-  console.log(`${garments.length} fixtures written to ${dir}`);
+for (const g of garments) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="600" height="600"><path d="${shapes[g.shape]}" fill="${g.fill}" fill-rule="evenodd" stroke="${darker(g.fill)}" stroke-width="0.8" stroke-linejoin="round"/></svg>`;
+  await sharp(Buffer.from(svg)).png({ compressionLevel: 9, palette: true }).toFile(join(dir, g.file));
 }
+writeFileSync(join(dir, 'garments.json'), JSON.stringify(garments.map(({ shape, fill, ...rest }) => rest), null, 2) + '\n');
+console.log(`${garments.length} fixtures written to ${dir}`);

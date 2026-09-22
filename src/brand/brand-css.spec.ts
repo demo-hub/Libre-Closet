@@ -261,7 +261,7 @@ describe('templates and client scripts', () => {
     [/\b(input-xs|badge-xs|range-xs)\b/, 'below the 12 px floor'],
     [/text-\[\d+px\]/, 'off the type scale'],
     [
-      /<h[1-3][^>]*\btext-(xs|sm|base)\b/,
+      /<h[1-3][^>]*\btext-(xs|sm|base|lg)(?![\w-])/,
       'a heading below the h3 size, where Plus Jakarta Sans runs its words together',
     ],
     [/\buppercase\b/, 'ch. 09: sentence case, no all-caps labels'],
@@ -291,6 +291,13 @@ describe('templates and client scripts', () => {
   ]
     .map((f) => f.split('\\').join('/'))
     .filter((f) => !KNOWN_DEBT.includes(f));
+
+  it('flags a small heading but not a heading in the text colour', () => {
+    const [heading] = forbidden.find(([, why]) => why.startsWith('a heading'))!;
+    expect(heading.test('<h2 class="card-title text-lg">')).toBe(true);
+    expect(heading.test('<h3 class="text-base">')).toBe(true);
+    expect(heading.test('<h2 class="text-h3 text-base-content">')).toBe(false);
+  });
 
   it('checks the files that have been swept', () => {
     // Guards the guard: a typo in KNOWN_DEBT would silently empty this suite.
