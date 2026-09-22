@@ -2,9 +2,9 @@
 <main id="main" tabindex="-1" class="page page--center gap-3">
     <form hx-post="/auth/update-email" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-trigger="submit">
         <fieldset
-        class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4"
+        class="fieldset bg-base-200 border-base-300 rounded-box w-xs max-w-[calc(100vw-2rem)] border p-4"
         hx-post="/auth/validate/update-email"
-        hx-target="this" hx-select="fieldset.fieldset" hx-swap="outerHTML"
+        hx-target="this" hx-select="fieldset.fieldset" hx-swap="outerHTML" hx-sync="this:replace" data-live-validation
         hx-indicator="#loading"
         hx-trigger="change, blur delay:500ms"
         hx-include="input"
