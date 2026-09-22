@@ -155,6 +155,8 @@
   body { line-height: 1.55; }
   code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.875rem; line-height: 1.5; }
   table { font-variant-numeric: tabular-nums; }
+  html { scroll-padding-top: var(--spacing-header); }
+  @media (width < 64rem) { html { scroll-padding-bottom: calc(var(--spacing-dock) + env(safe-area-inset-bottom)); } }
 }
 
 /* Keep in @layer utilities: :where() beats daisyUI's sub-layers yet loses to template utilities. */
@@ -206,30 +208,57 @@
   .htmx-indicator, .htmx-request .htmx-indicator { transition: none !important; }
 }
 
-.navbar {
-  position: fixed;
+/* Stacking: toast 60, skip link 50, header 40 (sticky), pull-to-refresh 999 while pulling, dock 1, modals in the top layer. */
+.app-header {
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
+  z-index: 40;
+  height: var(--spacing-header);
+  background: var(--color-base-100);
+  border-bottom: 1px solid var(--color-base-300);
+  padding-inline: max(1rem, env(safe-area-inset-left)) max(1rem, env(safe-area-inset-right));
+  view-transition-name: app-header;
 }
+.app-header nav [aria-current="page"] { box-shadow: inset 0 -2px 0 var(--color-primary); }
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: 0.5rem;
+  z-index: 50;
+  padding: 0.75rem 1rem;
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-field);
+  transform: translateY(-200%);
+}
+.skip-link:focus-visible { transform: none; }
+
+.page {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: 1rem 1rem calc(var(--spacing-dock) + env(safe-area-inset-bottom) + 1rem);
+}
+.page--narrow { max-width: 42rem; }
+.page--center { min-height: calc(100dvh - var(--spacing-header)); display: grid; place-content: safe center; padding-top: 2rem; }
+@media (min-width: 64rem) { .page { padding-bottom: 2rem; } }
 
 /* ── Calendar: mini calendar cell states ──────────────────────────────── */
 /* An inset box-shadow, not an outline, so .cal-in-week cannot hide the focus ring. */
 .cal-today { background: var(--color-primary); color: var(--color-primary-content); font-weight: 600; }
 .cal-in-week { box-shadow: inset 0 0 0 1px var(--mq-border); font-weight: 600; }
 .cal-out-month { color: var(--mq-text-secondary); }
-/*
- * pulltorefresh.js styling to pin refresh UI elements
- * under navbar and match the brand theme
- */
+/* pulltorefresh.js appends its own <style> after bundle.css on the first touch, hence !important. */
 .ptr--ptr {
   position: fixed !important;
-  top: 4rem !important; /* pin below the fixed navbar, until PR 4 makes it sticky */
+  top: var(--spacing-header) !important;
   left: 0;
   right: 0;
   z-index: 999;
   background-color: var(--color-base-100) !important;
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
 }
 .ptr--text,
 .ptr--icon {
@@ -255,12 +284,6 @@
 @keyframes spinner-turn { to { rotate: 1turn; } }
 @media (prefers-reduced-motion: reduce) {
   .spinner { animation: none; border-style: dotted; border-color: var(--color-primary); }
-}
-
-/* Prevent iOS from collapsing the viewport on scroll */
-body {
-  min-height: 100vh;
-  min-height: 100dvh; /* Use dynamic viewport height */
 }
 
 /* Colour multiselect: its class names are hooks for public/js/color-multiselect.js and the Playwright specs. */

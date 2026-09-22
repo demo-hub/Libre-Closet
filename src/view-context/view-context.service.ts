@@ -7,6 +7,7 @@ import { FastifyRequest } from 'fastify';
 import { I18nContext } from 'nestjs-i18n';
 import { GarmentEnricher } from '../ai/garment-enricher';
 import { User } from '../dal/entity/user.entity';
+import { sectionOf } from './section';
 
 @Injectable()
 export class ViewContextService {
@@ -46,7 +47,7 @@ export class ViewContextService {
     const context: Record<string, any> = {
       appName,
       siteUrl,
-      baseUrl: req.url === '/' ? '' : req.url,
+      section: sectionOf(req.url),
       authEnabled: this.configService.get<boolean>('AUTH_ENABLED'),
       signupsDisabled: this.configService.get<boolean>('DISABLE_REGISTRATION'),
       pwaEnabled: this.configService.get<boolean>('PWA_ENABLED'),

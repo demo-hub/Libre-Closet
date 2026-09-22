@@ -47,6 +47,7 @@ export type I18nTranslations = {
         "SCREENSHOT_OUTFIT_CAPTION": string;
         "HOME": string;
         "PROFILE": string;
+        "ACCOUNT": string;
         "FILES": string;
         "WARDROBE": string;
         "OUTFITS": string;
@@ -124,6 +125,11 @@ export type I18nTranslations = {
         "CLOSE": string;
         "DISMISS": string;
         "LOADING": string;
+        "SKIP_TO_CONTENT": string;
+        "MAIN_NAVIGATION": string;
+        "PTR_PULL": string;
+        "PTR_RELEASE": string;
+        "PTR_REFRESHING": string;
         "EDIT": string;
         "NEW_GARMENT": string;
         "EDIT_GARMENT": string;

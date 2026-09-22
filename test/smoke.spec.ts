@@ -11,7 +11,9 @@ test('homepage loads with APP_NAME title and version', async ({ page }) => {
   });
 
   await page.goto('/');
-  await expect(page.locator('body')).toContainText(APP_NAME);
+  await expect(
+    page.getByRole('banner').getByRole('link', { name: APP_NAME, exact: true }),
+  ).toBeVisible();
   expect(
     consoleErrors,
     `Console errors found:\n${consoleErrors.join('\n')}`,

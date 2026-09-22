@@ -345,7 +345,7 @@ Building the image by hand, rather than letting CI do it, is `docker build -f do
 
 | Variable                           | Description                                    | Default        | Example                                                                                   |
 | ---------------------------------- | ---------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------- |
-| `APP_NAME`                         | Display name shown in the UI and navbar        | `Libre Closet` | `My awesome Closet manager`                                                               |
+| `APP_NAME`                         | Display name shown in the UI and header        | `Libre Closet` | `My awesome Closet manager`                                                               |
 | `DATA_PATH`                        | Directory for SQLite DB and uploaded files     | `./data`       | `./libre-closet-data`                                                                     |
 | `AUTH_ENABLED`                     | Enable JWT user accounts and login. With `false`, everyone reaching the port shares one wardrobe with full write access | `false` | `true`                                             |
 | `DISABLE_REGISTRATION`             | Disallows user sign ups when true              | `false`        | `true`                                                                                    |

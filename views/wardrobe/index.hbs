@@ -1,6 +1,6 @@
 {{>navbar}}
 
-<main class="p-4 pt-20 pb-40">
+<main id="main" tabindex="-1" class="page pb-40!">
   <div class="flex items-center justify-between mb-6 px-2">
     <h1 class="text-2xl font-bold">{{t 'lang.WARDROBE'}}</h1>
     {{#if canEdit}}
@@ -58,7 +58,7 @@
 </main>
 
 {{!-- Fixed bottom search + filter bar --}}
-<div class="fixed bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] left-0 right-0 bg-base-100 border-t border-base-300 z-20 px-4 pt-2 pb-2">
+<div class="fixed bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] lg:bottom-0 left-0 right-0 bg-base-100 border-t border-base-300 z-20 px-4 pt-2 pb-2">
 
   {{!-- Filter button + active filter pills row --}}
   <div class="flex flex-wrap items-center gap-2 mb-2">
