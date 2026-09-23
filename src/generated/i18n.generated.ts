@@ -173,11 +173,10 @@ export type I18nTranslations = {
         "SEARCH_PLACEHOLDER": string;
         "SEARCH": string;
         "RESULTS": string;
-        "FILTER_SEARCH": string;
         "FILTERS": string;
-        "GARMENT_TYPE": string;
         "CLEAR_FILTERS": string;
         "APPLY_FILTERS": string;
+        "REMOVE_FILTER": string;
         "SELECT_COLOR": string;
         "SEARCH_OR_CREATE": string;
         "NO_MATCHES": string;
@@ -278,6 +277,7 @@ export type I18nTranslations = {
         "INVITE_MANAGE_DESC": string;
         "INVITE_LOGIN_REQUIRED": string;
         "MY_WARDROBE": string;
+        "WARDROBE_SWITCHER": string;
         "PRIVACY_TITLE": string;
         "PRIVACY_HEADING": string;
         "PRIVACY_INTRO": string;
