@@ -1,11 +1,11 @@
 {{>navbar}}
 <main id="main" tabindex="-1" class="page page--center grid-cols-[minmax(0,24rem)] gap-4">
   <h1>{{t 'lang.DELETE_ACCOUNT'}}</h1>
-  {{#if error}}{{> alert kind="error" text=error}}{{/if}}
-  <form method="post" action="/auth/delete-account" hx-post="/auth/delete-account" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-indicator="#loading" hx-confirm="{{t 'lang.DELETE_ACCOUNT_CONFIRMATION'}}">
+  {{#if error}}{{> alert kind="error" text=error focus=true}}{{/if}}
+  <form method="post" action="/auth/delete-account" hx-post="/auth/delete-account" hx-target="main" hx-select="main" hx-swap="outerHTML show:window:top" hx-indicator="#loading" hx-confirm="{{t 'lang.DELETE_ACCOUNT_CONFIRMATION'}}">
     <fieldset class="fieldset w-full border border-base-300 rounded-box p-4">
       {{> authField fieldId="email" type="email" label=(t 'lang.EMAIL') autocomplete="username" value=input.email}}
-      {{> authField fieldId="password" type="password" label=(t 'lang.PASSWORD') autocomplete="current-password" focus=error}}
+      {{> authField fieldId="password" type="password" label=(t 'lang.PASSWORD') autocomplete="current-password"}}
       <button type="submit" class="btn btn-outline mt-4">{{icon "trash" class="size-5"}} {{t 'lang.DELETE_ACCOUNT'}}</button>
     </fieldset>
   </form>

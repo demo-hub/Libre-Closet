@@ -14,10 +14,10 @@
 
 <main id="main" tabindex="-1" class="page page--center grid-cols-[minmax(0,24rem)] gap-4">
   <h1>{{t 'lang.REGISTER_OG_TITLE'}}</h1>
-  {{#if error}}{{> alert kind="error" text=error}}{{/if}}
-  <form method="post" action="/auth/register" hx-post="/auth/register" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-indicator="#loading">
+  {{#if error}}{{> alert kind="error" text=error focus=true}}{{/if}}
+  <form method="post" action="/auth/register" hx-post="/auth/register" hx-target="main" hx-select="main" hx-swap="outerHTML show:window:top" hx-indicator="#loading">
     <fieldset class="fieldset w-full border border-base-300 rounded-box p-4">
-      {{!-- Only the fields are swapped on validation, so a press on the button is never lost to the swap. --}}
+      {{!-- Only the fields are swapped on validation; the head script holds the swap while the button is pressed. --}}
       <div class="contents" data-live-validation hx-post="/auth/validate/register" hx-target="this" hx-select="[data-live-validation]" hx-swap="outerHTML transition:false" hx-sync="this:replace" hx-trigger="change" hx-include="input" hx-indicator="#loading">
         {{> authField fieldId="email" type="email" label=(t 'lang.EMAIL') autocomplete="email" value=input.email errors=(filterErrors validationErrors 'email')}}
         {{> authField fieldId="password" type="password" label=(t 'lang.PASSWORD') autocomplete="new-password" value=input.password errors=(filterErrors validationErrors 'password')}}

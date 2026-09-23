@@ -247,11 +247,11 @@ describe('templates and client scripts', () => {
     [/\b(input-xs|badge-xs|range-xs)\b/, 'below the 12 px floor'],
     [/text-\[\d+px\]/, 'off the type scale'],
     [
-      /class="(?=[^"]*\bbg-base-200\b)(?=[^"]*(?<![\w-])(fieldset|collapse|input|select|textarea|btn-outline)(?![\w-]))[^"]*"/,
+      /class="(?=[^"]*\bbg-base-200\b)(?=[^"]*(?<![\w-])(fieldset|collapse|input|select|textarea|file-input|checkbox|radio|toggle|btn-outline|badge-outline)(?![\w-]))[^"]*"/,
       'Steel borders are approved on White and Paper, not on Surface',
     ],
     [
-      /class="(?=[^"]*(?<![\w-])(card|alert)(?![\w-]))(?=[^"]*(?<![\w-])(hover:)?shadow(-(sm|md|lg|xl|2xl))?(?![\w-]))[^"]*"/,
+      /class="(?=[^"]*(?<![\w-])(card|alert)(?![\w-]))(?=[^"]*(?<![\w-])(hover:)?shadow(-(2xs|xs|sm|md|lg|xl|2xl|\[[^\]]*\]))?(?![\w-]))[^"]*"/,
       'cards take the Hairline border, alerts the status rail; a shadow replaces both',
     ],
     [
@@ -301,9 +301,16 @@ describe('templates and client scripts', () => {
     );
     expect(surface.test('<div class="bg-base-200 p-4">')).toBe(false);
     expect(surface.test('<div class="input-group bg-base-200">')).toBe(false);
+    expect(surface.test('<span class="badge badge-outline bg-base-200">')).toBe(
+      true,
+    );
     expect(shadow.test('<div class="card shadow-md">')).toBe(true);
     expect(shadow.test('<div class="alert alert-error shadow-lg">')).toBe(true);
     expect(shadow.test('<p class="card-title shadow-sm">')).toBe(false);
+    expect(shadow.test('<div class="card shadow-xs">')).toBe(true);
+    expect(shadow.test('<div class="alert shadow-[0_1px_2px_#0003]">')).toBe(
+      true,
+    );
     expect(shadow.test('<div class="card">')).toBe(false);
   });
 

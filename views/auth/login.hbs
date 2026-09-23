@@ -14,15 +14,15 @@
 
 <main id="main" tabindex="-1" class="page page--center grid-cols-[minmax(0,24rem)] gap-4">
   <h1>{{t 'lang.LOGIN_OG_TITLE'}}</h1>
-  {{#if error}}{{> alert kind="error" text=error}}{{/if}}
-  <form method="post" action="/auth/login" hx-post="/auth/login" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-indicator="#loading">
+  {{#if error}}{{> alert kind="error" text=error focus=true}}{{/if}}
+  <form method="post" action="/auth/login" hx-post="/auth/login" hx-target="main" hx-select="main" hx-swap="outerHTML show:window:top" hx-indicator="#loading">
     {{#if returnTo}}
     {{!-- Checked server-side to be a path on this site, here and on the way back. --}}
     <input type="hidden" name="returnTo" value="{{returnTo}}" />
     {{/if}}
     <fieldset class="fieldset w-full border border-base-300 rounded-box p-4">
       {{> authField fieldId="email" type="email" label=(t 'lang.EMAIL') autocomplete="username" value=input.email}}
-      {{> authField fieldId="password" type="password" label=(t 'lang.PASSWORD') autocomplete="current-password" focus=error}}
+      {{> authField fieldId="password" type="password" label=(t 'lang.PASSWORD') autocomplete="current-password"}}
       <a class="link justify-self-end" href="/auth/reset">{{t 'lang.FORGOT_PASSWORD'}}</a>
       <button type="submit" class="btn btn-primary mt-4">{{t 'lang.LOGIN'}}</button>
     </fieldset>

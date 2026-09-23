@@ -70,23 +70,28 @@ export class ErrorViewFilter implements ExceptionFilter {
       const lang: string = context.locale ?? 'en';
       const key = MESSAGE_KEYS[status >= 500 ? 500 : status];
       const now = new Date();
-      await response
+      // view() swallows its own render errors, so the page is rendered here and the fallback below can run.
+      const html = await (
+        response as FastifyReply & {
+          viewAsync(page: string, data: object): Promise<string>;
+        }
+      ).viewAsync('error', {
+        layout: 'layout',
+        ...context,
+        statusCode: status,
+        message: key ? this.i18n.t(key, { lang }) : fallback,
+        pageTitle: `${this.i18n.t('lang.ERROR', { lang })} ${status}`,
+        timestamp: new Intl.DateTimeFormat(intlLocale(lang), TIMESTAMP).format(
+          now,
+        ),
+        timestampIso: now.toISOString(),
+        path: request.url,
+      });
+      response
         .status(status)
         .header('Cache-Control', 'no-store')
         .type('text/html; charset=utf-8')
-        .view('error', {
-          layout: 'layout',
-          ...context,
-          statusCode: status,
-          message: key ? this.i18n.t(key, { lang }) : fallback,
-          pageTitle: `${this.i18n.t('lang.ERROR', { lang })} ${status}`,
-          timestamp: new Intl.DateTimeFormat(
-            intlLocale(lang),
-            TIMESTAMP,
-          ).format(now),
-          timestampIso: now.toISOString(),
-          path: request.url,
-        });
+        .send(html);
     } catch (renderError) {
       this.logger.error(renderError);
       response

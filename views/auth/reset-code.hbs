@@ -1,12 +1,12 @@
 {{>navbar}}
 <main id="main" tabindex="-1" class="page page--center grid-cols-[minmax(0,24rem)] gap-4">
   <h1>{{t 'lang.CHANGE_PASSWORD'}}</h1>
-  {{#if error}}{{> alert kind="error" text=error}}{{/if}}
-  <form method="post" action="/auth/reset-code" hx-post="/auth/reset-code" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-indicator="#loading">
+  {{#if error}}{{> alert kind="error" text=error focus=true}}{{/if}}
+  <form method="post" action="/auth/reset-code" hx-post="/auth/reset-code" hx-target="main" hx-select="main" hx-swap="outerHTML show:window:top" hx-indicator="#loading">
     <fieldset class="fieldset w-full border border-base-300 rounded-box p-4">
       <div class="contents" data-live-validation hx-post="/auth/validate/reset-code" hx-target="this" hx-select="[data-live-validation]" hx-swap="outerHTML transition:false" hx-sync="this:replace" hx-trigger="change" hx-include="input" hx-indicator="#loading">
         {{> authField fieldId="email" type="email" label=(t 'lang.EMAIL') autocomplete="email" value=input.email errors=(filterErrors validationErrors 'email')}}
-        {{> authField fieldId="resetCode" type="text" label=(t 'lang.RESET_CODE') autocomplete="one-time-code" inputmode="numeric" value=input.resetCode focus=error}}
+        {{> authField fieldId="resetCode" type="text" label=(t 'lang.RESET_CODE') autocomplete="one-time-code" inputmode="numeric" value=input.resetCode}}
         {{> authField fieldId="password" type="password" label=(t 'lang.PASSWORD') autocomplete="new-password" value=input.password errors=(filterErrors validationErrors 'password')}}
         {{> authField fieldId="confirmPassword" type="password" label=(t 'lang.CONFIRM_PASSWORD') autocomplete="new-password" value=input.confirmPassword errors=(filterErrors validationErrors 'confirmPassword')}}
       </div>

@@ -118,10 +118,20 @@ https://nestjs-i18n.com/quick-start --}}
         });
         // A live-validation swap brings back the values the request carried; keep what was typed since.
         var typed = null;
+        // A validation swap that lands while the submit button is held moves it from under the pointer.
+        var pressedForm = null;
+        document.addEventListener('pointerdown', function (e) {
+          var button = e.target.closest && e.target.closest('[type=submit]');
+          pressedForm = button ? button.form : null;
+        }, true);
+        ['pointerup', 'pointercancel'].forEach(function (type) {
+          document.addEventListener(type, function () { setTimeout(function () { pressedForm = null; }); }, true);
+        });
         document.addEventListener('htmx:beforeSwap', function (e) {
           typed = null;
           var fs = e.detail.target;
           if (!fs || !fs.hasAttribute || !fs.hasAttribute('data-live-validation')) return;
+          if (pressedForm && fs.closest('form') === pressedForm) { e.detail.shouldSwap = false; return; }
           var active = document.activeElement;
           typed = { values: {}, focus: fs.contains(active) ? active.id : null };
           try { typed.start = active.selectionStart; typed.end = active.selectionEnd; } catch (err) {}

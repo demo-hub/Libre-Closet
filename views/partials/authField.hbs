@@ -2,7 +2,7 @@
 <label class="label" for="{{fieldId}}">{{label}}</label>
 <input id="{{fieldId}}" name="{{fieldId}}" type="{{type}}" autocomplete="{{autocomplete}}"{{#if inputmode}} inputmode="{{inputmode}}"{{/if}} required
   class="input w-full{{#if errors.length}} input-error{{/if}}"{{#if value}} value="{{value}}"{{/if}}
-  {{#if errors.length}}aria-invalid="true" aria-describedby="{{fieldId}}-error"{{/if}}{{#if focus}} autofocus{{else}}{{#ifEquals firstError fieldId}} autofocus{{/ifEquals}}{{/if}} />
+  {{#if errors.length}}aria-invalid="true" aria-describedby="{{fieldId}}-error"{{/if}}{{#ifEquals firstError fieldId}} autofocus{{/ifEquals}} />
 {{#if errors.length}}
 <div id="{{fieldId}}-error" class="grid gap-1">
   {{#each errors}}

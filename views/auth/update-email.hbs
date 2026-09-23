@@ -1,11 +1,11 @@
 {{>navbar}}
 <main id="main" tabindex="-1" class="page page--center grid-cols-[minmax(0,24rem)] gap-4">
   <h1>{{t 'lang.UPDATE_EMAIL'}}</h1>
-  {{#if error}}{{> alert kind="error" text=error}}{{/if}}
-  <form method="post" action="/auth/update-email" hx-post="/auth/update-email" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-indicator="#loading">
+  {{#if error}}{{> alert kind="error" text=error focus=true}}{{/if}}
+  <form method="post" action="/auth/update-email" hx-post="/auth/update-email" hx-target="main" hx-select="main" hx-swap="outerHTML show:window:top" hx-indicator="#loading">
     <fieldset class="fieldset w-full border border-base-300 rounded-box p-4">
       <div class="contents" data-live-validation hx-post="/auth/validate/update-email" hx-target="this" hx-select="[data-live-validation]" hx-swap="outerHTML transition:false" hx-sync="this:replace" hx-trigger="change" hx-include="input" hx-indicator="#loading">
-        {{> authField fieldId="email" type="email" label=(t 'lang.NEW_EMAIL') autocomplete="email" value=input.email errors=(filterErrors validationErrors 'email') focus=error}}
+        {{> authField fieldId="email" type="email" label=(t 'lang.NEW_EMAIL') autocomplete="email" value=input.email errors=(filterErrors validationErrors 'email')}}
         {{> authField fieldId="confirmEmail" type="email" label=(t 'lang.CONFIRM_EMAIL') autocomplete="email" value=input.confirmEmail errors=(filterErrors validationErrors 'confirmEmail')}}
       </div>
       <button type="submit" class="btn btn-primary mt-4">{{t 'lang.UPDATE'}}</button>

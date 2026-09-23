@@ -1,10 +1,10 @@
 {{>navbar}}
 <main id="main" tabindex="-1" class="page page--center grid-cols-[minmax(0,24rem)] gap-4">
   <h1>{{t 'lang.RESET_PASSWORD'}}</h1>
-  {{#if error}}{{> alert kind="error" text=error}}{{/if}}
-  <form method="post" action="/auth/reset" hx-post="/auth/reset" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-indicator="#loading">
+  {{#if error}}{{> alert kind="error" text=error focus=true}}{{/if}}
+  <form method="post" action="/auth/reset" hx-post="/auth/reset" hx-target="main" hx-select="main" hx-swap="outerHTML show:window:top" hx-indicator="#loading">
     <fieldset class="fieldset w-full border border-base-300 rounded-box p-4">
-      {{> authField fieldId="email" type="email" label=(t 'lang.EMAIL') autocomplete="email" value=input.email focus=error}}
+      {{> authField fieldId="email" type="email" label=(t 'lang.EMAIL') autocomplete="email" value=input.email}}
       <button type="submit" class="btn btn-primary mt-4">{{t 'lang.SEND_RESET_CODE'}}</button>
     </fieldset>
   </form>

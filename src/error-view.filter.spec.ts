@@ -25,9 +25,9 @@ async function render(exception: unknown, locale = 'en', fail = false) {
     status: jest.fn().mockReturnThis(),
     header: jest.fn().mockReturnThis(),
     type: jest.fn().mockReturnThis(),
-    view: fail
+    viewAsync: fail
       ? jest.fn().mockRejectedValue(new Error('template broke'))
-      : jest.fn().mockResolvedValue(undefined),
+      : jest.fn().mockResolvedValue('<html>error page</html>'),
     send: jest.fn(),
   };
   const host = {
@@ -37,7 +37,7 @@ async function render(exception: unknown, locale = 'en', fail = false) {
     }),
   } as unknown as ArgumentsHost;
   await new ErrorViewFilter(viewContext, i18n).catch(exception, host);
-  const data = reply.view.mock.calls[0]?.[1] as Record<string, unknown>;
+  const data = reply.viewAsync.mock.calls[0]?.[1] as Record<string, unknown>;
   return { reply, data };
 }
 
@@ -75,7 +75,7 @@ describe('the error page', () => {
     'dates the error in %s without the formatter throwing',
     async (locale) => {
       const { reply, data } = await render(new NotFoundException(), locale);
-      expect(reply.send).not.toHaveBeenCalled();
+      expect(reply.type).not.toHaveBeenCalledWith('application/json');
       expect(data.timestamp).toMatch(/2026/);
       expect(data.timestampIso).toBe('2026-09-11T14:05:00.000Z');
     },
@@ -86,10 +86,11 @@ describe('the error page', () => {
     expect(data.timestamp).toMatch(/^11 September 2026/);
   });
 
-  it('is never cached, whatever the route set', async () => {
+  it('sends the page as HTML that is never cached, whatever the route set', async () => {
     const { reply } = await render(new NotFoundException());
     expect(reply.header).toHaveBeenCalledWith('Cache-Control', 'no-store');
     expect(reply.type).toHaveBeenCalledWith('text/html; charset=utf-8');
+    expect(reply.send).toHaveBeenCalledWith('<html>error page</html>');
   });
 
   it('answers with JSON when the page itself cannot render', async () => {
