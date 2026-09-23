@@ -55,7 +55,7 @@
     {
       "name": "Add garment",
       "short_name": "Add garment",
-      "description": "Catalog a new clothing item",
+      "description": "Catalogue a new clothing item",
       "url": "/wardrobe/new"
     },
     {
@@ -65,14 +65,14 @@
       "url": "/wardrobe/new?mode=link"
     }
   ],
-  "description": "A free, open-source digital wardrobe organizer. Catalog your clothing, build outfits, and share looks — self-hostable and privacy-first.",
+  "description": "A free, open-source digital wardrobe organiser. Catalogue your clothing, build outfits and share looks. Self-hosted, with your data on your own server.",
   "screenshots": [
     {
       "src": "/assets/screenshots/Screenshot_1.webp",
       "sizes": "2300x2034",
       "type": "image/webp",
       "form_factor": "wide",
-      "label": "Wardrobe view with garment catalog"
+      "label": "Wardrobe view with garment catalogue"
     },
     {
       "src": "/assets/screenshots/Screenshot_mobile_1.webp",
