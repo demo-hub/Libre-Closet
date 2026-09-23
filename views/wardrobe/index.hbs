@@ -32,7 +32,8 @@
   </form>
 
   <div class="flex flex-wrap items-center gap-2 mb-4">
-    <button id="filter-button" type="button" class="btn btn-outline" aria-haspopup="dialog" _="on click call #filter-modal.showModal()">{{icon "funnel" class="size-5"}}{{t 'lang.FILTERS'}}</button>
+    {{!-- Close is focused explicitly: WebKit drops focus on the first keyboard opening, and Chromium would pick the scrollable box. --}}
+    <button id="filter-button" type="button" class="btn btn-outline" aria-haspopup="dialog" _="on click call #filter-modal.showModal() then call #filter-close.focus()">{{icon "funnel" class="size-5"}}{{t 'lang.FILTERS'}}</button>
     {{#each activeFilters}}
     <a href="{{this.href}}" class="badge gap-1 min-h-11 h-auto px-3 max-w-full wrap-anywhere" aria-label="{{t 'lang.REMOVE_FILTER'}}: {{#if this.facet}}{{this.facet}}: {{/if}}{{this.value}}">
       <span>{{#if this.facet}}{{this.facet}}: {{/if}}<span{{#if this.capitalize}} class="capitalize"{{/if}}>{{this.value}}</span></span>
@@ -75,18 +76,19 @@
     <div class="sticky top-0 z-1 flex items-center justify-between gap-2 bg-base-100 px-6 pt-4 pb-2">
       <h2 id="filter-modal-title" class="text-h3">{{t 'lang.FILTERS'}}</h2>
       <form method="dialog">
-        <button class="btn btn-ghost btn-circle" aria-label="{{t 'lang.CLOSE'}}" autofocus>{{icon "x-mark" class="size-5"}}</button>
+        <button id="filter-close" class="btn btn-ghost btn-circle" aria-label="{{t 'lang.CLOSE'}}">{{icon "x-mark" class="size-5"}}</button>
       </form>
     </div>
 
     <div class="grid gap-5 px-6 py-2">
+      {{!-- peer-focus, not peer-focus-visible: WebKit drops :focus-visible when arrow keys move between radios. --}}
       <fieldset>
         <legend class="mb-2 text-sm font-medium text-graphite">{{t 'lang.CATEGORY'}}</legend>
         <div class="flex flex-wrap gap-2">
           {{#each availableCategories}}
           <label class="group cursor-pointer">
             <input type="radio" name="modal-category" value="{{this.value}}" class="sr-only peer" {{#ifEquals this.value ../search.category}}checked{{/ifEquals}}>
-            <span class="badge badge-outline gap-1 min-h-11 h-auto px-3 wrap-anywhere select-none peer-checked:bg-primary peer-checked:text-primary-content peer-checked:border-primary peer-checked:font-semibold peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus">{{icon "check" class="size-4 shrink-0 hidden group-has-checked:inline"}}{{this.label}}</span>
+            <span class="badge badge-outline gap-1 min-h-11 h-auto px-3 wrap-anywhere select-none peer-checked:bg-primary peer-checked:text-primary-content peer-checked:border-primary peer-checked:font-semibold peer-focus:outline-2 peer-focus:outline-offset-2 peer-focus:outline-focus">{{icon "check" class="size-4 shrink-0 hidden group-has-checked:inline"}}{{this.label}}</span>
           </label>
           {{/each}}
         </div>
@@ -98,7 +100,7 @@
           {{#each colors}}
           <label class="group cursor-pointer">
             <input type="radio" name="modal-color" value="{{this}}" class="sr-only peer" {{#ifEquals this ../search.color}}checked{{/ifEquals}}>
-            <span class="badge badge-outline gap-1 min-h-11 h-auto px-3 capitalize select-none peer-checked:bg-primary peer-checked:text-primary-content peer-checked:border-primary peer-checked:font-semibold peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus">{{icon "check" class="size-4 shrink-0 hidden group-has-checked:inline"}}{{this}}</span>
+            <span class="badge badge-outline gap-1 min-h-11 h-auto px-3 capitalize select-none peer-checked:bg-primary peer-checked:text-primary-content peer-checked:border-primary peer-checked:font-semibold peer-focus:outline-2 peer-focus:outline-offset-2 peer-focus:outline-focus">{{icon "check" class="size-4 shrink-0 hidden group-has-checked:inline"}}{{this}}</span>
           </label>
           {{/each}}
         </div>
@@ -111,7 +113,7 @@
           {{#each availableSizes}}
           <label class="group cursor-pointer">
             <input type="radio" name="modal-size" value="{{this}}" class="sr-only peer" {{#ifEquals this ../search.size}}checked{{/ifEquals}}>
-            <span class="badge badge-outline gap-1 min-h-11 h-auto px-3 wrap-anywhere select-none peer-checked:bg-primary peer-checked:text-primary-content peer-checked:border-primary peer-checked:font-semibold peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus">{{icon "check" class="size-4 shrink-0 hidden group-has-checked:inline"}}{{this}}</span>
+            <span class="badge badge-outline gap-1 min-h-11 h-auto px-3 wrap-anywhere select-none peer-checked:bg-primary peer-checked:text-primary-content peer-checked:border-primary peer-checked:font-semibold peer-focus:outline-2 peer-focus:outline-offset-2 peer-focus:outline-focus">{{icon "check" class="size-4 shrink-0 hidden group-has-checked:inline"}}{{this}}</span>
           </label>
           {{/each}}
         </div>
