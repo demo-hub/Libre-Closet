@@ -21,10 +21,10 @@
   {{/if}}
 
   <form method="get" action="/wardrobe" id="search-form" role="search" class="flex w-full max-w-xl gap-2 mb-3">
-    <input type="hidden" name="category" id="active-category" value="{{search.category}}">
-    <input type="hidden" name="color" id="active-color" value="{{search.color}}">
-    <input type="hidden" name="size" id="active-size" value="{{search.size}}">
-    <input type="hidden" name="archived" id="active-archived" value="{{#if showArchived}}true{{/if}}">
+    <input type="hidden" name="category" id="active-category" value="{{search.category}}" data-initial="{{search.category}}">
+    <input type="hidden" name="color" id="active-color" value="{{search.color}}" data-initial="{{search.color}}">
+    <input type="hidden" name="size" id="active-size" value="{{search.size}}" data-initial="{{search.size}}">
+    <input type="hidden" name="archived" id="active-archived" value="{{#if showArchived}}true{{/if}}" data-initial="{{#if showArchived}}true{{/if}}">
     {{#if viewOwner}}<input type="hidden" name="ownerId" value="{{viewOwner}}">{{/if}}
     <label for="wardrobe-keyword" class="sr-only">{{t 'lang.SEARCH_PLACEHOLDER'}}</label>
     <input id="wardrobe-keyword" type="search" name="keyword" value="{{search.keyword}}" placeholder="{{t 'lang.SEARCH_PLACEHOLDER'}}" enterkeyhint="search" class="input flex-1 min-w-0">
@@ -65,29 +65,29 @@
     {{/each}}
   </ul>
   {{else if filtered}}
-  {{> empty icon="magnifying-glass" text=(t 'lang.NO_MATCHES') href=clearFiltersHref cta=(t 'lang.CLEAR_FILTERS')}}
+  {{> empty icon="magnifying-glass" text=(t 'lang.NO_MATCHES') href=clearFiltersHref cta=(t 'lang.CLEAR_FILTERS') outline=true}}
   {{else}}
   {{> empty icon="hanger" text=(t 'lang.NO_GARMENTS') href=newGarmentHref cta=(t 'lang.ADD_FIRST_GARMENT')}}
   {{/if}}
 </main>
 
 <dialog id="filter-modal" class="modal modal-bottom sm:modal-middle" aria-labelledby="filter-modal-title">
-  <div class="modal-box p-0">
-    <div class="sticky top-0 z-1 flex items-center justify-between gap-2 bg-base-100 px-6 pt-4 pb-2">
+  <div class="modal-box flex flex-col overflow-hidden p-0">
+    <div class="flex items-center justify-between gap-2 px-6 pt-4 pb-2">
       <h2 id="filter-modal-title" class="text-h3">{{t 'lang.FILTERS'}}</h2>
       <form method="dialog">
         <button id="filter-close" class="btn btn-ghost btn-circle" aria-label="{{t 'lang.CLOSE'}}">{{icon "x-mark" class="size-5"}}</button>
       </form>
     </div>
 
-    <div class="grid gap-5 px-6 py-2">
+    <div class="grid min-h-0 gap-5 overflow-y-auto px-6 py-2">
       {{!-- peer-focus, not peer-focus-visible: WebKit drops :focus-visible when arrow keys move between radios. --}}
       <fieldset>
         <legend class="mb-2 text-sm font-medium text-graphite">{{t 'lang.CATEGORY'}}</legend>
         <div class="flex flex-wrap gap-2">
           {{#each availableCategories}}
-          <label class="group cursor-pointer">
-            <input type="radio" name="modal-category" value="{{this.value}}" class="sr-only peer" {{#ifEquals this.value ../search.category}}checked{{/ifEquals}}>
+          <label class="group relative cursor-pointer">
+            <input type="radio" name="modal-category" value="{{this.value}}" class="peer absolute inset-0 m-0 size-full cursor-pointer appearance-none opacity-0" {{#ifEquals this.value ../search.category}}checked{{/ifEquals}}>
             <span class="badge badge-outline gap-1 min-h-11 h-auto px-3 wrap-anywhere select-none peer-checked:bg-primary peer-checked:text-primary-content peer-checked:border-primary peer-checked:font-semibold peer-focus:outline-2 peer-focus:outline-offset-2 peer-focus:outline-focus">{{icon "check" class="size-4 shrink-0 hidden group-has-checked:inline"}}{{this.label}}</span>
           </label>
           {{/each}}
@@ -98,8 +98,8 @@
         <legend class="mb-2 text-sm font-medium text-graphite">{{t 'lang.COLOR'}}</legend>
         <div class="flex flex-wrap gap-2">
           {{#each colors}}
-          <label class="group cursor-pointer">
-            <input type="radio" name="modal-color" value="{{this}}" class="sr-only peer" {{#ifEquals this ../search.color}}checked{{/ifEquals}}>
+          <label class="group relative cursor-pointer">
+            <input type="radio" name="modal-color" value="{{this}}" class="peer absolute inset-0 m-0 size-full cursor-pointer appearance-none opacity-0" {{#ifEquals this ../search.color}}checked{{/ifEquals}}>
             <span class="badge badge-outline gap-1 min-h-11 h-auto px-3 capitalize select-none peer-checked:bg-primary peer-checked:text-primary-content peer-checked:border-primary peer-checked:font-semibold peer-focus:outline-2 peer-focus:outline-offset-2 peer-focus:outline-focus">{{icon "check" class="size-4 shrink-0 hidden group-has-checked:inline"}}{{this}}</span>
           </label>
           {{/each}}
@@ -111,8 +111,8 @@
         <legend class="mb-2 text-sm font-medium text-graphite">{{t 'lang.SIZE'}}</legend>
         <div class="flex flex-wrap gap-2">
           {{#each availableSizes}}
-          <label class="group cursor-pointer">
-            <input type="radio" name="modal-size" value="{{this}}" class="sr-only peer" {{#ifEquals this ../search.size}}checked{{/ifEquals}}>
+          <label class="group relative cursor-pointer">
+            <input type="radio" name="modal-size" value="{{this}}" class="peer absolute inset-0 m-0 size-full cursor-pointer appearance-none opacity-0" {{#ifEquals this ../search.size}}checked{{/ifEquals}}>
             <span class="badge badge-outline gap-1 min-h-11 h-auto px-3 wrap-anywhere select-none peer-checked:bg-primary peer-checked:text-primary-content peer-checked:border-primary peer-checked:font-semibold peer-focus:outline-2 peer-focus:outline-offset-2 peer-focus:outline-focus">{{icon "check" class="size-4 shrink-0 hidden group-has-checked:inline"}}{{this}}</span>
           </label>
           {{/each}}
@@ -129,9 +129,9 @@
       </fieldset>
     </div>
 
-    <div class="modal-action sticky bottom-0 m-0 bg-base-100 px-6 py-4">
+    <div class="modal-action m-0 flex-wrap px-6 py-4">
       <button type="button"
-        class="btn btn-outline"
+        class="btn btn-outline grow"
         _="on click
           for el in <input[name='modal-category']/>
             set el.checked to false
@@ -154,7 +154,7 @@
         {{t 'lang.CLEAR_FILTERS'}}
       </button>
       <button type="button"
-        class="btn btn-primary"
+        class="btn btn-primary grow"
         _="on click
           set category to ''
           get the first <input[name='modal-category']:checked/>

@@ -2,6 +2,7 @@ import type { SearchGarmentDto } from './dto/search-garment.dto';
 import {
   activeFilters,
   filterState,
+  normalizeSearch,
   single,
   wardrobeHref,
 } from './active-filters';
@@ -162,5 +163,29 @@ describe('filterState', () => {
       false,
     );
     expect(filterState(query({}), null, 3).emptyWardrobe).toBe(false);
+  });
+});
+
+describe('normalizeSearch', () => {
+  it('drops repeated and empty parameters and any archived value but "true"', () => {
+    expect(
+      normalizeSearch(
+        query({
+          keyword: '',
+          category: ['tops', 'bags'],
+          color: 'red',
+          size: ['S', 'M'],
+          archived: 'TRUE',
+        }),
+      ),
+    ).toEqual({
+      keyword: undefined,
+      category: undefined,
+      color: 'red',
+      brand: undefined,
+      size: undefined,
+      archived: undefined,
+    });
+    expect(normalizeSearch(query({ archived: 'true' })).archived).toBe('true');
   });
 });

@@ -21,7 +21,7 @@ import { Payload } from '../auth/dto/payload.dto';
 import { GarmentCategory } from './garment-category.enum';
 import { GarmentColor } from './garment-color.enum';
 import { buildFormModel, customOf } from './garment-form';
-import { activeFilters, filterState } from './active-filters';
+import { activeFilters, filterState, normalizeSearch } from './active-filters';
 import { GarmentService } from './garment.service';
 import { sanitizeSourceUrl, sourceUrlHost } from './source-url';
 import { WardrobeShareService } from '../wardrobe-share/wardrobe-share.service';
@@ -85,8 +85,9 @@ export class WardrobeController {
       }
     }
 
+    const search = normalizeSearch(query);
     const [garments, filters] = await Promise.all([
-      this.garmentService.findAll(userId, query, viewOwner),
+      this.garmentService.findAll(userId, search, viewOwner),
       this.garmentService.findAvailableFilters(viewOwner ?? userId),
     ]);
     const categoryLabel = (value: string) =>
@@ -107,10 +108,10 @@ export class WardrobeController {
       availableCategories,
       colors: Object.values(GarmentColor),
       availableSizes: filters.sizes,
-      search: query,
-      ...filterState(query, owner, garments.length),
+      search,
+      ...filterState(search, owner, garments.length),
       activeFilters: activeFilters(
-        query,
+        search,
         owner,
         {
           category: i18n.t('lang.CATEGORY'),

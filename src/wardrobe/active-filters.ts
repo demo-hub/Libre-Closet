@@ -1,4 +1,5 @@
 import type { SearchGarmentDto } from './dto/search-garment.dto';
+import type { GarmentColor } from './garment-color.enum';
 
 const PARAMS = ['keyword', 'category', 'color', 'size', 'archived'] as const;
 type Param = (typeof PARAMS)[number];
@@ -27,6 +28,18 @@ export function single(value: unknown): string | undefined {
 /** `archived=true` adds archived garments to the list; any other value is ignored. */
 export function showsArchived(query: SearchGarmentDto): boolean {
   return query.archived === 'true';
+}
+
+/** The query as the page shows it: a repeated or empty parameter is dropped, so the list, the pills and the form agree. */
+export function normalizeSearch(query: SearchGarmentDto): SearchGarmentDto {
+  return {
+    keyword: single(query.keyword),
+    category: single(query.category),
+    color: single(query.color) as GarmentColor | undefined,
+    brand: single(query.brand),
+    size: single(query.size),
+    archived: showsArchived(query) ? 'true' : undefined,
+  };
 }
 
 /** The wardrobe view with the same query, minus the dropped parameters. */

@@ -99,6 +99,9 @@ https://nestjs-i18n.com/quick-start --}}
           var toast = document.getElementById('requestErrorToast');
           if (toast) toast.classList.add('hidden');
           document.querySelectorAll('details.dropdown[open]').forEach(function (d) { d.removeAttribute('open'); });
+          // A restored snapshot must not keep a dialog open (it would come back non-modal) or values a script wrote into a form.
+          document.querySelectorAll('dialog[open]').forEach(function (d) { d.close(); });
+          document.querySelectorAll('input[data-initial]').forEach(function (i) { i.value = i.dataset.initial; });
         });
         // A <details> menu closes only when its own summary is pressed.
         function closeMenusOutside(e) {

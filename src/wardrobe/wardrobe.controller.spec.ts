@@ -155,10 +155,19 @@ describe('WardrobeController', () => {
       ]);
     });
 
-    it('does not resolve a repeated category', async () => {
+    it('ignores a repeated parameter everywhere, not only in the pills', async () => {
+      garmentService.findAll.mockResolvedValue([{ id: 1, category: 'tops' }]);
+
       const view = await index({ category: ['tops', 'bags'] });
 
+      expect(garmentService.findAll).toHaveBeenCalledWith(
+        undefined,
+        expect.objectContaining({ category: undefined }),
+        undefined,
+      );
+      expect(view.search.category).toBeUndefined();
       expect(view.activeFilters).toEqual([]);
+      expect(view.emptyWardrobe).toBe(false);
       expect(garmentService.resolveCategoryLabel).not.toHaveBeenCalledWith(
         ['tops', 'bags'],
         i18n,
