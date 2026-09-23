@@ -83,6 +83,26 @@ describe('translations', () => {
       expect(lang.IMPORTED_FROM_ALERT).toContain('{host}');
     });
 
+    it('opens each failure message the way its validation messages open', () => {
+      const validation = lang.validation as Record<string, string>;
+      const prefix = `${validation.IS_EMAIL.split(':')[0]}:`;
+      for (const key of Object.keys(lang).filter((k) =>
+        k.endsWith('_FAILED'),
+      )) {
+        if (key === 'REQUEST_FAILED') continue;
+        expect(`${key}: ${lang[key] as string}`).toMatch(`${key}: ${prefix}`);
+      }
+      for (const key of [
+        'ERROR_401',
+        'ERROR_403',
+        'ERROR_404',
+        'ERROR_429',
+        'ERROR_500',
+      ]) {
+        expect((lang[key] as string).startsWith(prefix)).toBe(false);
+      }
+    });
+
     it('keeps the licence and the original builder in the footer credit', () => {
       expect(lang.FOOTER_CREDIT).toContain('AGPL-3.0');
       expect(lang.FOOTER_CREDIT).toContain('Lazztech LLC');
