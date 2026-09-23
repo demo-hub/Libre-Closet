@@ -4,10 +4,12 @@ import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { User } from '../dal/entity/user.entity';
 import { UserDevice } from '../dal/entity/userDevice.entity';
+import webpush from 'web-push';
 import { NotificationService } from './notification.service';
 
 describe('NotificationService', () => {
   let service: NotificationService;
+  let users: { findOneOrFail: jest.Mock };
 
   const DUMMY_VAPID_KEYS = {
     publicKey:
@@ -39,6 +41,7 @@ describe('NotificationService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: {
+            findOneOrFail: jest.fn(),
             findOne: jest.fn(),
             find: jest.fn(),
             persistAndFlush: jest.fn(),
@@ -64,9 +67,39 @@ describe('NotificationService', () => {
     }).compile();
 
     service = module.get<NotificationService>(NotificationService);
+    users = module.get(getRepositoryToken(User));
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  it('puts the body, icon, badge and click target where the service worker reads them', async () => {
+    const subscription = { endpoint: 'https://push.example/1', keys: {} };
+    users.findOneOrFail.mockResolvedValue({
+      userDevices: {
+        loadItems: () =>
+          Promise.resolve([{ webPushSubscription: subscription }]),
+      },
+    });
+    const send = jest
+      .spyOn(webpush, 'sendNotification')
+      .mockResolvedValue({ statusCode: 201, body: '', headers: {} });
+
+    await service.sendWebPushNotification(
+      { title: 'Libre Closet', body: 'Hello', url: '/chat' },
+      1,
+    );
+
+    expect(send).toHaveBeenCalledWith(subscription, expect.any(String));
+    expect(JSON.parse(send.mock.calls[0][1])).toEqual({
+      title: 'Libre Closet',
+      options: {
+        body: 'Hello',
+        icon: '/assets/icons/icon-192.png',
+        badge: '/assets/icons/badge-96.png',
+        data: { url: '/chat' },
+      },
+    });
   });
 });

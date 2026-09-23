@@ -7,6 +7,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { I18n, I18nContext } from 'nestjs-i18n';
 import { type PushSubscription } from 'web-push';
 import { AuthGuard } from '../auth/auth.guard';
 import { Payload } from '../auth/dto/payload.dto';
@@ -42,12 +43,14 @@ export class NotificationController {
 
   @UseGuards(AuthGuard)
   @Post('test')
-  async postTest(@User() payload: Payload) {
+  async postTest(@User() payload: Payload, @I18n() i18n: I18nContext) {
+    const notification: PushNotificationDto = {
+      title: this.configService.getOrThrow<string>('APP_NAME'),
+      body: i18n.t('lang.TEST_WEB_PUSH'),
+      url: '/chat',
+    };
     await this.notificationService.sendWebPushNotification(
-      {
-        title: 'Test Web Push',
-        body: 'body',
-      } as PushNotificationDto,
+      notification,
       payload.userId,
     );
   }
