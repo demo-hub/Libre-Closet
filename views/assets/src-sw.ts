@@ -214,12 +214,12 @@ addEventListener('install', (event) => {
   event.waitUntil(promiseChain);
 });
 
-self.addEventListener('notificationclick', (event) => {
+(self as any).addEventListener('notificationclick', function (event) {
   event.notification.close();
   event.waitUntil(
     focusOrOpen(
-      self.clients,
-      clickTarget(event.notification.data, self.location.origin),
+      (self as any).clients,
+      clickTarget(event.notification.data, (self as any).location.origin),
     ),
   );
 });

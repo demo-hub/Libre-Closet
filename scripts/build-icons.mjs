@@ -112,9 +112,17 @@ await png(
 );
 await png(svg(96, markGroup({ box: 96, cx: 48, cy: 48, stroke: colour.white })), 'public/assets/icons/badge-96.png');
 
-await png(readFileSync(join(root, 'design/og-image.svg'), 'utf8'), 'public/assets/og-image.png', { opaque: true });
-await png(readFileSync(join(root, 'design/social-preview.svg'), 'utf8'), 'design/social-preview.png', {
-  opaque: true,
-});
+// The preview SVGs embed the mark next to their outlined text; redraw it from the source before rasterising.
+const MARK_GROUP = /(<g transform="[^"]*" fill="none" stroke="[^"]*" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">)(?:<path d="[^"]+"\/>)+(<\/g>)/;
+for (const [source, out] of [
+  ['design/og-image.svg', 'public/assets/og-image.png'],
+  ['design/social-preview.svg', 'design/social-preview.png'],
+]) {
+  const text = readFileSync(join(root, source), 'utf8');
+  if (!MARK_GROUP.test(text)) throw new Error(`no mark group in ${source}`);
+  const redrawn = text.replace(MARK_GROUP, `$1${paths.map((p) => `<path d="${p}"/>`).join('')}$2`);
+  writeFileSync(join(root, source), redrawn);
+  await png(redrawn, out, { opaque: true });
+}
 
 console.log('icons written');

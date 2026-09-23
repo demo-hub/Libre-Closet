@@ -455,7 +455,7 @@ npm pack @fontsource-variable/inter@<version>   # then take files/inter-latin-wg
 
 ### Icons
 
-The mark is drawn once, in `design/libre-closet-mark.svg`; every icon, the favicon and the link-preview images are generated from it and committed. After changing it, run `node scripts/build-icons.mjs`. The two preview images keep their text as outlines in `design/og-image.svg` and `design/social-preview.svg`, so the build needs no fonts; `python3 design/outline_text.py <fonts>` rewrites them when the name or the tagline changes (it needs fontTools and the variable Inter and Plus Jakarta Sans files). `design/social-preview.png` is for GitHub's Settings → Social preview and is not served by the app.
+The mark is drawn once, in `design/libre-closet-mark.svg`; every icon, the favicon and the link-preview images are generated from it and committed. After changing it, run `node scripts/build-icons.mjs`, which also redraws the mark inside the two preview SVGs. Those keep their text as outlines in `design/og-image.svg` and `design/social-preview.svg`, so the build needs no fonts. When the name or the tagline changes, `python3 design/outline_text.py <dir>` rewrites them; it needs fontTools and a directory holding `Inter-VF.ttf` (Inter 4.001, `ofl/inter/Inter[opsz,wght].ttf` in github.com/google/fonts) and `PlusJakartaSans-VF.ttf` (Plus Jakarta Sans 2.071, `ofl/plusjakartasans/PlusJakartaSans[wght].ttf`), renamed to those names. `design/social-preview.png` is for GitHub's Settings → Social preview and is not served by the app.
 
 ### Docker build
 

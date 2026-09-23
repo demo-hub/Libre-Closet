@@ -79,7 +79,6 @@ export abstract class FileService implements FileServiceInterface {
   abstract getByShareableId(shareableId: string): Promise<Readable | undefined>;
   protected abstract store(fileName: string, stream: Readable): Promise<void>;
 
-  /** A missing ICON_NAME file falls back to the default icon, so share previews keep working after the Lazztech icons went. */
   private watermarkSource(): string {
     const configured = this.configService.getOrThrow<string>('ICON_NAME');
     const file = join(process.cwd(), 'public', 'assets', configured);

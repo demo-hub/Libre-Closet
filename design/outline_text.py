@@ -1,5 +1,5 @@
 # Writes design/og-image.svg and design/social-preview.svg with the text as outlines, so sharp needs no fonts.
-# Run: python3 design/outline_text.py <dir with Inter-VF.ttf 4.001 and PlusJakartaSans-VF.ttf 2.071> (fontTools; the brand kit's fetch_fonts.sh downloads them).
+# Run: python3 design/outline_text.py <dir with Inter-VF.ttf and PlusJakartaSans-VF.ttf> (fontTools; README.md, Icons, says where they come from).
 import json
 import re
 import sys

@@ -83,4 +83,21 @@ describe('renderIcon', () => {
     const paths = [...source.matchAll(/<path d="([^"]+)"/g)].map((m) => m[1]);
     expect(paths).toEqual(ICON_PATHS.hanger);
   });
+
+  it.each(['og-image.svg', 'social-preview.svg'])(
+    'draws the same hanger in design/%s',
+    (file) => {
+      const source = fs.readFileSync(
+        path.join(__dirname, '..', 'design', file),
+        'utf8',
+      );
+      const group = source.match(
+        /stroke-linejoin="round">((?:<path d="[^"]+"\/>)+)<\/g>/,
+      );
+      const paths = [...(group?.[1] ?? '').matchAll(/<path d="([^"]+)"/g)].map(
+        (m) => m[1],
+      );
+      expect(paths).toEqual(ICON_PATHS.hanger);
+    },
+  );
 });

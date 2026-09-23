@@ -167,6 +167,20 @@ describe('the identity assets', () => {
     expect([ico.readUInt16LE(2), sizes]).toEqual([1, [16, 32, 48]]);
   });
 
+  it('lets Chromium pick the SVG favicon, which follows dark mode', () => {
+    // An ICO advertising 16x16 matches the tab size exactly and wins the tie over the SVG.
+    const layout = fs.readFileSync(
+      path.join(__dirname, '..', 'views', 'layout.hbs'),
+      'utf8',
+    );
+    expect(layout).toContain(
+      '<link rel="icon" href="/favicon.ico" sizes="32x32" />',
+    );
+    expect(layout).toContain(
+      '<link rel="icon" href="/favicon.svg" type="image/svg+xml" />',
+    );
+  });
+
   it('turns the tab icon light in dark mode', () => {
     expect(fs.readFileSync(publicFile('favicon.svg'), 'utf8')).toContain(
       'prefers-color-scheme: dark',

@@ -53,10 +53,12 @@ describe('the share watermark', () => {
     );
   });
 
-  it('is 150 px with a 20 px margin', async () => {
+  it('is 150 px at 200/255 opacity, with a 20 px margin', async () => {
     const watermark = await serviceWith('icons/icon-512.png').getWatermark();
     const { width, height } = await sharp(watermark).metadata();
+    const { channels } = await sharp(watermark).stats();
     expect([width, height]).toEqual([170, 170]);
+    expect(channels[3].max).toBe(200);
   });
 
   it('uses the configured file when it exists', async () => {
