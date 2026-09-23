@@ -42,7 +42,7 @@ export class ViewContextService {
     const appName = this.configService.get<string>('APP_NAME');
     const appDescription =
       'Self-hosted wardrobe organizer. Catalog clothes with photos, build outfits, and install as an offline PWA. Free and open-source. No subscription, no ads.';
-    const ogImage = `${baseUrl}/assets/lazztech_icon.png`;
+    const ogImage = `${baseUrl}/assets/og-image.png`;
 
     const context: Record<string, any> = {
       appName,
@@ -64,6 +64,8 @@ export class ViewContextService {
       ogTitle: appName,
       ogDescription: appDescription,
       ogImage,
+      ogImageWidth: 1200,
+      ogImageHeight: 630,
     };
 
     try {

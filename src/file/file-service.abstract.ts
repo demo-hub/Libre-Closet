@@ -1,17 +1,20 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MultipartFile } from '@fastify/multipart';
+import { existsSync } from 'fs';
 import { join } from 'path';
 import sharp from 'sharp';
 import { File } from 'src/dal/entity/file.entity';
 import Stream, { Readable } from 'stream';
 import { FileServiceInterface } from './file-service.interface';
 
+const DEFAULT_WATERMARK = 'icons/icon-512.png';
+
 @Injectable()
 export abstract class FileService implements FileServiceInterface {
   public logger = new Logger(FileService.name);
 
-  public watermark: Promise<Buffer<ArrayBufferLike>>;
+  private watermark?: Promise<Buffer>;
 
   constructor(readonly configService: ConfigService) {}
 
@@ -76,15 +79,19 @@ export abstract class FileService implements FileServiceInterface {
   abstract getByShareableId(shareableId: string): Promise<Readable | undefined>;
   protected abstract store(fileName: string, stream: Readable): Promise<void>;
 
-  async getWatermark() {
-    return sharp(
-      join(
-        process.cwd(),
-        'public',
-        'assets',
-        this.configService.getOrThrow('ICON_NAME'),
-      ),
-    )
+  /** A missing ICON_NAME file falls back to the default icon, so share previews keep working after the Lazztech icons went. */
+  private watermarkSource(): string {
+    const configured = this.configService.getOrThrow<string>('ICON_NAME');
+    const file = join(process.cwd(), 'public', 'assets', configured);
+    if (existsSync(file)) return file;
+    this.logger.warn(
+      `ICON_NAME "${configured}" is not a file under public/assets; watermarking with ${DEFAULT_WATERMARK}`,
+    );
+    return join(process.cwd(), 'public', 'assets', DEFAULT_WATERMARK);
+  }
+
+  getWatermark(): Promise<Buffer> {
+    this.watermark ??= sharp(this.watermarkSource())
       .resize(150, 150)
       .extend({
         top: 0,
@@ -105,7 +112,12 @@ export abstract class FileService implements FileServiceInterface {
           blend: 'dest-in',
         },
       ])
-      .toBuffer();
+      .toBuffer()
+      .catch((error: unknown) => {
+        this.watermark = undefined;
+        throw error;
+      });
+    return this.watermark;
   }
 
   async watermarkImage(

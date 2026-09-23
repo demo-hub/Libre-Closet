@@ -360,6 +360,7 @@ Building the image by hand, rather than letting CI do it, is `docker build -f do
 | `IMPORT_ALLOW_PRIVATE_NETWORKS`    | Development and testing only - let the importer reach private and loopback addresses on any port | `false` | `true`                                                          |
 | `IMPORT_FETCH_TIMEOUT_MS`          | Time budget for fetching a pasted link         | `10000`        | `20000`                                                                                   |
 | `SITE_URL`                         | Public address, used for share links and page metadata. **Must be `https://` — an `http://` value stops the app at boot** | `https://librecloset.lazz.tech` | `https://closet.example.com`             |
+| `ICON_NAME`                        | Image under `public/assets/` stamped on shared-photo previews. A file that does not exist falls back to the default, with a warning in the log | `icons/icon-512.png` | `my-mark.png`                            |
 | `THROTTLE_LIMIT`                   | Requests allowed per minute per client before the app answers 429. Raise it only to load test; the default protects the import fetcher and the sign-in limits | `600` | `100000` |
 | `ACCESS_TOKEN_SECRET`              | JWT signing secret - **change for production**, nothing enforces it | `ChangeMe!`    | `u9n8c2y847rfctb23468tcb689f243`                                       |
 | `DATABASE_TYPE`                    | `sqlite` or `postgres`                         | `sqlite`       | `postgres`                                                                                |
@@ -452,6 +453,10 @@ The upstream version is part of each file name because the files are served with
 ```bash
 npm pack @fontsource-variable/inter@<version>   # then take files/inter-latin-wght-normal.woff2 and LICENSE
 ```
+
+### Icons
+
+The mark is drawn once, in `design/libre-closet-mark.svg`; every icon, the favicon and the link-preview images are generated from it and committed. After changing it, run `node scripts/build-icons.mjs`. The two preview images keep their text as outlines in `design/og-image.svg` and `design/social-preview.svg`, so the build needs no fonts; `python3 design/outline_text.py <fonts>` rewrites them when the name or the tagline changes (it needs fontTools and the variable Inter and Plus Jakarta Sans files). `design/social-preview.png` is for GitHub's Settings → Social preview and is not served by the app.
 
 ### Docker build
 

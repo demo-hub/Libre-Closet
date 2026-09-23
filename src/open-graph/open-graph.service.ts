@@ -14,6 +14,13 @@ export interface OpenGraphTagValues {
   ogImage: string;
 }
 
+/** A watermarked photo's size varies, so its dimensions are left unset; with no photo the default image stays. */
+function previewImage(url: string | undefined) {
+  return url
+    ? { ogImage: url, ogImageWidth: undefined, ogImageHeight: undefined }
+    : {};
+}
+
 @Injectable()
 export class OpenGraphService {
   constructor(
@@ -44,7 +51,9 @@ export class OpenGraphService {
         ogUrl: `${req.protocol}://${req.host}/file/${shareableId}`,
         ogTitle: file?.fileName,
         ogDescription: `From ${createdBy?.email}`,
-        ogImage: this.fileUrlService.getWatermarkedFileUrl(shareableId, req),
+        ...previewImage(
+          this.fileUrlService.getWatermarkedFileUrl(shareableId, req),
+        ),
         file,
         createdBy,
       };
@@ -66,7 +75,7 @@ export class OpenGraphService {
         ogUrl: `${req.protocol}://${req.host}/share?shareableId=${shareableId}&type=garment`,
         ogTitle: garment?.name,
         ogDescription: `From ${createdBy?.email}`,
-        ogImage,
+        ...previewImage(ogImage),
         garment,
         createdBy,
       };
@@ -91,7 +100,7 @@ export class OpenGraphService {
         ogUrl: `${req.protocol}://${req.host}/share?shareableId=${shareableId}&type=outfit`,
         ogTitle: outfit?.name,
         ogDescription: `From ${createdBy?.email}`,
-        ogImage,
+        ...previewImage(ogImage),
         outfit,
         garments: outfit?.garments.getItems() ?? [],
         createdBy,

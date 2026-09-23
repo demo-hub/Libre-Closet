@@ -35,7 +35,6 @@ const KNOWN_DEBT = [
   'views/chat.hbs', // PR 10
   'views/files.hbs', // PR 10
   'views/share.hbs', // PR 10
-  'views/layout.hbs', // PR 5 (the apple-touch-icon still points at lazztech_icon.png)
   'views/auth/login.hbs', // PR 7
   'views/auth/register.hbs', // PR 7
   'views/auth/reset.hbs', // PR 7
