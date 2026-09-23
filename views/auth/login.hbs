@@ -4,76 +4,27 @@
   {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "name": "Login — Libre Closet",
-    "description": "Sign in to your Libre Closet account to manage your wardrobe, build outfits, and schedule looks.",
+    "name": {{{json ogTitle}}},
+    "description": {{{json ogDescription}}},
     "isPartOf": {
       "@id": "{{siteUrl}}/#website"
     }
   }
 </script>
 
-<main id="main" tabindex="-1" class="page page--center justify-items-center">
-  <h1 class="text-2xl font-bold mb-4">{{t 'lang.LOGIN_OG_TITLE'}}</h1>
-  {{#if error}}
-  <div class="toast toast-top toast-center">
-    <div
-      role="alert"
-      class="alert alert-error shadow-lg"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-6 w-6 shrink-0 stroke-current"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-      <span>{{t 'lang.ERROR'}}</span>
-    </div>
-  </div>
-  {{/if}}
-
-  <form hx-post="/auth/login" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-indicator="#loading" hx-trigger="submit">
+<main id="main" tabindex="-1" class="page page--center grid-cols-[minmax(0,24rem)] gap-4">
+  <h1>{{t 'lang.LOGIN_OG_TITLE'}}</h1>
+  {{#if error}}{{> alert kind="error" text=error focus=true}}{{/if}}
+  <form method="post" action="/auth/login" hx-post="/auth/login" hx-target="main" hx-select="main" hx-swap="outerHTML show:window:top" hx-indicator="#loading">
     {{#if returnTo}}
-    {{!-- Where the user was headed before being asked to sign in. Server-side
-    it is checked to be a path on this site, both here and on the way back. --}}
+    {{!-- Checked server-side to be a path on this site, here and on the way back. --}}
     <input type="hidden" name="returnTo" value="{{returnTo}}" />
     {{/if}}
-    <fieldset
-      class="fieldset bg-base-200 border-base-300 rounded-box w-xs max-w-[calc(100vw-2rem)] border p-4"
-    >
-      <legend class="fieldset-legend">{{t 'lang.LOGIN'}}</legend>
-
-      <label class="label">{{t 'lang.EMAIL'}}</label>
-      <label class="input">
-        <input
-          name="email"
-          type="email"
-          placeholder="{{t 'lang.EMAIL'}}"
-          required
-        />
-      </label>
-
-      <label class="label">{{t 'lang.PASSWORD'}}</label>
-      <label class="input">
-        <input
-          name="password"
-          type="password"
-          required
-          placeholder="{{t 'lang.PASSWORD'}}"
-        />
-      </label>
-      <a class="ml-auto link link-info" href="/auth/reset"
-        >{{t 'lang.FORGOT_PASSWORD'}}</a
-      >
-      <button type="submit" class="btn btn-neutral mt-4">
-        {{t 'lang.LOGIN'}}
-      </button>
+    <fieldset class="fieldset w-full border border-base-300 rounded-box p-4">
+      {{> authField fieldId="email" type="email" label=(t 'lang.EMAIL') autocomplete="username" value=input.email}}
+      {{> authField fieldId="password" type="password" label=(t 'lang.PASSWORD') autocomplete="current-password"}}
+      <a class="link justify-self-end" href="/auth/reset">{{t 'lang.FORGOT_PASSWORD'}}</a>
+      <button type="submit" class="btn btn-primary mt-4">{{t 'lang.LOGIN'}}</button>
     </fieldset>
   </form>
 </main>

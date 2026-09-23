@@ -29,18 +29,9 @@ const KNOWN_DEBT = [
   'views/index.hbs', // PR 11a
   'views/privacy.hbs', // PR 11b
   'views/terms.hbs', // PR 11b
-  'views/offline.hbs', // PR 7
-  'views/error.hbs', // PR 7
   'views/chat.hbs', // PR 10
   'views/files.hbs', // PR 10
   'views/share.hbs', // PR 10
-  'views/auth/login.hbs', // PR 7
-  'views/auth/register.hbs', // PR 7
-  'views/auth/reset.hbs', // PR 7
-  'views/auth/reset-code.hbs', // PR 7
-  'views/auth/update-email.hbs', // PR 7
-  'views/auth/delete-account.hbs', // PR 7
-  'views/auth/profile.hbs', // PR 7
   'views/calendar/index.hbs', // PR 9b
   'views/outfits/index.hbs', // PR 9a
   'views/outfits/show.hbs', // PR 9a
@@ -48,7 +39,6 @@ const KNOWN_DEBT = [
   'views/wardrobe/index.hbs', // PR 8a
   'views/wardrobe/show.hbs', // PR 8b
   'views/wardrobe/form.hbs', // PR 8b
-  'views/wardrobe-share/invite.hbs', // PR 7
   'views/wardrobe-share/manage.hbs', // PR 10
   'views/wardrobe-share/partials/invite-link-result.hbs', // PR 10
   'views/partials/aiSuggestion.hbs', // PR 8b
@@ -257,6 +247,14 @@ describe('templates and client scripts', () => {
     [/\b(input-xs|badge-xs|range-xs)\b/, 'below the 12 px floor'],
     [/text-\[\d+px\]/, 'off the type scale'],
     [
+      /class="(?=[^"]*\bbg-base-200\b)(?=[^"]*(?<![\w-])(fieldset|collapse|input|select|textarea|file-input|checkbox|radio|toggle|btn-outline|badge-outline)(?![\w-]))[^"]*"/,
+      'Steel borders are approved on White and Paper, not on Surface',
+    ],
+    [
+      /class="(?=[^"]*(?<![\w-])(card|alert)(?![\w-]))(?=[^"]*(?<![\w-])(hover:)?shadow(-(2xs|xs|sm|md|lg|xl|2xl|\[[^\]]*\]))?(?![\w-]))[^"]*"/,
+      'cards take the Hairline border, alerts the status rail; a shadow replaces both',
+    ],
+    [
       /<h[1-3][^>]*\btext-(xs|sm|base|lg)(?![\w-])/,
       'a heading below the h3 size, where Plus Jakarta Sans runs its words together',
     ],
@@ -293,6 +291,27 @@ describe('templates and client scripts', () => {
     expect(heading.test('<h2 class="card-title text-lg">')).toBe(true);
     expect(heading.test('<h3 class="text-base">')).toBe(true);
     expect(heading.test('<h2 class="text-h3 text-base-content">')).toBe(false);
+  });
+
+  it('flags Surface under a bordered control and shadows on cards and alerts', () => {
+    const [surface] = forbidden.find(([, why]) => why.startsWith('Steel'))!;
+    const [shadow] = forbidden.find(([, why]) => why.startsWith('cards'))!;
+    expect(surface.test('<fieldset class="fieldset bg-base-200 p-4">')).toBe(
+      true,
+    );
+    expect(surface.test('<div class="bg-base-200 p-4">')).toBe(false);
+    expect(surface.test('<div class="input-group bg-base-200">')).toBe(false);
+    expect(surface.test('<span class="badge badge-outline bg-base-200">')).toBe(
+      true,
+    );
+    expect(shadow.test('<div class="card shadow-md">')).toBe(true);
+    expect(shadow.test('<div class="alert alert-error shadow-lg">')).toBe(true);
+    expect(shadow.test('<p class="card-title shadow-sm">')).toBe(false);
+    expect(shadow.test('<div class="card shadow-xs">')).toBe(true);
+    expect(shadow.test('<div class="alert shadow-[0_1px_2px_#0003]">')).toBe(
+      true,
+    );
+    expect(shadow.test('<div class="card">')).toBe(false);
   });
 
   it('checks the files that have been swept', () => {

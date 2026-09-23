@@ -1,31 +1,18 @@
 {{>navbar}}
 
 <main id="main" tabindex="-1" class="page page--center justify-items-center gap-2">
-  <div class="flex flex-row gap-2">
+  <div class="flex flex-row items-center gap-2">
     <h1>{{t 'lang.OFFLINE_TITLE'}}</h1>
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke-width="1.5"
-      stroke="currentColor"
-      class="size-6 text-error animate-pulse"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        d="m3 3 8.735 8.735m0 0a.374.374 0 1 1 .53.53m-.53-.53.53.53m0 0L21 21M14.652 9.348a3.75 3.75 0 0 1 0 5.304m2.121-7.425a6.75 6.75 0 0 1 0 9.546m2.121-11.667c3.808 3.807 3.808 9.98 0 13.788m-9.546-4.242a3.733 3.733 0 0 1-1.06-2.122m-1.061 4.243a6.75 6.75 0 0 1-1.625-6.929m-.496 9.05c-3.068-3.067-3.664-7.67-1.79-11.334M12 12h.008v.008H12V12Z"
-      />
-    </svg>
+    {{icon "wifi-slash" class="size-6 text-error"}}
   </div>
-  <p>{{t 'lang.OFFLINE_DESC'}}</p>
-  {{!-- Filled in only when something really is waiting; the offline page is
-  served from the cache with no query string, so the server cannot know. --}}
-  <div id="pendingShare" class="alert alert-info hidden max-w-sm">
-    <span>{{t 'lang.SHARE_WAITING'}}</span>
-    <a id="pendingShareLink" class="btn btn-sm">{{t 'lang.SHARE_WAITING_OPEN'}}</a>
+  <p class="text-center">{{t 'lang.OFFLINE_DESC'}}</p>
+  {{!-- Revealed by the script below: the page is served from the cache, so the server cannot know. --}}
+  <div id="pendingShare" role="status" class="alert hidden max-w-sm">
+    {{icon "information-circle" class="size-5 shrink-0"}}
+    <div>{{t 'lang.SHARE_WAITING'}}</div>
+    <a id="pendingShareLink" class="btn btn-outline btn-sm">{{t 'lang.SHARE_WAITING_OPEN'}}</a>
   </div>
-  <a href="/" class="btn">{{t 'lang.RETURN_TO_HOME'}}</a>
+  <a href="/" class="btn btn-primary">{{t 'lang.RETURN_TO_HOME'}}</a>
 </main>
 
 {{#if pwaEnabled}}

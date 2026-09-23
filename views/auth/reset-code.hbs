@@ -1,80 +1,17 @@
 {{>navbar}}
-
-<main id="main" tabindex="-1" class="page page--center">
-  <form hx-post="/auth/reset-code" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-indicator="#loading" hx-trigger="submit">
-    <fieldset
-      class="fieldset bg-base-200 border-base-300 rounded-box w-xs max-w-[calc(100vw-2rem)] border p-4"
-      hx-post="/auth/validate/reset-code"
-      hx-target="this" hx-select="fieldset.fieldset" hx-swap="outerHTML" hx-sync="this:replace" data-live-validation
-      hx-indicator="#loading"
-      hx-trigger="change, blur delay:500ms"
-      hx-include="input"
-    >
-      <legend class="fieldset-legend">{{t 'lang.CHANGE_PASSWORD'}}</legend>
-
-      <label class="label">{{t 'lang.EMAIL'}}</label>
-      <label class="input {{#if (filterErrors validationErrors "email")}}input-error{{/if}}">
-        <input
-          id="email"
-          name="email"
-          type="email"
-          value="{{input.email}}"
-          placeholder="{{t 'lang.CONFIRM_EMAIL'}}"
-          required
-        />
-      </label>
-      {{#each (filterErrors validationErrors "email")}}
-      <p class="text-error">{{this}}</p>
-      {{/each}}
-
-      <label class="label">{{t 'lang.RESET_CODE'}}</label>
-      <label class="input {{#if (filterErrors validationErrors "resetCode")}}input-error{{/if}}">
-        <input
-          id="resetCode"
-          name="resetCode"
-          value="{{input.resetCode}}"
-          placeholder="{{t 'lang.RESET_CODE'}}"
-          required
-        />
-      </label>
-      {{#each (filterErrors validationErrors "resetCode")}}
-      <p class="text-error">{{this}}</p>
-      {{/each}}
-
-      <label class="label">{{t 'lang.PASSWORD'}}</label>
-      <label class="input {{#if (filterErrors validationErrors "password")}}input-error{{/if}}">
-        <input
-          id="password"
-          name="password"
-          type="password"
-          value="{{input.password}}"
-          required
-          placeholder="{{t 'lang.PASSWORD'}}"
-          autocomplete="new-password"
-        />
-      </label>
-      {{#each (filterErrors validationErrors "password")}}
-      <p class="text-error">{{this}}</p>
-      {{/each}}
-
-      <label class="label">{{t 'lang.CONFIRM_PASSWORD'}}</label>
-      <label class="input {{#if (filterErrors validationErrors "confirmPassword")}}input-error{{/if}}">
-        <input
-          id="confirmPassword"
-          name="confirmPassword"
-          type="password"
-          value="{{input.confirmPassword}}"
-          required
-          placeholder="{{t 'lang.PASSWORD'}}"
-        />
-      </label>
-      {{#each (filterErrors validationErrors "confirmPassword")}}
-      <p class="text-error">{{this}}</p>
-      {{/each}}
-
-      <button type="submit" id="submit" class="btn btn-neutral mt-4 {{#if validationErrors}}btn-disabled{{/if}}">{{t 'lang.RESET_PASSWORD'}}</button>
+<main id="main" tabindex="-1" class="page page--center grid-cols-[minmax(0,24rem)] gap-4">
+  <h1>{{t 'lang.CHANGE_PASSWORD'}}</h1>
+  {{#if error}}{{> alert kind="error" text=error focus=true}}{{/if}}
+  <form method="post" action="/auth/reset-code" hx-post="/auth/reset-code" hx-target="main" hx-select="main" hx-swap="outerHTML show:window:top" hx-indicator="#loading">
+    <fieldset class="fieldset w-full border border-base-300 rounded-box p-4">
+      <div class="contents" data-live-validation hx-post="/auth/validate/reset-code" hx-target="this" hx-select="[data-live-validation]" hx-swap="outerHTML transition:false" hx-sync="this:replace" hx-trigger="change" hx-include="input" hx-indicator="#loading">
+        {{> authField fieldId="email" type="email" label=(t 'lang.EMAIL') autocomplete="email" value=input.email errors=(filterErrors validationErrors 'email')}}
+        {{> authField fieldId="resetCode" type="text" label=(t 'lang.RESET_CODE') autocomplete="one-time-code" inputmode="numeric" value=input.resetCode}}
+        {{> authField fieldId="password" type="password" label=(t 'lang.PASSWORD') autocomplete="new-password" value=input.password errors=(filterErrors validationErrors 'password')}}
+        {{> authField fieldId="confirmPassword" type="password" label=(t 'lang.CONFIRM_PASSWORD') autocomplete="new-password" value=input.confirmPassword errors=(filterErrors validationErrors 'confirmPassword')}}
+      </div>
+      <button type="submit" class="btn btn-primary mt-4">{{t 'lang.RESET_PASSWORD'}}</button>
     </fieldset>
   </form>
 </main>
-
 {{>dock}}

@@ -1,10 +1,9 @@
 {{>navbar}}
-<main id="main" tabindex="-1" class="page page--center justify-items-center gap-3">
-  <h1 class="text-2xl">{{user.email}}</h1>
+<main id="main" tabindex="-1" class="page page--center grid-cols-[minmax(0,24rem)] gap-3">
+  <h1>{{t 'lang.PROFILE'}}</h1>
+  <p class="text-graphite wrap-anywhere">{{user.email}}</p>
   <a class="link" href="/auth/update-email">{{t 'lang.UPDATE_EMAIL'}}</a>
-  <a class="link" href="/auth/reset?email={{user.email}}"
-    >{{t 'lang.CHANGE_PASSWORD'}}</a
-  >
+  <a class="link" href="/auth/reset?email={{uri user.email}}">{{t 'lang.CHANGE_PASSWORD'}}</a>
   {{#if authEnabled}}
   <a class="link" href="/wardrobe-share/manage">{{t 'lang.WARDROBE_SHARING'}}</a>
   {{/if}}

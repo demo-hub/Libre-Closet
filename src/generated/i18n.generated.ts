@@ -74,6 +74,11 @@ export type I18nTranslations = {
         "PATH": string;
         "TIME": string;
         "RETURN_TO_HOME": string;
+        "ERROR_401": string;
+        "ERROR_403": string;
+        "ERROR_404": string;
+        "ERROR_429": string;
+        "ERROR_500": string;
         "TEST_WEB_PUSH": string;
         "YOUR_MESSAGE": string;
         "COPY_TEXT": string;
@@ -114,6 +119,12 @@ export type I18nTranslations = {
         "SHARE_WAITING": string;
         "SHARE_WAITING_OPEN": string;
         "REQUEST_FAILED": string;
+        "LOGIN_FAILED": string;
+        "REGISTER_FAILED": string;
+        "RESET_FAILED": string;
+        "RESET_CODE_FAILED": string;
+        "UPDATE_EMAIL_FAILED": string;
+        "DELETE_ACCOUNT_FAILED": string;
         "PHOTO": string;
         "SAVE": string;
         "DELETE": string;

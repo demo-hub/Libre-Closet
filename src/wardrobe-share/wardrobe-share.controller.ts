@@ -108,12 +108,8 @@ export class WardrobeShareController {
       return { error: true, message: 'Invite not found or has expired.' };
     }
 
-    const permissionLabel =
-      share.permission === SharePermission.VIEW ? 'View only' : 'Can edit';
-
     return {
       share,
-      permissionLabel,
       grantorName:
         share.grantor.unwrap().firstName ||
         share.grantor.unwrap().email ||

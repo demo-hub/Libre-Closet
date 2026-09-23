@@ -1,48 +1,15 @@
 {{>navbar}}
-<main id="main" tabindex="-1" class="page page--center gap-3">
-    <form hx-post="/auth/update-email" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-trigger="submit">
-        <fieldset
-        class="fieldset bg-base-200 border-base-300 rounded-box w-xs max-w-[calc(100vw-2rem)] border p-4"
-        hx-post="/auth/validate/update-email"
-        hx-target="this" hx-select="fieldset.fieldset" hx-swap="outerHTML" hx-sync="this:replace" data-live-validation
-        hx-indicator="#loading"
-        hx-trigger="change, blur delay:500ms"
-        hx-include="input"
-        >
-        <legend class="fieldset-legend">{{t 'lang.UPDATE_EMAIL'}}</legend>
-
-        <label class="label">{{t 'lang.NEW_EMAIL'}}</label>
-        <label class="input {{#if (filterErrors validationErrors "email")}}input-error{{/if}}">
-            <input
-            id="email"
-            name="email"
-            type="email"
-            value="{{input.email}}"
-            placeholder="{{t 'lang.NEW_EMAIL'}}"
-            required
-            />
-        </label>
-        {{#each (filterErrors validationErrors "email")}}
-        <p class="text-error">{{this}}</p>
-        {{/each}}
-
-        <label class="label">{{t 'lang.CONFIRM_EMAIL'}}</label>
-        <label class="input {{#if (filterErrors validationErrors "confirmEmail")}}input-error{{/if}}">
-            <input
-            id="confirmEmail"
-            name="confirmEmail"
-            type="email"
-            value="{{input.confirmEmail}}"
-            placeholder="{{t 'lang.CONFIRM_EMAIL'}}"
-            required
-            />
-        </label>
-        {{#each (filterErrors validationErrors "confirmEmail")}}
-        <p class="text-error">{{this}}</p>
-        {{/each}}
-
-        <button type="submit" id="submit-email" class="btn btn-neutral mt-4 {{#if validationErrors}}btn-disabled{{/if}}">{{t 'lang.UPDATE'}}</button>
-        </fieldset>
-    </form>
+<main id="main" tabindex="-1" class="page page--center grid-cols-[minmax(0,24rem)] gap-4">
+  <h1>{{t 'lang.UPDATE_EMAIL'}}</h1>
+  {{#if error}}{{> alert kind="error" text=error focus=true}}{{/if}}
+  <form method="post" action="/auth/update-email" hx-post="/auth/update-email" hx-target="main" hx-select="main" hx-swap="outerHTML show:window:top" hx-indicator="#loading">
+    <fieldset class="fieldset w-full border border-base-300 rounded-box p-4">
+      <div class="contents" data-live-validation hx-post="/auth/validate/update-email" hx-target="this" hx-select="[data-live-validation]" hx-swap="outerHTML transition:false" hx-sync="this:replace" hx-trigger="change" hx-include="input" hx-indicator="#loading">
+        {{> authField fieldId="email" type="email" label=(t 'lang.NEW_EMAIL') autocomplete="email" value=input.email errors=(filterErrors validationErrors 'email')}}
+        {{> authField fieldId="confirmEmail" type="email" label=(t 'lang.CONFIRM_EMAIL') autocomplete="email" value=input.confirmEmail errors=(filterErrors validationErrors 'confirmEmail')}}
+      </div>
+      <button type="submit" class="btn btn-primary mt-4">{{t 'lang.UPDATE'}}</button>
+    </fieldset>
+  </form>
 </main>
 {{>dock}}

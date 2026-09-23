@@ -1,7 +1,7 @@
-{{!-- {{> alert kind="error|success|warning|neutral" text=… alertId=… dismiss=true}}; not `id`: partials inherit the caller's context. Playwright selects on alert-*. --}}
+{{!-- {{> alert kind="error|success|warning|neutral" text=… alertId=… dismiss=true focus=true}}; not `id`: partials inherit the caller's context. Playwright selects on alert-*. --}}
 <div{{#if alertId}} id="{{alertId}}"{{/if}}
   role="{{#ifEquals kind 'error'}}alert{{else}}status{{/ifEquals}}"
-  class="alert{{#ifEquals kind 'neutral'}}{{else}} alert-{{kind}}{{/ifEquals}}">
+  class="alert{{#ifEquals kind 'neutral'}}{{else}} alert-{{kind}}{{/ifEquals}}"{{#if focus}} tabindex="-1" autofocus{{/if}}>
   {{#ifEquals kind 'error'}}{{icon "x-circle" class="size-5 shrink-0"}}{{/ifEquals}}
   {{#ifEquals kind 'success'}}{{icon "check-circle" class="size-5 shrink-0"}}{{/ifEquals}}
   {{#ifEquals kind 'warning'}}{{icon "exclamation-triangle" class="size-5 shrink-0"}}{{/ifEquals}}

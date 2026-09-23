@@ -190,7 +190,6 @@
   :where(.badge) { font-size: 0.875rem; --size: calc(var(--size-selector) * 7); background: var(--color-base-200); color: var(--color-base-content); border-color: var(--color-base-300); }
   :where(.badge-outline) { background: transparent; border-color: var(--mq-border); }
   :where(.fieldset) { font-size: 1rem; }
-  :where(.fieldset-legend) { font-family: var(--font-heading); font-size: var(--text-h3); letter-spacing: var(--tracking-display); }
   :where(.label) { color: var(--mq-text-secondary); font-size: 0.875rem; }
   :where(.dock) { border-top: 1px solid var(--color-base-300); background: var(--color-base-100); view-transition-name: app-dock; }
   :where(.dock-label) { font-size: 0.875rem; }
