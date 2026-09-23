@@ -4,9 +4,7 @@
   <h1 class="text-2xl font-bold mb-6">{{t 'lang.WARDROBE_SHARING'}}</h1>
 
   {{#if error}}
-  <div class="alert alert-error mb-4">
-    <span>{{error}}</span>
-  </div>
+  <div class="mb-4">{{> alert kind="error" text=error}}</div>
   {{/if}}
 
   {{!-- Create invite link --}}
