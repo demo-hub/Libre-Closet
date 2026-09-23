@@ -7,13 +7,37 @@ import {
   Logger,
 } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
+import { I18nService } from 'nestjs-i18n';
+import { intlLocale } from './i18n/intl-locale';
 import { ViewContextService } from './view-context/view-context.service';
+
+const MESSAGE_KEYS: Partial<Record<number, string>> = {
+  401: 'lang.ERROR_401',
+  403: 'lang.ERROR_403',
+  404: 'lang.ERROR_404',
+  429: 'lang.ERROR_429',
+  500: 'lang.ERROR_500',
+};
+
+// dateStyle cannot be combined with timeZoneName: the constructor throws.
+const TIMESTAMP: Intl.DateTimeFormatOptions = {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZoneName: 'short',
+  hourCycle: 'h23',
+};
 
 @Catch()
 export class ErrorViewFilter implements ExceptionFilter {
   private logger = new Logger(ErrorViewFilter.name);
 
-  constructor(private readonly viewContextService: ViewContextService) {}
+  constructor(
+    private readonly viewContextService: ViewContextService,
+    private readonly i18n: I18nService,
+  ) {}
 
   async catch(exception: unknown, host: ArgumentsHost) {
     this.logger.warn(exception);
@@ -32,27 +56,43 @@ export class ErrorViewFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message =
+    const raw =
       exception instanceof HttpException
         ? exception.getResponse()
         : 'Internal server error';
+    const fallback =
+      typeof raw === 'string' ? raw : (raw as { message?: string }).message;
 
     try {
       const context =
         (response as any).locals ||
         (await this.viewContextService.buildContext(request));
-      await response.status(status).view('error', {
-        layout: 'layout',
-        statusCode: status,
-        message:
-          typeof message === 'string' ? message : (message as any).message,
-        timestamp: new Date().toISOString(),
-        path: request.url,
-        ...context,
-      });
+      const lang: string = context.locale ?? 'en';
+      const key = MESSAGE_KEYS[status >= 500 ? 500 : status];
+      const now = new Date();
+      await response
+        .status(status)
+        .header('Cache-Control', 'no-store')
+        .type('text/html; charset=utf-8')
+        .view('error', {
+          layout: 'layout',
+          ...context,
+          statusCode: status,
+          message: key ? this.i18n.t(key, { lang }) : fallback,
+          pageTitle: `${this.i18n.t('lang.ERROR', { lang })} ${status}`,
+          timestamp: new Intl.DateTimeFormat(
+            intlLocale(lang),
+            TIMESTAMP,
+          ).format(now),
+          timestampIso: now.toISOString(),
+          path: request.url,
+        });
     } catch (renderError) {
       this.logger.error(renderError);
-      response.status(status).send({ statusCode: status, message });
+      response
+        .status(status)
+        .type('application/json')
+        .send({ statusCode: status, message: fallback });
     }
   }
 }
