@@ -41,7 +41,8 @@ export class ViewContextService {
     const baseUrl = `${protocol}://${host}`;
     const appName = this.configService.get<string>('APP_NAME');
     const appDescription =
-      'Self-hosted wardrobe organizer. Catalog clothes with photos, build outfits, and install as an offline PWA. Free and open-source. No subscription, no ads.';
+      I18nContext.current()?.t('lang.APP_DESCRIPTION') ??
+      'Self-hosted wardrobe organiser. Catalogue clothes with photos, build outfits and install it as a progressive web app. Free and open source, with no subscription and no ads.';
     const ogImage = `${baseUrl}/assets/og-image.png`;
 
     const context: Record<string, any> = {
