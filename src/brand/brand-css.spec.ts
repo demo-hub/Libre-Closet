@@ -36,7 +36,6 @@ const KNOWN_DEBT = [
   'views/outfits/index.hbs', // PR 9a
   'views/outfits/show.hbs', // PR 9a
   'views/outfits/form.hbs', // PR 9a
-  'views/wardrobe/index.hbs', // PR 8a
   'views/wardrobe/show.hbs', // PR 8b
   'views/wardrobe/form.hbs', // PR 8b
   'views/wardrobe-share/manage.hbs', // PR 10

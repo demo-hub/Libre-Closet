@@ -173,9 +173,7 @@ export type I18nTranslations = {
         "SEARCH_PLACEHOLDER": string;
         "SEARCH": string;
         "RESULTS": string;
-        "FILTER_SEARCH": string;
         "FILTERS": string;
-        "GARMENT_TYPE": string;
         "CLEAR_FILTERS": string;
         "APPLY_FILTERS": string;
         "REMOVE_FILTER": string;
