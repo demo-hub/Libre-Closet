@@ -68,3 +68,32 @@ test('brand fonts are self-hosted, cached for good, and actually used', async ({
     expect.arrayContaining(['Inter', 'Plus Jakarta Sans']),
   );
 });
+
+test('identity assets are served, and the landing points at the source', async ({
+  page,
+  request,
+}) => {
+  for (const src of [
+    '/favicon.ico',
+    '/favicon.svg',
+    '/apple-touch-icon.png',
+    '/assets/og-image.png',
+    '/assets/icons/icon-512.png',
+    '/assets/icons/badge-96.png',
+  ]) {
+    expect((await request.get(src)).status(), src).toBe(200);
+  }
+  await page.goto('/');
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+    'content',
+    /\/assets\/og-image\.png$/,
+  );
+  await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute(
+    'content',
+    '1200',
+  );
+  await expect(page.getByRole('link', { name: 'Source code' })).toHaveAttribute(
+    'href',
+    process.env.SOURCE_URL || 'https://github.com/demo-hub/Libre-Closet',
+  );
+});

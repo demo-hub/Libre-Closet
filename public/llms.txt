@@ -43,9 +43,7 @@ Libre Closet is a digital wardrobe manager you host yourself. Photograph your cl
 
 ## Links
 
-- Website: https://librecloset.lazz.tech
-- GitHub: https://github.com/lazztech/libre-closet
-- Documentation: https://github.com/lazztech/libre-closet#readme
-- Open Wardrobe (demo): https://librecloset.lazz.tech/wardrobe
-- Register: https://librecloset.lazz.tech/auth/register
-- Lazztech: https://lazztech.com
+- Source code: https://github.com/demo-hub/Libre-Closet
+- Documentation: https://github.com/demo-hub/Libre-Closet#readme
+- Container image: ghcr.io/demo-hub/libre-closet
+- Original project: https://github.com/Lazztech/Libre-Closet (originally built by Lazztech LLC)

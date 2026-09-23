@@ -47,7 +47,7 @@ Run Libre Closet on your own server, NAS, or Raspberry Pi with a single Docker c
 docker run -d \
   -p 3000:3000 \
   -v librecloset_data:/app/data \
-  ghcr.io/lazztech/libre-closet
+  ghcr.io/demo-hub/libre-closet
 ```
 
 See the README for docker-compose and environment variable options.
@@ -66,7 +66,7 @@ See the README for docker-compose and environment variable options.
 
 ## Links
 
-- Website: https://librecloset.lazz.tech
-- GitHub: https://github.com/lazztech/libre-closet
-- Container: ghcr.io/lazztech/libre-closet
-- Lazztech: https://lazztech.com
+- Source code: https://github.com/demo-hub/Libre-Closet
+- Documentation: https://github.com/demo-hub/Libre-Closet#readme
+- Container image: ghcr.io/demo-hub/libre-closet
+- Original project: https://github.com/Lazztech/Libre-Closet (originally built by Lazztech LLC)

@@ -36,6 +36,8 @@ export type I18nTranslations = {
         "SELF_HOST_TITLE": string;
         "SELF_HOST_DESC": string;
         "SELF_HOST_NOTE": string;
+        "FOOTER_CREDIT": string;
+        "SOURCE_CODE": string;
         "SCREENSHOTS_TITLE": string;
         "SCREENSHOT_WARDROBE_ALT": string;
         "SCREENSHOT_WARDROBE_CAPTION": string;
@@ -313,7 +315,8 @@ export type I18nTranslations = {
         "ABOUT_OPEN_SOURCE_DESC": string;
         "ABOUT_TECH": string;
         "ABOUT_TECH_DESC": string;
-        "ABOUT_LINK": string;
+        "ABOUT_SOURCE": string;
+        "ABOUT_UPSTREAM": string;
         "TERMS_TITLE": string;
         "TERMS_HEADING": string;
         "TERMS_INTRO": string;

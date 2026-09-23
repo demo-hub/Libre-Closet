@@ -104,6 +104,10 @@ import { ViewContextModule } from './view-context/view-context.module';
         ),
         SITE_URL: Joi.string().default('https://librecloset.lazz.tech'),
         ICON_NAME: Joi.string().default('icons/icon-512.png'),
+        SOURCE_URL: Joi.string()
+          .uri({ scheme: ['https', 'http'] })
+          .default('https://github.com/demo-hub/Libre-Closet'),
+        IMAGE_NAME: Joi.string().default('ghcr.io/demo-hub/libre-closet'),
         THROTTLE_LIMIT: Joi.number().default(600),
         DATA_PATH: Joi.string().default(path.join(process.cwd(), 'data')),
         DATABASE_TYPE: Joi.string()

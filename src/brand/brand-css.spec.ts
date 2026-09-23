@@ -27,7 +27,6 @@ type Tokens = {
 /** Skipped files, each tagged with the PR that sweeps it; only ever shrinks, and PR 12 asserts it is empty. */
 const KNOWN_DEBT = [
   'views/index.hbs', // PR 11a
-  'views/about.hbs', // PR 11a
   'views/privacy.hbs', // PR 11b
   'views/terms.hbs', // PR 11b
   'views/offline.hbs', // PR 7
