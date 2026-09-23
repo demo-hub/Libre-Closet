@@ -1,6 +1,8 @@
 import { ForbiddenException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { I18nContext } from 'nestjs-i18n';
+import { SharePermission } from '../dal/entity/wardrobe-share.entity';
 import { ConditionalAuthGuard } from '../auth/conditional-auth.guard';
 import { WardrobeShareService } from '../wardrobe-share/wardrobe-share.service';
 import { GarmentService } from './garment.service';
@@ -8,8 +10,19 @@ import { WardrobeController } from './wardrobe.controller';
 
 describe('WardrobeController', () => {
   let controller: WardrobeController;
-  let garmentService: { archive: jest.Mock; create: jest.Mock };
-  let shareService: { canManage: jest.Mock };
+  let garmentService: {
+    archive: jest.Mock;
+    create: jest.Mock;
+    findAll: jest.Mock;
+    findAvailableFilters: jest.Mock;
+    resolveCategoryLabel: jest.Mock;
+  };
+  let shareService: {
+    canManage: jest.Mock;
+    canView: jest.Mock;
+    getInboundShares: jest.Mock;
+    getSharePermission: jest.Mock;
+  };
   let reply: { header: jest.Mock; send: jest.Mock; redirect: jest.Mock };
 
   const requestAs = (userId?: number) =>
@@ -21,8 +34,18 @@ describe('WardrobeController', () => {
     garmentService = {
       archive: jest.fn().mockResolvedValue(undefined),
       create: jest.fn().mockResolvedValue({ id: 7 }),
+      findAll: jest.fn().mockResolvedValue([]),
+      findAvailableFilters: jest
+        .fn()
+        .mockResolvedValue({ categories: [], sizes: [], brands: [] }),
+      resolveCategoryLabel: jest.fn((value: string) => `label:${value}`),
     };
-    shareService = { canManage: jest.fn().mockResolvedValue(true) };
+    shareService = {
+      canManage: jest.fn().mockResolvedValue(true),
+      canView: jest.fn().mockResolvedValue(true),
+      getInboundShares: jest.fn().mockResolvedValue([]),
+      getSharePermission: jest.fn().mockResolvedValue(SharePermission.VIEW),
+    };
     reply = {
       header: jest.fn(),
       send: jest.fn(),
@@ -101,6 +124,67 @@ describe('WardrobeController', () => {
         expect.objectContaining({ category: 'tops' }),
         9,
       );
+    });
+  });
+
+  describe('index', () => {
+    const i18n = { t: (key: string) => key } as unknown as I18nContext;
+    const index = (query: object, userId?: number, ownerId?: string) =>
+      controller.index(requestAs(userId), query, ownerId, i18n);
+
+    it('labels every card with its translated or custom category', async () => {
+      garmentService.findAll.mockResolvedValue([
+        { id: 1, category: 'tops' },
+        { id: 2, category: 'Knitwear' },
+      ]);
+
+      const view = await index({});
+
+      expect(view.categoryLabels).toEqual({
+        tops: 'label:tops',
+        Knitwear: 'label:Knitwear',
+      });
+    });
+
+    it('turns each filter into a pill that names its facet', async () => {
+      const view = await index({ category: 'tops', color: 'red' });
+
+      expect(view.activeFilters.map((p) => [p.facet, p.value])).toEqual([
+        ['lang.CATEGORY', 'label:tops'],
+        ['lang.COLOR', 'red'],
+      ]);
+    });
+
+    it('does not resolve a repeated category', async () => {
+      const view = await index({ category: ['tops', 'bags'] });
+
+      expect(view.activeFilters).toEqual([]);
+      expect(garmentService.resolveCategoryLabel).not.toHaveBeenCalledWith(
+        ['tops', 'bags'],
+        i18n,
+      );
+    });
+
+    it('tells an empty wardrobe from an empty search', async () => {
+      expect((await index({})).emptyWardrobe).toBe(true);
+      expect((await index({ archived: 'true' })).emptyWardrobe).toBe(true);
+      expect((await index({ color: 'red' })).emptyWardrobe).toBe(false);
+    });
+
+    it('adds a garment to the shared wardrobe the user manages', async () => {
+      shareService.getSharePermission.mockResolvedValue(SharePermission.MANAGE);
+
+      const view = await index({ color: 'red' }, 5, '9');
+
+      expect(view.newGarmentHref).toBe('/wardrobe/new?ownerId=9');
+      expect(view.activeFilters[0].href).toBe('/wardrobe?ownerId=9');
+    });
+
+    it('offers no new garment in a wardrobe the user can only view', async () => {
+      const view = await index({}, 5, '9');
+
+      expect(view.canEdit).toBe(false);
+      expect(view.newGarmentHref).toBeNull();
     });
   });
 });

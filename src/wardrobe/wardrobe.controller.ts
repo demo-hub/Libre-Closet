@@ -21,12 +21,17 @@ import { Payload } from '../auth/dto/payload.dto';
 import { GarmentCategory } from './garment-category.enum';
 import { GarmentColor } from './garment-color.enum';
 import { buildFormModel, customOf } from './garment-form';
+import { activeFilters, filterState } from './active-filters';
 import { GarmentService } from './garment.service';
 import { sanitizeSourceUrl, sourceUrlHost } from './source-url';
 import { WardrobeShareService } from '../wardrobe-share/wardrobe-share.service';
 import { SharePermission } from '../dal/entity/wardrobe-share.entity';
 import type { SearchGarmentDto } from './dto/search-garment.dto';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+
+function newGarmentHref(ownerId: number | null): string {
+  return ownerId != null ? `/wardrobe/new?ownerId=${ownerId}` : '/wardrobe/new';
+}
 
 @UseGuards(ConditionalAuthGuard)
 @Controller('wardrobe')
@@ -84,18 +89,40 @@ export class WardrobeController {
       this.garmentService.findAll(userId, query, viewOwner),
       this.garmentService.findAvailableFilters(viewOwner ?? userId),
     ]);
+    const categoryLabel = (value: string) =>
+      this.garmentService.resolveCategoryLabel(value, i18n);
     const availableCategories = filters.categories.map((value) => ({
       value,
-      label: this.garmentService.resolveCategoryLabel(value, i18n),
+      label: categoryLabel(value),
     }));
+    const owner = viewOwner ?? null;
     return {
       garments,
+      categoryLabels: Object.fromEntries(
+        garments.map((garment) => [
+          garment.category,
+          categoryLabel(garment.category),
+        ]),
+      ),
       availableCategories,
       colors: Object.values(GarmentColor),
       availableSizes: filters.sizes,
       search: query,
+      ...filterState(query, owner, garments.length),
+      activeFilters: activeFilters(
+        query,
+        owner,
+        {
+          category: i18n.t('lang.CATEGORY'),
+          color: i18n.t('lang.COLOR'),
+          size: i18n.t('lang.SIZE'),
+          showArchived: i18n.t('lang.SHOW_ARCHIVED'),
+        },
+        categoryLabel,
+      ),
+      newGarmentHref: canEdit ? newGarmentHref(owner) : null,
       sharedWardrobes,
-      viewOwner: viewOwner ?? null,
+      viewOwner: owner,
       canEdit,
     };
   }
