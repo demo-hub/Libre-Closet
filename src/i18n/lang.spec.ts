@@ -82,5 +82,10 @@ describe('translations', () => {
     it('names the shop in the imported alert', () => {
       expect(lang.IMPORTED_FROM_ALERT).toContain('{host}');
     });
+
+    it('keeps the licence and the original builder in the footer credit', () => {
+      expect(lang.FOOTER_CREDIT).toContain('AGPL-3.0');
+      expect(lang.FOOTER_CREDIT).toContain('Lazztech LLC');
+    });
   });
 });

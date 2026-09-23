@@ -1,3 +1,5 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import Handlebars from 'handlebars';
 import { ICON_PATHS, renderIcon } from './icons';
 
@@ -72,4 +74,30 @@ describe('renderIcon', () => {
     )({});
     expect(html).toMatch(/^<button><svg [^>]*class="size-5">/);
   });
+
+  it('draws the same hanger as design/libre-closet-mark.svg, which the icon files are built from', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '..', 'design', 'libre-closet-mark.svg'),
+      'utf8',
+    );
+    const paths = [...source.matchAll(/<path d="([^"]+)"/g)].map((m) => m[1]);
+    expect(paths).toEqual(ICON_PATHS.hanger);
+  });
+
+  it.each(['og-image.svg', 'social-preview.svg'])(
+    'draws the same hanger in design/%s',
+    (file) => {
+      const source = fs.readFileSync(
+        path.join(__dirname, '..', 'design', file),
+        'utf8',
+      );
+      const group = source.match(
+        /stroke-linejoin="round">((?:<path d="[^"]+"\/>)+)<\/g>/,
+      );
+      const paths = [...(group?.[1] ?? '').matchAll(/<path d="([^"]+)"/g)].map(
+        (m) => m[1],
+      );
+      expect(paths).toEqual(ICON_PATHS.hanger);
+    },
+  );
 });

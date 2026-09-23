@@ -26,11 +26,10 @@
     <h2 class="text-xl font-semibold mt-8 mb-3">{{t 'lang.ABOUT_TECH'}}</h2>
     <p class="mb-6">{{t 'lang.ABOUT_TECH_DESC'}}</p>
 
-    <div class="mt-8">
-      <a href="https://lazz.tech" target="_blank" rel="noopener" hx-boost="false" class="btn btn-outline">
-        {{t 'lang.ABOUT_LINK'}}
-      </a>
-    </div>
+    <p class="mt-8 flex flex-wrap gap-x-6 gap-y-2">
+      <a href="{{sourceUrl}}" target="_blank" rel="noopener" hx-boost="false" class="link link-primary">{{t 'lang.ABOUT_SOURCE'}}</a>
+      <a href="https://github.com/Lazztech/Libre-Closet" target="_blank" rel="noopener" hx-boost="false" class="link link-primary">{{t 'lang.ABOUT_UPSTREAM'}}</a>
+    </p>
   </div>
 </main>
 

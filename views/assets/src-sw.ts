@@ -5,6 +5,7 @@ import { registerRoute, setCatchHandler } from 'workbox-routing';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { NetworkFirst, NetworkOnly } from 'workbox-strategies';
+import { clickTarget, focusOrOpen, notificationFromPush } from './push';
 import {
   pendingShares,
   stashedShareUrl,
@@ -199,38 +200,26 @@ addEventListener('install', (event) => {
     return;
   }
 
-  const eventText = event.data.text();
-  // Specify default options
-  let options = {};
-  let title = '';
-
-  // Support both plain text notification and json
-  if (eventText.substr(0, 1) === '{') {
-    const eventData = JSON.parse(eventText);
-    title = eventData.title;
-
-    // Set specific options
-    // @link https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/showNotification#parameters
-    if (eventData.options) {
-      options = Object.assign(options, eventData.options);
-    }
-
-    // Check expiration if specified
-    if (eventData.expires && Date.now() > eventData.expires) {
-      console.log('Push notification has expired');
-      return;
-    }
-  } else {
-    title = eventText;
-  }
+  const notification = notificationFromPush(event.data.text(), Date.now());
+  if (!notification) return;
 
   // Warning: this can fail silently if notifications are disabled at system level
   // The promise itself resolve to undefined and is not helpful to see if it has been displayed properly
   const promiseChain = (self as any).registration.showNotification(
-    title,
-    options,
+    notification.title,
+    notification.options,
   );
 
   // With this, the browser will keep the service worker running until the promise you passed in has settled.
   event.waitUntil(promiseChain);
+});
+
+(self as any).addEventListener('notificationclick', function (event) {
+  event.notification.close();
+  event.waitUntil(
+    focusOrOpen(
+      (self as any).clients,
+      clickTarget(event.notification.data, (self as any).location.origin),
+    ),
+  );
 });

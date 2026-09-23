@@ -5,9 +5,6 @@
 A free, open-source, self-hosted wardrobe organizer. Catalog your clothes, upload photos, build outfits, and access everything from your phone as an offline-ready PWA - all on your own server.
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Join the Discussion](https://img.shields.io/badge/Community-Join%20the%20Discussion-2EA44F?logo=github&logoColor=white&labelColor=1F2937)](https://github.com/Lazztech/Libre-Closet/discussions)
-
-Crafted and engineered with care and intention by [Lazztech LLC](https://lazz.tech/about) 🖤
 
 ---
 
@@ -360,6 +357,9 @@ Building the image by hand, rather than letting CI do it, is `docker build -f do
 | `IMPORT_ALLOW_PRIVATE_NETWORKS`    | Development and testing only - let the importer reach private and loopback addresses on any port | `false` | `true`                                                          |
 | `IMPORT_FETCH_TIMEOUT_MS`          | Time budget for fetching a pasted link         | `10000`        | `20000`                                                                                   |
 | `SITE_URL`                         | Public address, used for share links and page metadata. **Must be `https://` — an `http://` value stops the app at boot** | `https://librecloset.lazz.tech` | `https://closet.example.com`             |
+| `SOURCE_URL`                       | Where the landing page, its footer and About link to the source code, which the AGPL requires you to offer when you run a modified copy. `public/llms.txt` and `llms-full.txt` are static and need the same edit | `https://github.com/demo-hub/Libre-Closet` | `https://github.com/you/Libre-Closet` |
+| `IMAGE_NAME`                       | Container image in the landing page's `docker run` example | `ghcr.io/demo-hub/libre-closet` | `ghcr.io/you/libre-closet`               |
+| `ICON_NAME`                        | Image under `public/assets/` stamped on shared-photo previews. A file that does not exist falls back to the default, with a warning in the log | `icons/icon-512.png` | `my-mark.png`                            |
 | `THROTTLE_LIMIT`                   | Requests allowed per minute per client before the app answers 429. Raise it only to load test; the default protects the import fetcher and the sign-in limits | `600` | `100000` |
 | `ACCESS_TOKEN_SECRET`              | JWT signing secret - **change for production**, nothing enforces it | `ChangeMe!`    | `u9n8c2y847rfctb23468tcb689f243`                                       |
 | `DATABASE_TYPE`                    | `sqlite` or `postgres`                         | `sqlite`       | `postgres`                                                                                |
@@ -452,6 +452,10 @@ The upstream version is part of each file name because the files are served with
 ```bash
 npm pack @fontsource-variable/inter@<version>   # then take files/inter-latin-wght-normal.woff2 and LICENSE
 ```
+
+### Icons
+
+The mark is drawn once, in `design/libre-closet-mark.svg`; every icon, the favicon and the link-preview images are generated from it and committed. After changing it, run `node scripts/build-icons.mjs`, which also redraws the mark inside the two preview SVGs. Those keep their text as outlines in `design/og-image.svg` and `design/social-preview.svg`, so the build needs no fonts. When the name or the tagline changes, `python3 design/outline_text.py <dir>` rewrites them; it needs fontTools and a directory holding `Inter-VF.ttf` (Inter 4.001, `ofl/inter/Inter[opsz,wght].ttf` in github.com/google/fonts) and `PlusJakartaSans-VF.ttf` (Plus Jakarta Sans 2.071, `ofl/plusjakartasans/PlusJakartaSans[wght].ttf`), renamed to those names. `design/social-preview.png` is for GitHub's Settings → Social preview and is not served by the app.
 
 ### Docker build
 
@@ -554,6 +558,6 @@ PRs and issues are welcome. This project is licensed under AGPL-3.0 - contributi
 
 ---
 
-## Star History
+## Attribution
 
-[![Star History Chart](https://api.star-history.com/image?repos=Lazztech/Libre-Closet&type=date&legend=top-left)](https://www.star-history.com/?repos=Lazztech%2FLibre-Closet&type=date&legend=top-left)
+Libre Closet was originally built by [Lazztech LLC](https://github.com/Lazztech/Libre-Closet) and is licensed under the AGPL-3.0. This fork is maintained by mandatiq.

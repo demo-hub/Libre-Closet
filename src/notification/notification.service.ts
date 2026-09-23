@@ -7,6 +7,7 @@ import webpush from 'web-push';
 import _ from 'lodash';
 import { UserDevice } from '../dal/entity/userDevice.entity';
 import { PushNotificationDto } from './dto/pushNotification.dto';
+import { buildPushPayload } from './push-payload';
 
 @Injectable()
 export class NotificationService {
@@ -75,10 +76,7 @@ export class NotificationService {
         webpush
           .sendNotification(
             subscription,
-            JSON.stringify({
-              ...notification,
-              icon: `${this.configService.get('SITE_URL')}/assets/${this.configService.getOrThrow('ICON_NAME')}`,
-            }),
+            JSON.stringify(buildPushPayload(notification)),
           )
           .then((log) => {
             this.logger.debug('Push notification sent.');
