@@ -1,0 +1,12 @@
+{{!-- {{> authField fieldId="email" type="email" label=(t 'lang.EMAIL') autocomplete="email" value=input.email errors=(filterErrors validationErrors 'email')}}; fieldId is also the input's name. --}}
+<label class="label" for="{{fieldId}}">{{label}}</label>
+<input id="{{fieldId}}" name="{{fieldId}}" type="{{type}}" autocomplete="{{autocomplete}}"{{#if inputmode}} inputmode="{{inputmode}}"{{/if}} required
+  class="input w-full{{#if errors.length}} input-error{{/if}}"{{#if value}} value="{{value}}"{{/if}}
+  {{#if errors.length}}aria-invalid="true" aria-describedby="{{fieldId}}-error"{{/if}}{{#if focus}} autofocus{{else}}{{#ifEquals firstError fieldId}} autofocus{{/ifEquals}}{{/if}} />
+{{#if errors.length}}
+<div id="{{fieldId}}-error" class="grid gap-1">
+  {{#each errors}}
+  <p class="text-error text-sm flex items-center gap-1">{{icon "x-circle" class="size-4 shrink-0"}}<span>{{this}}</span></p>
+  {{/each}}
+</div>
+{{/if}}

@@ -39,6 +39,15 @@ export class AuthController {
 
   constructor(private authService: AuthService) {}
 
+  /** @fastify/view merges the request's locals underneath, so ogTitle and friends given here win over the defaults. */
+  private rerender(
+    reply: FastifyReply,
+    view: string,
+    data: Record<string, unknown>,
+  ) {
+    return reply.view(view, { layout: 'layout', ...data });
+  }
+
   @UseGuards(RegistrationGuard)
   @Post('register')
   async postRegister(
@@ -46,18 +55,32 @@ export class AuthController {
     @Body() body: RegisterDto,
     @Res() reply: FastifyReply,
   ): Promise<any> {
+    const page = {
+      ogTitle: i18n.t('lang.REGISTER_OG_TITLE'),
+      ogDescription: i18n.t('lang.REGISTER_OG_DESC'),
+    };
     const instance = plainToInstance(RegisterDto, body);
     const validationErrors = await i18n.validate(instance);
     if (validationErrors.length) {
-      return reply.view('auth/register', {
-        layout: 'layout',
+      return this.rerender(reply, 'auth/register', {
+        ...page,
         input: body,
         validationErrors,
-        ...((reply as any).locals ?? {}),
+        firstError: validationErrors[0].property,
       });
     }
 
-    const jwt = await this.authService.register(body.email, body.password);
+    let jwt: string;
+    try {
+      jwt = await this.authService.register(body.email, body.password);
+    } catch (error) {
+      this.logger.warn(error);
+      return this.rerender(reply, 'auth/register', {
+        ...page,
+        error: i18n.t('lang.REGISTER_FAILED'),
+        input: { email: body.email },
+      });
+    }
     reply.setCookie('access_token', jwt, {
       path: '/',
       maxAge: 365 * 24 * 60 * 60 * 1000, // 365 days
@@ -88,6 +111,7 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: seconds(60) } })
   @Post('login')
   async postLogin(
+    @I18n() i18n: I18nContext,
     @Body() loginDto: LoginDto & { returnTo?: string | string[] },
     @Res() reply: FastifyReply,
   ) {
@@ -109,12 +133,13 @@ export class AuthController {
       return navigate(reply, returnTo ?? '/auth/profile');
     } catch (error) {
       this.logger.warn(error);
-      return reply.view('auth/login', {
-        layout: 'layout',
-        error,
+      return this.rerender(reply, 'auth/login', {
+        ogTitle: i18n.t('lang.LOGIN_OG_TITLE'),
+        ogDescription: i18n.t('lang.LOGIN_OG_DESC'),
+        error: i18n.t('lang.LOGIN_FAILED'),
+        input: { email: loginDto.email },
         // Re-emitted, or a mistyped password loses where they were going.
         returnTo,
-        ...((reply as any).locals ?? {}),
       });
     }
   }
@@ -154,7 +179,11 @@ export class AuthController {
   }
 
   @Post('reset')
-  async postReset(@Body() emailDto: EmailDto, @Res() reply: FastifyReply) {
+  async postReset(
+    @I18n() i18n: I18nContext,
+    @Body() emailDto: EmailDto,
+    @Res() reply: FastifyReply,
+  ) {
     try {
       await this.authService.sendPasswordResetEmail(emailDto.email);
       return navigate(
@@ -163,10 +192,9 @@ export class AuthController {
       );
     } catch (error) {
       this.logger.warn(error);
-      return reply.view('auth/reset', {
-        layout: 'layout',
-        error,
-        ...((reply as any).locals ?? {}),
+      return this.rerender(reply, 'auth/reset', {
+        error: i18n.t('lang.RESET_FAILED'),
+        input: { email: emailDto.email },
       });
     }
   }
@@ -181,14 +209,12 @@ export class AuthController {
     };
   }
 
-  @Throttle({ default: { limit: 5, ttl: minutes(10) } })
   @Render('auth/reset-code')
   @Post('validate/reset-code')
   async postResetCodeValidate(
     @I18n() i18n: I18nContext,
     @Body() body: ResetPasswordDto,
   ) {
-    console.log(body);
     const instance = plainToInstance(ResetPasswordDto, body);
     const validationErrors = await i18n.validate(instance);
     if (validationErrors.length) {
@@ -201,6 +227,7 @@ export class AuthController {
     return { input: body };
   }
 
+  @Throttle({ default: { limit: 5, ttl: minutes(10) } })
   @Post('reset-code')
   async postResetCode(
     @I18n() i18n: I18nContext,
@@ -210,15 +237,22 @@ export class AuthController {
     const instance = plainToInstance(ResetPasswordDto, body);
     const validationErrors = await i18n.validate(instance);
     if (validationErrors.length) {
-      return reply.view('auth/reset-code', {
-        layout: 'layout',
+      return this.rerender(reply, 'auth/reset-code', {
         input: body,
         validationErrors,
-        ...((reply as any).locals ?? {}),
+        firstError: validationErrors[0].property,
       });
     }
 
-    await this.authService.resetPassword(body);
+    try {
+      await this.authService.resetPassword(body);
+    } catch (error) {
+      this.logger.warn(error);
+      return this.rerender(reply, 'auth/reset-code', {
+        error: i18n.t('lang.RESET_CODE_FAILED'),
+        input: { email: body.email, resetCode: body.resetCode },
+      });
+    }
     return navigate(reply, '/auth/login');
   }
 
@@ -246,6 +280,7 @@ export class AuthController {
   @Post('delete-account')
   async postDeleteAccount(
     @User() payload: Payload,
+    @I18n() i18n: I18nContext,
     @Body() loginDto: LoginDto,
     @Res() reply: FastifyReply,
   ) {
@@ -256,10 +291,9 @@ export class AuthController {
       return navigate(reply, '/');
     } catch (error) {
       this.logger.warn(error);
-      return reply.view('auth/delete-account', {
-        layout: 'layout',
-        error,
-        ...((reply as any).locals ?? {}),
+      return this.rerender(reply, 'auth/delete-account', {
+        error: i18n.t('lang.DELETE_ACCOUNT_FAILED'),
+        input: { email: loginDto.email },
       });
     }
   }
@@ -298,15 +332,22 @@ export class AuthController {
     const instance = plainToInstance(UpdateEmailDto, body);
     const validationErrors = await i18n.validate(instance);
     if (validationErrors.length) {
-      return reply.view('auth/update-email', {
-        layout: 'layout',
+      return this.rerender(reply, 'auth/update-email', {
         input: body,
         validationErrors,
-        ...((reply as any).locals ?? {}),
+        firstError: validationErrors[0].property,
       });
     }
 
-    await this.authService.changeEmail(payload.userId, body.confirmEmail);
+    try {
+      await this.authService.changeEmail(payload.userId, body.confirmEmail);
+    } catch (error) {
+      this.logger.warn(error);
+      return this.rerender(reply, 'auth/update-email', {
+        error: i18n.t('lang.UPDATE_EMAIL_FAILED'),
+        input: body,
+      });
+    }
     return navigate(reply, '/auth/profile');
   }
 }

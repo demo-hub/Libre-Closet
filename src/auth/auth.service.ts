@@ -115,13 +115,14 @@ export class AuthService {
       email: details.email,
     });
 
-    const passwordReset = await user.passwordReset.load();
-
-    if (passwordReset?.pin === details.resetCode) {
-      const hashedPassword = await bcrypt.hash(details.password, 12);
-      user.password = hashedPassword;
-      await this.em.persistAndFlush(user);
+    const passwordReset = await user.passwordReset?.load();
+    if (!passwordReset || passwordReset.pin !== details.resetCode) {
+      throw new UnauthorizedException('Reset code does not match');
     }
+
+    const hashedPassword = await bcrypt.hash(details.password, 12);
+    user.password = hashedPassword;
+    await this.em.persistAndFlush(user);
   }
 
   async sendPasswordResetEmail(email: string) {
