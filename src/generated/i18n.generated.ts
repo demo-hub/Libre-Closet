@@ -50,7 +50,6 @@ export type I18nTranslations = {
         "HOME": string;
         "PROFILE": string;
         "ACCOUNT": string;
-        "FILES": string;
         "WARDROBE": string;
         "OUTFITS": string;
         "LOGOUT": string;
@@ -65,23 +64,18 @@ export type I18nTranslations = {
         "UPDATE_EMAIL": string;
         "UPDATE": string;
         "CHANGE_PASSWORD": string;
-        "CURRENT_PASSWORD": string;
-        "NEW_PASSWORD": string;
         "FORGOT_PASSWORD": string;
         "RESET_PASSWORD": string;
         "RESET_CODE": string;
         "SEND_RESET_CODE": string;
-        "CHANGE": string;
         "DELETE_ACCOUNT": string;
         "DELETE_ACCOUNT_CONFIRMATION": string;
         "ERROR": string;
         "PATH": string;
         "TIME": string;
         "RETURN_TO_HOME": string;
-        "FORCE_PWA": string;
         "TEST_WEB_PUSH": string;
         "YOUR_MESSAGE": string;
-        "SW_UPDATE_PROMPT": string;
         "COPY_TEXT": string;
         "SHARE": string;
         "UPLOAD": string;
@@ -138,7 +132,6 @@ export type I18nTranslations = {
         "CLONE_GARMENT": string;
         "NO_GARMENTS": string;
         "ADD_FIRST_GARMENT": string;
-        "NEW_OUTFIT": string;
         "EDIT_OUTFIT": string;
         "NO_OUTFITS": string;
         "ADD_FIRST_OUTFIT": string;
@@ -168,8 +161,6 @@ export type I18nTranslations = {
         "CONFIRM_DELETE": string;
         "SEARCH_PLACEHOLDER": string;
         "SEARCH": string;
-        "ALL_CATEGORIES": string;
-        "CLEAR": string;
         "RESULTS": string;
         "FILTER_SEARCH": string;
         "FILTERS": string;
@@ -198,7 +189,6 @@ export type I18nTranslations = {
         "OFFLINE_TITLE": string;
         "OFFLINE_DESC": string;
         "SHARED_BY": string;
-        "SELECT_AN_OUTFIT": string;
         "UNTITLED_OUTFIT": string;
         "MONTH_JAN": string;
         "MONTH_FEB": string;
@@ -231,10 +221,7 @@ export type I18nTranslations = {
         "CALENDAR_MARK_WORN": string;
         "CALENDAR_MARK_WORN_PROMPT": string;
         "CALENDAR_WORN": string;
-        "CALENDAR_UNMARK_WORN": string;
-        "CALENDAR_NO_OUTFIT_PLANNED": string;
         "CALENDAR_DELETE_CONFIRM": string;
-        "CALENDAR_WORN_RECENTLY": string;
         "BUILD_OUTFIT": string;
         "BUILD_OUTFIT_TITLE": string;
         "START_OVER": string;
@@ -252,7 +239,6 @@ export type I18nTranslations = {
             "EMAIL_MUST_MATCH": string;
         };
         "MASK_EDITOR_TITLE": string;
-        "MASK_EDITOR_HINT": string;
         "MASK_EDITOR_SKIP": string;
         "MASK_EDITOR_ACCEPT": string;
         "MASK_BRUSH_ERASE": string;
@@ -265,7 +251,6 @@ export type I18nTranslations = {
         "PERMISSION_MANAGE": string;
         "CREATE_INVITE_LINK": string;
         "COPY_INVITE_LINK": string;
-        "OR": string;
         "YOUR_SHARED_WARDROBES": string;
         "PENDING_INVITE": string;
         "PENDING": string;

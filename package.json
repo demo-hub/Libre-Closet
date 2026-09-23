@@ -1,7 +1,7 @@
 {
   "name": "libre-closet",
   "version": "0.6.0",
-  "description": "A free, open-source digital wardrobe organizer. Catalog your clothing, build outfits, and share looks.",
+  "description": "A free, open-source digital wardrobe organiser. Catalogue your clothing, build outfits and share looks.",
   "author": "Lazztech LLC",
   "private": true,
   "license": "AGPL-3.0",
