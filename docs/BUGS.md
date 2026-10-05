@@ -73,7 +73,7 @@ Bugs found while working on this fork and left out of the change that found them
 - **A failed save of an edited cut-out looks saved** (medium).
   - After Accept in the mask editor, the garment page posts the new cut-out and shows it whether or not the server took it: the response status is never checked.
   - A fix needs an error message the page can show; `#requestErrorToast` answers htmx requests only.
-  - Where: `public/js/background-removal.js:244-252`, `wireUpEditMaskBtn`.
+  - Where: `public/js/background-removal.js:247-255`, `wireUpEditMaskBtn`.
   - Found in #30.
 - **The restore brush paints the wrong pixels on a non-square photo with no stored cut-out** (medium).
   - Without a cut-out, `/file/nobg/` serves the original as it is, while the editor's restore source is the original padded to a square, so the two images do not line up.
@@ -81,11 +81,15 @@ Bugs found while working on this fork and left out of the change that found them
   - Found in #30.
 - **With site data blocked, a garment's photo cannot be replaced** (low).
   - The photo picker's script reads `localStorage` first, which throws when site data is blocked, so the rest of it never runs and `#photoBtn` stays disabled. `isBgRemovalEnabled` throws the same way.
-  - Where: `views/partials/photoPicker.hbs:59`, `public/js/background-removal.js:15`.
+  - Where: `views/partials/photoPicker.hbs:62`, `public/js/background-removal.js:15`.
   - Found in #30.
 - **Colours are stored as typed** (low).
-  - Nothing validates `color`: any text is saved, including markup and commas, and a comma later splits one colour into two. The colour picker now shows such values as text and turns a typed comma into a space, but a direct POST still stores them.
+  - Nothing validates `color`: any text is saved, including markup, commas and the same colour twice, and a comma later splits one colour into two. The colour picker now shows such values as text and turns a typed comma into a space, but a direct POST still stores them.
   - Where: `src/wardrobe/dto/create-garment.dto.ts:8`, `src/wardrobe/wardrobe.controller.ts:190-202`.
+  - Found in #30.
+- **After Back, the new-garment form shows a photo it no longer has** (low).
+  - The history snapshot keeps the preview of a chosen photo, but a file input cannot be restored, so Save then posts the garment without it.
+  - Where: `views/partials/photoPicker.hbs`, `#photoPreview`; the head script's `htmx:beforeHistorySave` handler in `views/layout.hbs` resets the garment page's file name but not this preview.
   - Found in #30.
 - **Background removal logs to the console in production** (low).
   - The library runs with `debug: true`, and three `console.log` calls remain.
@@ -131,6 +135,10 @@ Bugs found while working on this fork and left out of the change that found them
   - Every input uses Tailwind preflight's placeholder colour, 50 % of the text colour, which measures 3.35:1 on White.
   - Plan 5.1 maps placeholders to Graphite.
   - Found in #28.
+- **In WebKit the outfit garment modal opens with focus on the page** (low).
+  - `#garment-modal` is opened with `showModal()` and nothing focuses inside it, which WebKit needs for a daisyUI `.modal`. Chromium and Firefox focus its close button.
+  - Where: `views/partials/outfit_row.hbs:89`.
+  - Found in #30.
 
 ## Translations
 
@@ -152,7 +160,7 @@ Bugs found while working on this fork and left out of the change that found them
   - the eleven error keys (#27);
   - `REMOVE_FILTER` and `WARDROBE_SWITCHER` (#28);
   - the eleven garment-page keys (`BACK`, `REQUIRED`, `EDIT_MASK`, `DELETE_GARMENT`, `CLONED_NAME`, six `PLACEHOLDER_*`) and the re-worded `AI_SUGGEST_WITH` and `AI_SUGGESTED_VIA` (#29);
-  - `CHOOSE_PHOTO`, `REMOVE`, `COLORS_SELECTED` and the re-worded `MASK_BRUSH_SIZE` (#30).
+  - `CHOOSE_PHOTO`, `REMOVE_COLOR`, `CREATE_COLOR`, `COLORS_SELECTED`, `MASK_CANVAS` and the re-worded `MASK_BRUSH_SIZE` (#30).
 
 ## Tests and tooling
 
