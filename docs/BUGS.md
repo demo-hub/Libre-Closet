@@ -66,6 +66,15 @@ Bugs found while working on this fork and left out of the change that found them
   - Found in #28.
 - **A wardrobe whose garments are all archived says "No garments yet"** (low).
   - Found in #28.
+- **A garment without a name has an empty card title on the wardrobe grid** (low).
+  - The name is optional. The garment page falls back to the category for its heading; the grid card does not.
+  - Where: `views/wardrobe/index.hbs`, the card's `card-title`.
+  - Found in PR 8b.
+- **Copy buttons do nothing on an instance served over plain http** (medium).
+  - `navigator.clipboard` exists only in a secure context (HTTPS or localhost), so on a LAN address like `http://192.168.1.10:3000` the call throws and nothing is copied or shown.
+  - This affects Share on the garment page and every other copy button: outfit and file share, sharing management, the invite link.
+  - A fallback (selecting the link in a field, or the Web Share API where available) would cover it.
+  - Found in PR 8b.
 
 ## Shell and PWA
 
@@ -84,6 +93,9 @@ Bugs found while working on this fork and left out of the change that found them
 - **Chrome logs "Transition was skipped" when Back follows a boosted navigation** (low).
   - This comes from htmx's global view transitions.
   - Found in #23.
+- **Hidden loading indicators can still be read by a screen reader** (low).
+  - htmx hides an `htmx-indicator` with `opacity: 0`, so the element stays in the accessibility tree. In browse mode a screen reader can read "Loading" from the spinner partial's hidden text, or the AI form's "Asking the model…" sentence, when nothing is loading.
+  - Found in PR 8b.
 
 ## Accessibility and theme
 
