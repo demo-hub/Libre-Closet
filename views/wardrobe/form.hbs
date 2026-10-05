@@ -110,8 +110,8 @@
     />
     <input type="hidden" name="suggested" value="{{suggestedFields}}" />
     <input type="hidden" name="sizeOptions" value="{{join sizeOptions '|'}}" />
-    <div class="form-control grid gap-1">
-      <label class="label flex-wrap whitespace-normal" for="photoInput">{{t 'lang.PHOTO'}}</label>
+    <div class="form-control grid gap-1" role="group" aria-labelledby="photoFieldLabel">
+      <span id="photoFieldLabel" class="label flex-wrap whitespace-normal">{{t 'lang.PHOTO'}}</span>
       {{> photoPicker preview=true submitBtnId='saveBtn'
       previewSrc=importPreview.dataUri hasAlpha=importPreview.hasAlpha}}
       {{#if importCandidates}}
