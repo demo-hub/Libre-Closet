@@ -166,6 +166,7 @@
   :where(.input, .select, .textarea, .file-input) { --input-color: var(--mq-border); font-size: 1rem; }
   :where(.input, .select, .textarea, .file-input):is(:focus, :focus-within) { --input-color: var(--mq-focus); }
   :where(.checkbox) { border-color: var(--mq-border); }
+  :where(.range) { --range-bg: var(--color-base-300); }
   :where(.toggle:not(:checked, [aria-checked=true], :has(> input:checked))) { --input-color: var(--mq-border); }
   :where(.card):focus-visible { outline: 2px solid var(--mq-focus); outline-offset: 2px; }
   :where(.collapse) { outline-color: var(--mq-focus); }
@@ -205,6 +206,8 @@
     transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
   .htmx-indicator, .htmx-request .htmx-indicator { transition: none !important; }
+  /* Even 0.01 ms of (inherited) visibility transition keeps a modal's controls hidden for a frame, too long for showModal() to focus one. */
+  .modal, .modal * { transition: none !important; }
 }
 
 /* Stacking: toast 60, skip link 50, header 40 (sticky), pull-to-refresh 999 while pulling, dock 1, modals in the top layer. */
@@ -282,6 +285,17 @@
   animation: spinner-turn 0.8s linear infinite;
 }
 @keyframes spinner-turn { to { rotate: 1turn; } }
+
+/* No border or padding: toCanvasPos in mask-editor.js maps the border box onto the bitmap. */
+.mask-frame {
+  display: block;
+  margin-inline: auto;
+  max-width: 100%;
+  max-height: max(16rem, 100dvh - 19rem);
+  background: repeating-conic-gradient(var(--color-base-300) 0 25%, var(--color-base-100) 0 50%) 0 0 / 16px 16px;
+  cursor: crosshair;
+  touch-action: none;
+}
 @media (prefers-reduced-motion: reduce) {
   .spinner { animation: none; border-style: dotted; border-color: var(--color-primary); }
 }

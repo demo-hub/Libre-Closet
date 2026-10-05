@@ -254,7 +254,6 @@
     "PASSWORDS_MUST_MATCH": "Fehler: Die Passwörter stimmen nicht überein.",
     "EMAIL_MUST_MATCH": "Fehler: Die E-Mail-Adressen stimmen nicht überein."
   },
-  "MASK_EDITOR_TITLE": "Hintergrund bereinigen",
   "EDIT_MASK": "Hintergrund bereinigen",
   "MASK_EDITOR_SKIP": "Überspringen",
   "MASK_EDITOR_ACCEPT": "Akzeptieren",

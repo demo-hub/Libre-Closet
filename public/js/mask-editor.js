@@ -118,16 +118,18 @@ export function openMaskEditor(originalFile, nobgBlob) {
     const restoreBtn = document.getElementById('maskBrushRestore');
     const sizeInput = document.getElementById('maskBrushSize');
 
-    const onEraseClick = () => {
-      brushMode = 'erase';
-      eraseBtn.classList.add('btn-active');
-      restoreBtn.classList.remove('btn-active');
+    const setMode = (mode) => {
+      brushMode = mode;
+      for (const [btn, value] of [
+        [eraseBtn, 'erase'],
+        [restoreBtn, 'restore'],
+      ]) {
+        btn.classList.toggle('btn-active', value === mode);
+        btn.setAttribute('aria-pressed', String(value === mode));
+      }
     };
-    const onRestoreClick = () => {
-      brushMode = 'restore';
-      restoreBtn.classList.add('btn-active');
-      eraseBtn.classList.remove('btn-active');
-    };
+    const onEraseClick = () => setMode('erase');
+    const onRestoreClick = () => setMode('restore');
     const onSizeChange = () => {
       brushRadius = Number(sizeInput.value);
     };
@@ -138,8 +140,7 @@ export function openMaskEditor(originalFile, nobgBlob) {
 
     // Set initial UI state.
     brushRadius = Number(sizeInput.value);
-    eraseBtn.classList.add('btn-active');
-    restoreBtn.classList.remove('btn-active');
+    setMode('erase');
 
     // --- Accept / Skip ---
     const acceptBtn = document.getElementById('maskEditorAccept');
@@ -172,7 +173,7 @@ export function openMaskEditor(originalFile, nobgBlob) {
       resolve(nobgBlob);
     };
 
-    // Escape and the backdrop close the dialog natively; without this the
+    // Escape closes the dialog natively; without this the
     // promise would never settle and the caller's submit button stay disabled.
     const onDismiss = () => {
       cleanup();
@@ -184,5 +185,7 @@ export function openMaskEditor(originalFile, nobgBlob) {
     dialog.addEventListener('close', onDismiss);
 
     dialog.showModal();
+    // Explicit: WebKit leaves focus on <body> after a keyboard opening, and Chromium would pick a scrollable box.
+    eraseBtn.focus();
   });
 }

@@ -214,8 +214,12 @@ export const wireUpEditMaskBtn = async (fileName, garmentId, ownerId) => {
   const btn = document.getElementById('editMaskBtn');
   if (!btn) return;
 
+  // Not disabled while busy: the dialog hands focus back to its opener only if it can take it.
+  let busy = false;
   btn.addEventListener('click', async () => {
-    btn.disabled = true;
+    if (busy) return;
+    busy = true;
+    btn.setAttribute('aria-disabled', 'true');
     try {
       const [origResp, nobgResp] = await Promise.all([
         fetch(`/file/${fileName}`),
@@ -249,7 +253,8 @@ export const wireUpEditMaskBtn = async (fileName, garmentId, ownerId) => {
     } catch (err) {
       console.warn('[edit-mask] Failed:', err);
     } finally {
-      btn.disabled = false;
+      busy = false;
+      btn.removeAttribute('aria-disabled');
     }
   });
 };

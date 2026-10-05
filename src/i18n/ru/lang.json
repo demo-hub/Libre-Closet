@@ -245,7 +245,6 @@
     "PASSWORDS_MUST_MATCH": "Ошибка: пароли не совпадают.",
     "EMAIL_MUST_MATCH": "Ошибка: email‑адреса не совпадают."
   },
-  "MASK_EDITOR_TITLE": "Очистить фон",
   "EDIT_MASK": "Очистить фон",
   "MASK_EDITOR_SKIP": "Пропустить",
   "MASK_EDITOR_ACCEPT": "Принять",

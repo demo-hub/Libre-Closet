@@ -254,7 +254,6 @@
     "PASSWORDS_MUST_MATCH": "Error: las contraseñas no coinciden.",
     "EMAIL_MUST_MATCH": "Error: las direcciones de correo electrónico no coinciden."
   },
-  "MASK_EDITOR_TITLE": "Limpiar fondo",
   "EDIT_MASK": "Limpiar fondo",
   "MASK_EDITOR_SKIP": "Omitir",
   "MASK_EDITOR_ACCEPT": "Aceptar",

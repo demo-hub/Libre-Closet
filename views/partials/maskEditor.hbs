@@ -1,61 +1,21 @@
-{{!-- Mask editor dialog; ids are the contract of public/js/mask-editor.js. --}}
-<dialog id="maskEditorDialog" class="modal">
-  <div class="modal-box w-full max-w-lg p-4 flex flex-col gap-4">
-    <h3 class="font-bold text-lg">{{t 'lang.MASK_EDITOR_TITLE'}}</h3>
-    {{!-- Brush controls --}}
-    <div class="flex flex-wrap items-center gap-3">
-      <div class="join">
-        <button id="maskBrushErase" class="btn btn-sm join-item">
-          {{t 'lang.MASK_BRUSH_ERASE'}}
-        </button>
-        <button id="maskBrushRestore" class="btn btn-sm join-item">
-          {{t 'lang.MASK_BRUSH_RESTORE'}}
-        </button>
+{{!-- Mask editor dialog; ids are the contract of public/js/mask-editor.js. No backdrop form: a stray tap outside would throw the painting away. --}}
+<dialog id="maskEditorDialog" class="modal" aria-labelledby="maskEditorTitle">
+  <div class="modal-box flex flex-col gap-4">
+    <h2 id="maskEditorTitle" class="text-h3">{{t 'lang.EDIT_MASK'}}</h2>
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
+      <div class="join join-vertical min-[25rem]:join-horizontal">
+        <button id="maskBrushErase" type="button" class="btn btn-outline join-item btn-active aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-content" aria-pressed="true">{{t 'lang.MASK_BRUSH_ERASE'}}</button>
+        <button id="maskBrushRestore" type="button" class="btn btn-outline join-item aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-content" aria-pressed="false">{{t 'lang.MASK_BRUSH_RESTORE'}}</button>
       </div>
-      <div class="flex items-center gap-2 flex-1 min-w-32">
-        <span class="text-xs text-base-content/60 shrink-0"
-          >{{t 'lang.MASK_BRUSH_SIZE'}}</span
-        >
-        <input
-          id="maskBrushSize"
-          type="range"
-          min="4"
-          max="80"
-          value="20"
-          class="range range-xs flex-1"
-        />
+      <div class="flex min-w-40 flex-1 items-center gap-3">
+        <label for="maskBrushSize" class="shrink-0 text-sm text-graphite">{{t 'lang.MASK_BRUSH_SIZE'}}</label>
+        <input id="maskBrushSize" type="range" min="4" max="80" value="20" class="range flex-1" />
       </div>
     </div>
-    <div class="overflow-auto rounded-box border border-base-300 bg-base-200">
-      <canvas
-        id="maskEditorCanvas"
-        class="block max-w-full mx-auto cursor-crosshair"
-        style="
-          background-image:
-            linear-gradient(45deg, #cccccc 25%, transparent 25%),
-            linear-gradient(-45deg, #cccccc 25%, transparent 25%),
-            linear-gradient(45deg, transparent 75%, #cccccc 75%),
-            linear-gradient(-45deg, transparent 75%, #cccccc 75%);
-          background-size: 16px 16px;
-          background-position:
-            0 0,
-            0 8px,
-            8px -8px,
-            -8px 0px;
-          background-color: #ffffff;
-        "
-      ></canvas>
-    </div>
-    <div class="modal-action mt-0">
-      <button id="maskEditorSkip" class="btn btn-ghost btn-sm">
-        {{t 'lang.MASK_EDITOR_SKIP'}}
-      </button>
-      <button id="maskEditorAccept" class="btn btn-primary btn-sm">
-        {{t 'lang.MASK_EDITOR_ACCEPT'}}
-      </button>
+    <canvas id="maskEditorCanvas" class="mask-frame"></canvas>
+    <div class="modal-action mt-0 flex-wrap">
+      <button id="maskEditorSkip" type="button" class="btn btn-outline">{{t 'lang.MASK_EDITOR_SKIP'}}</button>
+      <button id="maskEditorAccept" type="button" class="btn btn-primary">{{t 'lang.MASK_EDITOR_ACCEPT'}}</button>
     </div>
   </div>
-  <form method="dialog" class="modal-backdrop">
-    <button>close</button>
-  </form>
 </dialog>

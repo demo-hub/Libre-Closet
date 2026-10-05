@@ -38,11 +38,9 @@ const KNOWN_DEBT = [
   'views/outfits/form.hbs', // PR 9a
   'views/wardrobe-share/manage.hbs', // PR 10
   'views/wardrobe-share/partials/invite-link-result.hbs', // PR 10
-  'views/partials/maskEditor.hbs', // PR 8c
   'views/partials/outfit_row.hbs', // PR 9a
   'views/partials/garmentModal.hbs', // PR 9a
   'views/partials/calendar_worn_button.hbs', // PR 9b
-  'public/js/mask-editor.js', // PR 8c
 ];
 
 const hexes = new Set(tokens.colours.map((c) => c.value.hex.toLowerCase()));

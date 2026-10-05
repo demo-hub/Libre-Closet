@@ -254,7 +254,6 @@
     "PASSWORDS_MUST_MATCH": "Errore: le password non corrispondono.",
     "EMAIL_MUST_MATCH": "Errore: gli indirizzi email non corrispondono."
   },
-  "MASK_EDITOR_TITLE": "Pulisci lo sfondo",
   "EDIT_MASK": "Pulisci lo sfondo",
   "MASK_EDITOR_SKIP": "Salta",
   "MASK_EDITOR_ACCEPT": "Accetta",

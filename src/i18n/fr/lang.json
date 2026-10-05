@@ -254,7 +254,6 @@
     "PASSWORDS_MUST_MATCH": "Erreur : les mots de passe ne correspondent pas.",
     "EMAIL_MUST_MATCH": "Erreur : les adresses e-mail ne correspondent pas."
   },
-  "MASK_EDITOR_TITLE": "Nettoyer l'arrière-plan",
   "EDIT_MASK": "Nettoyer l'arrière-plan",
   "MASK_EDITOR_SKIP": "Passer",
   "MASK_EDITOR_ACCEPT": "Accepter",
