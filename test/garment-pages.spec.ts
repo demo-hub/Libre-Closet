@@ -21,16 +21,16 @@ async function createGarmentWithPhoto(
   request: APIRequestContext,
   name: string,
 ): Promise<string> {
-  const response = await request.post('/wardrobe/import', {
+  const show = await createGarment(request, { name });
+  // Not through /wardrobe/import: its 30 requests a minute are shared by every spec and project.
+  const response = await request.post(`${show}/photo`, {
     multipart: {
-      name,
-      category: 'outerwear',
       photo: { name: 'coat.png', mimeType: 'image/png', buffer: coat },
       nobgPhoto: { name: 'coat.png', mimeType: 'image/png', buffer: coat },
     },
   });
   expect(response.ok()).toBeTruthy();
-  return new URL(response.url()).pathname;
+  return show;
 }
 
 const fitsItsColumn = (

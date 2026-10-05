@@ -7,12 +7,12 @@
         <button id="maskBrushErase" type="button" class="btn btn-outline join-item btn-active aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-content" aria-pressed="true">{{t 'lang.MASK_BRUSH_ERASE'}}</button>
         <button id="maskBrushRestore" type="button" class="btn btn-outline join-item aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-content" aria-pressed="false">{{t 'lang.MASK_BRUSH_RESTORE'}}</button>
       </div>
-      <div class="flex min-w-40 flex-1 items-center gap-3">
-        <label for="maskBrushSize" class="shrink-0 text-sm text-graphite">{{t 'lang.MASK_BRUSH_SIZE'}}</label>
-        <input id="maskBrushSize" type="range" min="4" max="80" value="20" class="range flex-1" />
+      <div class="flex min-w-40 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+        <label for="maskBrushSize" class="text-sm text-graphite">{{t 'lang.MASK_BRUSH_SIZE'}}</label>
+        <input id="maskBrushSize" type="range" min="4" max="80" value="20" class="range min-w-24 flex-1" />
       </div>
     </div>
-    <canvas id="maskEditorCanvas" class="mask-frame"></canvas>
+    <canvas id="maskEditorCanvas" class="mask-frame" role="img" aria-label="{{t 'lang.MASK_CANVAS'}}"></canvas>
     <div class="modal-action mt-0 flex-wrap">
       <button id="maskEditorSkip" type="button" class="btn btn-outline">{{t 'lang.MASK_EDITOR_SKIP'}}</button>
       <button id="maskEditorAccept" type="button" class="btn btn-primary">{{t 'lang.MASK_EDITOR_ACCEPT'}}</button>

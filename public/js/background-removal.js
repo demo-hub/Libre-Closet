@@ -233,7 +233,10 @@ export const wireUpEditMaskBtn = async (fileName, garmentId, ownerId) => {
       const squaredBlob = await squarePadBlob(origBlob);
       const squaredFile = new File([squaredBlob], fileName, { type: 'image/png' });
 
-      const editedBlob = await openMaskEditor(squaredFile, nobgBlob);
+      const editing = openMaskEditor(squaredFile, nobgBlob);
+      // Now, not after the await: Accept hands focus back to this button before the promise settles.
+      btn.removeAttribute('aria-disabled');
+      const editedBlob = await editing;
 
       // openMaskEditor resolves with the exact nobgBlob reference on Skip.
       if (editedBlob === nobgBlob) return;

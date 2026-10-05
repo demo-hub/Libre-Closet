@@ -10,7 +10,8 @@
     id="color-ms-{{@index}}"
     data-placeholder="{{t 'lang.SELECT_COLOR'}}"
     data-selected-template="{{tRaw 'lang.COLORS_SELECTED'}}"
-    data-remove-label="{{t 'lang.REMOVE'}}"
+    data-remove-template="{{tRaw 'lang.REMOVE_COLOR'}}"
+    data-create-template="{{tRaw 'lang.CREATE_COLOR'}}"
   >
     <summary aria-labelledby="color-label-{{@index}} color-summary-{{@index}}">
       <span class="ms-placeholder" id="color-summary-{{@index}}">{{t 'lang.SELECT_COLOR'}}</span>
@@ -43,7 +44,7 @@
         <div class="ms-empty" hidden>{{t 'lang.NO_MATCHES'}}</div>
         <button type="button" class="ms-create" hidden>
           {{icon "plus" class="size-4 shrink-0"}}
-          <span>{{t 'lang.CREATE'}} "<strong class="ms-create-label"></strong>"</span>
+          <span class="ms-create-text"></span>
         </button>
         <div class="ms-footer">
           <span class="ms-count">0 {{t 'lang.SELECTED'}}</span>
@@ -55,4 +56,5 @@
 
   {{!-- After the box, not inside its summary: a button in a summary fails axe nested-interactive, and above the box each new row would push the open list down. --}}
   <div class="ms-pills" id="color-pills-{{@index}}"></div>
+  <span class="ms-status sr-only" role="status"></span>
 </div>

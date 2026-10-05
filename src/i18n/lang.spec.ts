@@ -99,6 +99,11 @@ describe('translations', () => {
       expect(lang.COLORS_SELECTED).toContain('{n}');
     });
 
+    it('keeps the colour in the names built around it', () => {
+      expect(lang.REMOVE_COLOR).toContain('{name}');
+      expect(lang.CREATE_COLOR).toContain('{name}');
+    });
+
     it('opens each failure message the way its validation messages open', () => {
       const validation = lang.validation as Record<string, string>;
       const prefix = `${validation.IS_EMAIL.split(':')[0]}:`;

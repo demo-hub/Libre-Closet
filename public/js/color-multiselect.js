@@ -5,6 +5,11 @@
   // A history restore brings back the markup but not the listeners, so the mark cannot live in the DOM.
   const initialised = new WeakSet();
 
+  // Stored comma-joined, so a comma would split one colour into two.
+  function normalise(raw) {
+    return raw.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
   function swatch(value) {
     const el = document.createElement('span');
     el.className =
@@ -35,12 +40,16 @@
     const optionsEl = det.querySelector('.ms-options');
     const emptyEl = det.querySelector('.ms-empty');
     const createRow = det.querySelector('.ms-create');
-    const createLabel = det.querySelector('.ms-create-label');
+    const createText = det.querySelector('.ms-create-text');
     const countEl = det.querySelector('.ms-count');
     const clearBtn = det.querySelector('.ms-clear');
+    const statusEl = field.querySelector('.ms-status');
     const placeholder = det.dataset.placeholder || summaryText.textContent;
     const template = det.dataset.selectedTemplate || '{n}';
-    const removeLabel = det.dataset.removeLabel || '';
+    const removeTemplate = det.dataset.removeTemplate || '{name}';
+    const [createBefore, createAfter = ''] = (
+      det.dataset.createTemplate || '{name}'
+    ).split('{name}');
 
     const boxes = () => [...optionsEl.querySelectorAll('input[name="color"]')];
 
@@ -51,7 +60,10 @@
       remove.type = 'button';
       remove.className = 'ms-pill-remove badge badge-sm';
       remove.dataset.val = box.value;
-      remove.setAttribute('aria-label', removeLabel + ' ' + box.value);
+      remove.setAttribute(
+        'aria-label',
+        removeTemplate.replace('{name}', () => box.value),
+      );
       remove.innerHTML = CROSS;
       el.append(swatch(box.value), text(box.value), remove);
       return el;
@@ -65,8 +77,14 @@
       summaryText.textContent = checked.length ? count : placeholder;
     }
 
+    function say(message) {
+      if (statusEl && statusEl.textContent !== message)
+        statusEl.textContent = message;
+    }
+
     function filterOptions(q) {
-      const needle = q.trim().toLowerCase();
+      const value = normalise(q);
+      const needle = value.toLowerCase();
       let visible = 0;
       optionsEl.querySelectorAll('.ms-option').forEach(function (opt) {
         const match =
@@ -76,14 +94,16 @@
         if (match) visible++;
       });
       emptyEl.hidden = visible !== 0;
+      say(visible === 0 ? emptyEl.textContent.trim() : '');
       const exists = boxes().some((box) => box.value.toLowerCase() === needle);
-      createLabel.textContent = q.trim();
+      const label = document.createElement('strong');
+      label.textContent = value;
+      createText?.replaceChildren(createBefore, label, createAfter);
       createRow.hidden = !needle || exists;
     }
 
     function addCustom(raw) {
-      // Stored comma-joined, so a comma would split one colour into two.
-      const value = raw.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+      const value = normalise(raw);
       if (!value) return;
       let box = boxes().find(
         (b) => b.value.toLowerCase() === value.toLowerCase(),
@@ -103,6 +123,7 @@
       searchEl.value = '';
       filterOptions('');
       announce(box);
+      say(countEl.textContent);
     }
 
     optionsEl.addEventListener('change', renderPills);
@@ -113,7 +134,9 @@
       const index = [...pillsEl.querySelectorAll('.ms-pill-remove')].indexOf(
         remove,
       );
-      const box = boxes().find((b) => b.value === remove.dataset.val);
+      const box = boxes().find(
+        (b) => b.checked && b.value === remove.dataset.val,
+      );
       if (!box) return;
       box.checked = false;
       announce(box);
@@ -129,8 +152,10 @@
       e.preventDefault();
       if (!createRow.hidden) addCustom(searchEl.value);
     });
+    // The button hides itself, so focus goes back to the search or it would fall to <body>.
     createRow.addEventListener('click', function () {
       addCustom(searchEl.value);
+      searchEl.focus();
     });
 
     clearBtn.addEventListener('click', function () {
@@ -140,7 +165,9 @@
       });
       searchEl.value = '';
       filterOptions('');
-      if (checked.length) announce(checked[0]);
+      if (!checked.length) return;
+      announce(checked[0]);
+      say(countEl.textContent);
     });
 
     det.addEventListener('keydown', function (e) {
@@ -152,8 +179,13 @@
 
     // The list overlays the fields below it, so it must not stay open behind the focus.
     det.addEventListener('focusout', function (e) {
-      if (det.open && e.relatedTarget && !det.contains(e.relatedTarget))
-        det.open = false;
+      const to = e.relatedTarget;
+      if (!det.open || !to || det.contains(to)) return;
+      // A press on the list's text focuses <main tabindex="-1">, and closing mid-press crashes Chromium.
+      if (to.contains(det)) return;
+      // A dialog opening over the list hands focus back to it when it closes.
+      if (to.closest('dialog')) return;
+      det.open = false;
     });
 
     det.addEventListener('toggle', function () {
@@ -179,6 +211,7 @@
 
   document.addEventListener('click', function (e) {
     const path = e.composedPath();
+    if (path.some((node) => node.tagName === 'DIALOG')) return;
     document.querySelectorAll('.color-ms[open]').forEach(function (det) {
       if (!path.includes(det.parentElement)) det.open = false;
     });

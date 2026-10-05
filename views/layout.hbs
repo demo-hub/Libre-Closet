@@ -102,6 +102,8 @@ https://nestjs-i18n.com/quick-start --}}
           document.querySelectorAll('[data-copy][data-label] span').forEach(function (s) { s.textContent = s.closest('[data-label]').dataset.label; });
           document.querySelectorAll('dialog[open]').forEach(function (d) { d.close(); });
           document.querySelectorAll('input[data-initial]').forEach(function (i) { i.value = i.dataset.initial; });
+          document.querySelectorAll('#photoFileName').forEach(function (p) { p.hidden = true; p.textContent = ''; });
+          document.querySelectorAll('#photoBtn').forEach(function (b) { b.disabled = true; });
         });
         // A <details> menu closes only when its own summary is pressed.
         function closeMenusOutside(e) {

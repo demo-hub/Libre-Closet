@@ -10,6 +10,7 @@ export default tseslint.config(
       'eslint.config.mjs',
       './src/dal/migrations/**/*',
       './src/i18n/generated/**/*',
+      './src/generated/**/*',
     ],
   },
   eslint.configs.recommended,

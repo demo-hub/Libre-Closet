@@ -8,6 +8,8 @@
 export function openMaskEditor(originalFile, nobgBlob) {
   return new Promise((resolve) => {
     const dialog = document.getElementById('maskEditorDialog');
+    // One editor at a time: a cut-out that finishes behind the pencil's editor keeps its own result.
+    if (dialog.open) return resolve(nobgBlob);
     const canvas = document.getElementById('maskEditorCanvas');
     const ctx = canvas.getContext('2d');
 
@@ -173,8 +175,7 @@ export function openMaskEditor(originalFile, nobgBlob) {
       resolve(nobgBlob);
     };
 
-    // Escape closes the dialog natively; without this the
-    // promise would never settle and the caller's submit button stay disabled.
+    // Escape closes the dialog natively; without this the promise would never settle.
     const onDismiss = () => {
       cleanup();
       resolve(nobgBlob);
@@ -185,7 +186,7 @@ export function openMaskEditor(originalFile, nobgBlob) {
     dialog.addEventListener('close', onDismiss);
 
     dialog.showModal();
-    // Explicit: WebKit leaves focus on <body> after a keyboard opening, and Chromium would pick a scrollable box.
+    // Explicit: WebKit can leave focus on <body> when a daisyUI .modal opens, and Chromium would pick a scrollable box.
     eraseBtn.focus();
   });
 }

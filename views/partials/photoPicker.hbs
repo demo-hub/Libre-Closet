@@ -14,9 +14,12 @@
 {{/if}}
 <input type="file" id="nobgPhotoInput" name="nobgPhoto" class="hidden" accept="image/webp" />
 <div class="flex flex-wrap items-center gap-2">
-  {{!-- sr-only, not hidden: ai-suggestions.spec asserts it visible, and its focus starts the model preload. --}}
-  <input type="file" id="photoInput" name="photo" class="peer sr-only" accept="image/jpeg,image/png,image/gif,image/webp" />
-  <label for="photoInput" class="btn btn-outline grow peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus">{{icon "photo" class="size-5"}}{{t 'lang.CHOOSE_PHOTO'}}</label>
+  {{!-- The wrapper centres the 1 px input on its button, so the scroll margin takes the whole button clear of the bars when WebKit scrolls to it. --}}
+  <div class="flex grow items-center">
+    {{!-- sr-only, not hidden: ai-suggestions.spec asserts it visible, and its focus starts the model preload. --}}
+    <input type="file" id="photoInput" name="photo" class="peer sr-only scroll-my-[calc(1.375rem+4px)]" accept="image/jpeg,image/png,image/gif,image/webp" />
+    <label for="photoInput" class="btn btn-outline grow peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus">{{icon "photo" class="size-5"}}{{t 'lang.CHOOSE_PHOTO'}}</label>
+  </div>
   <input type="file" id="photoCaptureInput" class="hidden" accept="image/jpeg,image/png,image/gif,image/webp" capture="environment" />
   <button id="photoCaptureBtn" type="button" class="btn btn-outline btn-square" title="{{t 'lang.TAKE_PHOTO'}}" aria-label="{{t 'lang.TAKE_PHOTO'}}">{{icon "camera" class="size-5"}}</button>
   {{#if submitLabel}}
@@ -81,14 +84,26 @@
   const photoCaptureBtn = document.getElementById('photoCaptureBtn');
   const photoCaptureInput = document.getElementById('photoCaptureInput');
   const photoInputEl = document.getElementById('photoInput');
-  photoCaptureBtn?.addEventListener('click', () => photoCaptureInput?.click());
-  photoCaptureInput?.addEventListener('change', () => {
-    const file = photoCaptureInput.files?.[0];
+  const usePhoto = (file) => {
     if (!file || !photoInputEl) return;
     const dt = new DataTransfer();
     dt.items.add(file);
     photoInputEl.files = dt.files;
     photoInputEl.dispatchEvent(new Event('change'));
+  };
+  photoCaptureBtn?.addEventListener('click', () => photoCaptureInput?.click());
+  photoCaptureInput?.addEventListener('change', () => usePhoto(photoCaptureInput.files?.[0]));
+
+  // The real input is 1 px, so the button takes the drops a visible file input would.
+  const chooseLabel = document.querySelector('label[for="photoInput"]');
+  chooseLabel?.addEventListener('dragover', (e) => {
+    if (e.dataTransfer?.types.includes('Files')) e.preventDefault();
+  });
+  chooseLabel?.addEventListener('drop', (e) => {
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) return;
+    e.preventDefault();
+    if (photoInputEl?.accept.split(',').includes(file.type)) usePhoto(file);
   });
 
   const preview = document.getElementById('photoPreview');
