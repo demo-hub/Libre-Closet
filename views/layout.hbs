@@ -96,10 +96,10 @@ https://nestjs-i18n.com/quick-start --}}
           setTimeout(function () { toast.classList.remove('hidden'); }, 100);
         });
         document.addEventListener('htmx:beforeHistorySave', function () {
-          var toast = document.getElementById('requestErrorToast');
-          if (toast) toast.classList.add('hidden');
           document.querySelectorAll('details.dropdown[open]').forEach(function (d) { d.removeAttribute('open'); });
-          // A restored snapshot must not keep a dialog open (it would come back non-modal) or values a script wrote into a form.
+          // A restored snapshot must not keep a toast, a "Copied" label, an open dialog (it would come back non-modal) or values a script wrote into a form.
+          document.querySelectorAll('.toast').forEach(function (t) { t.classList.add('hidden'); });
+          document.querySelectorAll('[data-copy][data-label] span').forEach(function (s) { s.textContent = s.closest('[data-label]').dataset.label; });
           document.querySelectorAll('dialog[open]').forEach(function (d) { d.close(); });
           document.querySelectorAll('input[data-initial]').forEach(function (i) { i.value = i.dataset.initial; });
         });

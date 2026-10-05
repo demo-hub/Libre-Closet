@@ -83,6 +83,15 @@ describe('translations', () => {
       expect(lang.IMPORTED_FROM_ALERT).toContain('{host}');
     });
 
+    it('names the AI host inside both AI sentences', () => {
+      expect(lang.AI_SUGGEST_WITH).toContain('{host}');
+      expect(lang.AI_SUGGESTED_VIA).toContain('{host}');
+    });
+
+    it('keeps the garment name in a clone name', () => {
+      expect(lang.CLONED_NAME).toContain('{name}');
+    });
+
     it('opens each failure message the way its validation messages open', () => {
       const validation = lang.validation as Record<string, string>;
       const prefix = `${validation.IS_EMAIL.split(':')[0]}:`;

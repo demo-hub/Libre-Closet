@@ -35,7 +35,7 @@
     class="hidden"
     accept="image/webp"
   />
-  <div class="flex gap-2 items-center">
+  <div class="flex flex-wrap gap-2 items-center">
     <input
       type="file"
       id="photoInput"
@@ -81,10 +81,7 @@
     <button id="photoBtn" class="btn btn-neutral btn-sm" disabled>
       {{submitLabel}}
     </button>
-    <span
-      id="loading"
-      class="htmx-indicator loading loading-ring loading-sm"
-    ></span>
+    {{> spinner spinnerId="photoLoading" indicator=true}}
     {{/if}}
   </div>
   <label class="flex items-center gap-2 cursor-pointer select-none">

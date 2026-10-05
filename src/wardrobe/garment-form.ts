@@ -10,6 +10,7 @@ import type { GarmentPrefill } from './import/garment-prefill';
  * and the import route, which re-renders it prefilled.
  */
 export interface GarmentFormModel {
+  pageTitle: string;
   categories: { value: string; label: string }[];
   colors: GarmentColor[];
   customColors: string[];
@@ -43,6 +44,7 @@ export async function buildFormModel(
   const enumValues = Object.values(GarmentCategory) as string[];
   const custom = filters.categories.filter((c) => !enumValues.includes(c));
   return {
+    pageTitle: i18n.t('lang.NEW_GARMENT'),
     categories: [...enumValues, ...custom].map((value) => ({
       value,
       label: garmentService.resolveCategoryLabel(value, i18n),

@@ -324,7 +324,7 @@ All values are read through `ConfigService`, validated in the Joi schema in `src
 | `AI_API_KEY` | required iff `anthropic`; optional otherwise | Anthropic key, or bearer token for OpenAI-compatible servers. |
 | `AI_BASE_URL` | required iff `openai-compatible` | For example `http://ollama:11434/v1`. |
 
-`ViewContextService.buildContext` exposes `importUrlEnabled`, `aiProvider` and `aiHost` so templates can gate UI like they do with `pwaEnabled`.
+`ViewContextService.buildContext` exposes `importUrlEnabled`, `aiEnabled` and `aiSuggestWith` (the button's label, naming the host) so templates can gate UI like they do with `pwaEnabled`.
 
 ---
 

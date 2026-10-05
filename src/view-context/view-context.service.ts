@@ -21,6 +21,14 @@ export class ViewContextService {
     private readonly enricher: GarmentEnricher,
   ) {}
 
+  /** The AI button's label, naming the host the photo would go to. */
+  private aiSuggestWith(): string | undefined {
+    if (!this.enricher.available) return undefined;
+    return I18nContext.current()?.t('lang.AI_SUGGEST_WITH', {
+      args: { host: this.enricher.host },
+    });
+  }
+
   async buildContext(req: FastifyRequest) {
     const locale = I18nContext.current()?.lang ?? 'en';
     const path = req.url.split('?')[0];
@@ -57,7 +65,7 @@ export class ViewContextService {
       // but unusable (no key, no model, an unparseable base URL) makes the
       // route 404, and a button in front of a 404 does nothing at all.
       aiEnabled: this.enricher.available,
-      aiHost: this.enricher.host,
+      aiSuggestWith: this.aiSuggestWith(),
       locale,
       canonicalUrl,
       ogUrl: canonicalUrl,

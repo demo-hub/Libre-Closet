@@ -30,8 +30,8 @@ describe('ImportController', () => {
 
   const i18n = {
     lang: 'en',
-    t(key: string) {
-      return key;
+    t(key: string, options?: { args?: Record<string, unknown> }) {
+      return options?.args ? `${key} ${JSON.stringify(options.args)}` : key;
     },
   } as unknown as I18nContext;
 
@@ -268,9 +268,27 @@ describe('ImportController', () => {
 
         expect(fragment()).toMatchObject({
           suggestion: { name: 'Wool Coat' },
-          aiHost: 'ollama.lan:11434',
+          aiSuggestedVia: 'lang.AI_SUGGESTED_VIA {"host":"ollama.lan:11434"}',
           aiFailed: undefined,
         });
+      });
+
+      it('names the suggested category the way the form lists it', async () => {
+        enricher.analyzeImage.mockResolvedValueOnce({
+          category: 'outerwear',
+          colors: [],
+          confidence: { category: 0.8, colors: 0, brand: 0 },
+        });
+        garmentService.resolveCategoryLabel.mockReturnValueOnce('Outerwear');
+
+        await controller.analyze(
+          withPhoto(5, await jpeg()),
+          reply as unknown as FastifyReply,
+          i18n,
+          undefined,
+        );
+
+        expect(fragment().aiCategoryLabel).toBe('Outerwear');
       });
 
       it('sends the wardrobe vocabulary and the language, and a JPEG', async () => {
