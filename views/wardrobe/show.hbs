@@ -1,85 +1,30 @@
 {{>navbar}}
 
 <main id="main" tabindex="-1" class="page page--narrow">
-  <div class="flex items-center gap-3 mb-6">
-    <a
-      href="/wardrobe{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}"
-      class="btn btn-ghost btn-sm btn-circle"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="2"
-        stroke="currentColor"
-        class="size-4"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
-        />
-      </svg>
-    </a>
-    <h1 class="text-2xl font-bold flex-1">{{garment.name}}</h1>
+  <div class="flex items-center gap-2 mb-6">
+    <a href="/wardrobe{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}" class="btn btn-ghost btn-circle" aria-label="{{t 'lang.BACK'}}">{{icon "arrow-left" class="size-5"}}</a>
+    <h1 class="flex-1 min-w-0 wrap-anywhere">{{#if garment.name}}{{garment.name}}{{else}}{{categoryLabel}}{{/if}}</h1>
+    {{#if garment.archived}}<span class="badge">{{t 'lang.ARCHIVED'}}</span>{{/if}}
   </div>
 
   {{#if garment.photo}}
-  <figure
-    class="relative rounded-box overflow-hidden mb-6 bg-base-200 aspect-square w-full max-w-sm mx-auto"
-  >
-    <img
-      src="/file/nobg/{{garment.photo.fileName}}"
-      alt="{{garment.name}}"
-      class="object-cover w-full h-full"
-    />
-    {{!-- Edit mask icon button--}}
-    <button
-      id="editMaskBtn"
-      type="button"
-      class="btn btn-circle btn-sm absolute top-2 right-2 btn-neutral opacity-80 hover:opacity-100"
-      title="Edit mask"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="1.5"
-        stroke="currentColor"
-        class="size-4"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-        />
-      </svg>
-    </button>
+  <figure class="relative mx-auto mb-6 aspect-square w-full max-w-sm overflow-hidden rounded-box bg-base-200">
+    <img src="/file/nobg/{{garment.photo.fileName}}" alt="{{#if garment.name}}{{garment.name}}{{else}}{{categoryLabel}}{{/if}}" class="size-full object-contain" />
+    {{#if canEdit}}
+    <button id="editMaskBtn" type="button" class="btn btn-ghost btn-circle absolute top-2 end-2 bg-base-100" aria-label="{{t 'lang.EDIT_MASK'}}">{{icon "pencil" class="size-5"}}</button>
+    {{/if}}
   </figure>
   {{else}}
-  <div
-    class="rounded-box bg-base-200 aspect-square w-full max-w-sm mx-auto flex items-center justify-center text-base-content/30 mb-6"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke-width="1"
-      stroke="currentColor"
-      class="size-20"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        d="M9 3.75H6.912a2.25 2.25 0 0 0-2.15 1.588L2.35 13.177a2.25 2.25 0 0 0-.1.661V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 0 0-2.15-1.588H15M2.25 13.5h3.86a2.251 2.251 0 0 1 2.012 1.244l.256.512a2.251 2.251 0 0 0 2.013 1.244h3.218a2.251 2.251 0 0 0 2.013-1.244l.256-.512a2.251 2.251 0 0 1 2.013-1.244h3.859M12 3v8.25m0 0-3-3m3 3 3-3"
-      />
-    </svg>
+  <div class="mx-auto mb-6 flex aspect-square w-full max-w-sm items-center justify-center rounded-box bg-base-200">
+    {{icon "hanger" class="size-20 text-graphite"}}
   </div>
-  {{/if}} {{#if canEdit}} {{!-- Photo upload --}}
+  {{/if}}
+
+  {{#if canEdit}}
   <form
     hx-post="/wardrobe/{{garment.id}}/photo{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}"
     hx-encoding="multipart/form-data"
-    hx-indicator="#loading"
+    hx-indicator="#photoLoading"
     hx-target="main"
     hx-select="main"
     hx-swap="outerHTML"
@@ -100,155 +45,106 @@
     }
     {{/if}}
   </script>
-  {{/if}} {{!-- Metadata --}}
-  <div class="card bg-base-100 shadow-sm mb-4">
-    <div class="card-body gap-3">
-      <div class="flex justify-between">
-        <span class="text-base-content/60 text-sm">{{t 'lang.CATEGORY'}}</span>
-        <span class="capitalize font-medium">{{categoryLabel}}</span>
+  {{/if}}
+
+  <div class="card mb-6">
+    <dl class="card-body gap-3">
+      <div class="flex justify-between gap-4">
+        <dt class="text-sm text-graphite">{{t 'lang.CATEGORY'}}</dt>
+        <dd class="font-medium text-end wrap-anywhere">{{categoryLabel}}</dd>
       </div>
       {{#if garment.brand}}
-      <div class="flex justify-between">
-        <span class="text-base-content/60 text-sm">{{t 'lang.BRAND'}}</span>
-        <span class="font-medium">{{garment.brand}}</span>
-      </div>
-      {{/if}} {{#if garment.size}}
-      <div class="flex justify-between">
-        <span class="text-base-content/60 text-sm">{{t 'lang.SIZE'}}</span>
-        <span class="font-medium">{{garment.size}}</span>
-      </div>
-      {{/if}}       {{#if garment.color}}
-      <div class="flex justify-between">
-        <span class="text-base-content/60 text-sm">{{t 'lang.COLOR'}}</span>
-        <span class="capitalize font-medium"
-          >{{formatColors garment.color}}</span
-        >
-      </div>
-      {{/if}} {{#if garment.washingDetails}}
-      <div class="flex flex-col gap-1">
-        <span class="text-base-content/60 text-sm">{{t 'lang.WASHING_DETAILS'}}</span>
-        <p class="text-sm">{{garment.washingDetails}}</p>
-      {{/if}} {{#if garment.dateAquired}}
-      <div class="flex justify-between">
-        <span class="text-base-content/60 text-sm">{{t 'lang.DATE_AQUIRED'}}</span>
-        <span class="font-medium">{{formatDate garment.dateAquired}}</span>
-      </div>
-      {{/if}} {{#if garment.notes}}
-      <div class="flex flex-col gap-1">
-        <span class="text-base-content/60 text-sm">{{t 'lang.NOTES'}}</span>
-        <p class="text-sm">{{garment.notes}}</p>
-      </div>
-      {{/if}} {{#if sourceHost}}
-      <div class="flex justify-between gap-2">
-        <span class="text-base-content/60 text-sm"
-          >{{t 'lang.IMPORTED_FROM'}}</span
-        >
-        <a
-          href="{{garment.sourceUrl}}"
-          target="_blank"
-          rel="noopener noreferrer nofollow"
-          hx-boost="false"
-          class="link link-primary text-sm truncate"
-          >{{sourceHost}}</a
-        >
+      <div class="flex justify-between gap-4">
+        <dt class="text-sm text-graphite">{{t 'lang.BRAND'}}</dt>
+        <dd class="font-medium text-end wrap-anywhere">{{garment.brand}}</dd>
       </div>
       {{/if}}
-    </div>
+      {{#if garment.size}}
+      <div class="flex justify-between gap-4">
+        <dt class="text-sm text-graphite">{{t 'lang.SIZE'}}</dt>
+        <dd class="font-medium text-end wrap-anywhere">{{garment.size}}</dd>
+      </div>
+      {{/if}}
+      {{#if garment.color}}
+      <div class="flex justify-between gap-4">
+        <dt class="text-sm text-graphite">{{t 'lang.COLOR'}}</dt>
+        <dd class="font-medium text-end capitalize wrap-anywhere">{{formatColors garment.color}}</dd>
+      </div>
+      {{/if}}
+      {{#if garment.dateAquired}}
+      <div class="flex justify-between gap-4">
+        <dt class="text-sm text-graphite">{{t 'lang.DATE_AQUIRED'}}</dt>
+        <dd class="font-medium text-end"><time datetime="{{formatDate garment.dateAquired}}">{{formatDateLong garment.dateAquired}}</time></dd>
+      </div>
+      {{/if}}
+      {{#if garment.washingDetails}}
+      <div class="grid gap-1">
+        <dt class="text-sm text-graphite">{{t 'lang.WASHING_DETAILS'}}</dt>
+        <dd class="whitespace-pre-line wrap-anywhere">{{garment.washingDetails}}</dd>
+      </div>
+      {{/if}}
+      {{#if garment.notes}}
+      <div class="grid gap-1">
+        <dt class="text-sm text-graphite">{{t 'lang.NOTES'}}</dt>
+        <dd class="whitespace-pre-line wrap-anywhere">{{garment.notes}}</dd>
+      </div>
+      {{/if}}
+      {{#if sourceHost}}
+      <div class="flex justify-between gap-4">
+        <dt class="text-sm text-graphite">{{t 'lang.IMPORTED_FROM'}}</dt>
+        <dd class="min-w-0 text-end"><a href="{{garment.sourceUrl}}" target="_blank" rel="noopener noreferrer nofollow" hx-boost="false" class="link link-primary block truncate">{{sourceHost}}</a></dd>
+      </div>
+      {{/if}}
+    </dl>
   </div>
-  {{!-- Edit --}} {{#if canEdit}}
-  <div class="flex gap-2 mb-6">
-    <a
-      href="/wardrobe/{{garment.id}}/edit{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}"
-      class="btn btn-outline btn-sm flex-1"
-    >
-      {{t 'lang.EDIT'}}
-    </a>
-  </div>
-  {{/if}}
 
-  {{!-- Clone --}}
-  {{#if canClone}}
-  <div class="flex gap-2 mb-6">
-    <a
-      href="/wardrobe/{{garment.id}}/clone{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}"
-      class="btn btn-outline btn-sm flex-1"
-    >
-      {{t 'lang.CLONE_GARMENT'}}
-    </a>
-  </div>
-  {{/if}}
-
-  {{!-- Share --}}
   {{#if canEdit}}
-  <div class="flex gap-2 mb-6">
+  <div class="grid gap-2 mb-6 sm:grid-cols-3">
+    <a href="/wardrobe/{{garment.id}}/edit{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}" class="btn btn-outline">{{icon "pencil" class="size-5"}}{{t 'lang.EDIT'}}</a>
+    {{#if canClone}}
+    <a href="/wardrobe/{{garment.id}}/clone{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}" class="btn btn-outline">{{t 'lang.CLONE_GARMENT'}}</a>
+    {{/if}}
     <button
-      class="btn btn-outline btn-sm flex-1"
-      onclick="navigator.clipboard.writeText('{{siteUrl}}/share?shareableId={{garment.shareableId}}&type=garment'); alert('{{t 'lang.COPIED'}}')"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="1.5"
-        stroke="currentColor"
-        class="size-4"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.935-2.185 2.25 2.25 0 0 0-3.935 2.185Z"
-        />
-      </svg>
-      {{t 'lang.SHARE'}}
-    </button>
+      type="button"
+      class="btn btn-outline"
+      data-copy="{{siteUrl}}/share?shareableId={{garment.shareableId}}&type=garment"
+      data-done="{{t 'lang.COPIED'}}"
+      data-label="{{t 'lang.SHARE'}}"
+      _="on click
+           call navigator.clipboard.writeText(my @data-copy)
+           put my @data-done into the first <span/> in me
+           remove .hidden from #copied-toast
+           wait 2s
+           put my @data-label into the first <span/> in me
+           add .hidden to #copied-toast"
+    >{{icon "share" class="size-5"}}<span>{{t 'lang.SHARE'}}</span></button>
   </div>
   {{/if}}
 
-  {{!-- Archive --}}
   {{#if canDelete}}
-  <button
-    class="btn btn-outline btn-sm w-full mb-6"
-    hx-post="/wardrobe/{{garment.id}}/archive"
-    hx-confirm="{{#if garment.archived}}{{t 'lang.CONFIRM_UNARCHIVE'}}{{else}}{{t 'lang.CONFIRM_ARCHIVE'}}{{/if}}"
-    hx-indicator="#loading"
-  >
-    {{#if garment.archived}}{{t 'lang.UNARCHIVE'}}{{else}}{{t 'lang.ARCHIVE'}}{{/if}}
-  </button>
+  <div class="grid gap-2 sm:grid-cols-2">
+    <button
+      type="button"
+      class="btn btn-outline"
+      hx-post="/wardrobe/{{garment.id}}/archive"
+      hx-confirm="{{#if garment.archived}}{{t 'lang.CONFIRM_UNARCHIVE'}}{{else}}{{t 'lang.CONFIRM_ARCHIVE'}}{{/if}}"
+      hx-indicator="#loading"
+    >{{#if garment.archived}}{{t 'lang.UNARCHIVE'}}{{else}}{{t 'lang.ARCHIVE'}}{{/if}}</button>
+    <button
+      type="button"
+      class="btn btn-outline"
+      hx-delete="/wardrobe/{{garment.id}}"
+      hx-confirm="{{t 'lang.CONFIRM_DELETE'}}"
+      hx-indicator="#loading"
+    >{{icon "trash" class="size-5"}}{{t 'lang.DELETE_GARMENT'}}</button>
+  </div>
   {{/if}}
-
-  {{!-- Delete --}}
-  {{#if canDelete}}
-  <button
-    class="btn btn-error btn-outline btn-sm w-full"
-    hx-delete="/wardrobe/{{garment.id}}"
-    hx-confirm="{{t 'lang.CONFIRM_DELETE'}}"
-    hx-indicator="#loading"
-  >
-    {{t 'lang.DELETE'}}
-  </button>
-  {{/if}} {{!-- Mask editor dialog --}}
   {{> maskEditor}}
 </main>
 
-{{#if justCreated}}
-<div id="garment-saved-toast" class="toast toast-top toast-center" aria-live="polite" _="init wait 4s then add .hidden to me">
-  <div class="alert alert-success shadow-md">
-    <svg xmlns="http://www.w3.org/2000/svg" class="size-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-    <span>{{t 'lang.GARMENT_SAVED'}}</span>
-  </div>
-</div>
-{{/if}} {{#if justSavedPhoto}}
-<div id="photo-saved-toast" class="toast toast-top toast-center" aria-live="polite" _="init wait 4s then add .hidden to me">
-  <div class="alert alert-success shadow-md">
-    <svg xmlns="http://www.w3.org/2000/svg" class="size-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-    <span>{{t 'lang.PHOTO_SAVED'}}</span>
-  </div>
-</div>
-{{/if}}
+{{#if justCreated}}{{> toast id="garment-saved-toast" kind="success" text=(t 'lang.GARMENT_SAVED')}}{{/if}}
+{{#if justSavedPhoto}}{{> toast id="photo-saved-toast" kind="success" text=(t 'lang.PHOTO_SAVED')}}{{/if}}
+{{#if canEdit}}{{> toast id="copied-toast" kind="success" text=(t 'lang.COPIED') hidden=true}}{{/if}}
 <script>
   {{! Strip the one-shot save flags so refreshing or sharing this URL doesn't replay the toast }}
   var savedFlagUrl = new URL(window.location.href);

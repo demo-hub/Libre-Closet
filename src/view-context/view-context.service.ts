@@ -57,7 +57,11 @@ export class ViewContextService {
       // but unusable (no key, no model, an unparseable base URL) makes the
       // route 404, and a button in front of a 404 does nothing at all.
       aiEnabled: this.enricher.available,
-      aiHost: this.enricher.host,
+      aiSuggestWith: this.enricher.available
+        ? I18nContext.current()?.t('lang.AI_SUGGEST_WITH', {
+            args: { host: this.enricher.host },
+          })
+        : undefined,
       locale,
       canonicalUrl,
       ogUrl: canonicalUrl,

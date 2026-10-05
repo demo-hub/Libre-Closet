@@ -30,8 +30,8 @@ describe('ImportController', () => {
 
   const i18n = {
     lang: 'en',
-    t(key: string) {
-      return key;
+    t(key: string, options?: { args?: Record<string, unknown> }) {
+      return options?.args ? `${key} ${JSON.stringify(options.args)}` : key;
     },
   } as unknown as I18nContext;
 
@@ -268,7 +268,7 @@ describe('ImportController', () => {
 
         expect(fragment()).toMatchObject({
           suggestion: { name: 'Wool Coat' },
-          aiHost: 'ollama.lan:11434',
+          aiSuggestedVia: 'lang.AI_SUGGESTED_VIA {"host":"ollama.lan:11434"}',
           aiFailed: undefined,
         });
       });

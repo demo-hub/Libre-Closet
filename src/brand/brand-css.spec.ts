@@ -36,20 +36,15 @@ const KNOWN_DEBT = [
   'views/outfits/index.hbs', // PR 9a
   'views/outfits/show.hbs', // PR 9a
   'views/outfits/form.hbs', // PR 9a
-  'views/wardrobe/show.hbs', // PR 8b
-  'views/wardrobe/form.hbs', // PR 8b
   'views/wardrobe-share/manage.hbs', // PR 10
   'views/wardrobe-share/partials/invite-link-result.hbs', // PR 10
-  'views/partials/aiSuggestion.hbs', // PR 8b
   'views/partials/photoPicker.hbs', // PR 8c
   'views/partials/maskEditor.hbs', // PR 8c
   'views/partials/colorMultiSelect.hbs', // PR 8c
   'views/partials/outfit_row.hbs', // PR 9a
   'views/partials/garmentModal.hbs', // PR 9a
   'views/partials/calendar_worn_button.hbs', // PR 9b
-  'views/partials/suggestedBadge.hbs', // PR 8b
   'public/js/color-multiselect.js', // PR 8c
-  'public/js/color-suggest.js', // PR 8b
   'public/js/mask-editor.js', // PR 8c
 ];
 

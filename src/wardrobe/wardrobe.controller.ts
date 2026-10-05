@@ -335,7 +335,9 @@ export class WardrobeController {
     return {
       garment,
       isClone: true,
-      cloneName: garment.name ? `${garment.name} (cloned)` : undefined,
+      cloneName: garment.name
+        ? i18n.t('lang.CLONED_NAME', { args: { name: garment.name } })
+        : undefined,
       categories,
       colors: Object.values(GarmentColor),
       // Without these the clone's non-palette colours render as no checkbox at

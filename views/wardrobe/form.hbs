@@ -1,29 +1,13 @@
 {{>navbar}}
 
 <main id="main" tabindex="-1" class="page page--narrow">
-  <div class="flex items-center gap-3 mb-6">
+  <div class="flex items-center gap-2 mb-6">
     <a
       href="{{#if garment.id}}/wardrobe/{{garment.id}}{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}{{else}}/wardrobe{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}{{/if}}"
-      class="btn btn-ghost btn-sm btn-circle"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="2"
-        stroke="currentColor"
-        class="size-4"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
-        />
-      </svg>
-    </a>
-    <h1 class="text-2xl font-bold">
-      {{#if isClone}}{{t 'lang.CLONE_GARMENT'}}{{else if garment.id}}{{t 'lang.EDIT_GARMENT'}}{{else}}{{t 'lang.NEW_GARMENT'}}{{/if}}
-    </h1>
+      class="btn btn-ghost btn-circle"
+      aria-label="{{t 'lang.BACK'}}"
+    >{{icon "arrow-left" class="size-5"}}</a>
+    <h1>{{#if isClone}}{{t 'lang.CLONE_GARMENT'}}{{else if garment.id}}{{t 'lang.EDIT_GARMENT'}}{{else}}{{t 'lang.NEW_GARMENT'}}{{/if}}</h1>
   </div>
 
   {{#unless garment.id}}
@@ -49,29 +33,26 @@
     hx-disabled-elt="#importBtn"
     class="mb-4"
   >
-    <details class="collapse collapse-arrow bg-base-200" {{#if importOpen}}open{{/if}}>
-      <summary class="collapse-title text-sm font-medium">
-        {{t 'lang.IMPORT_FROM_LINK'}}
-      </summary>
-      <div class="collapse-content flex flex-col gap-2">
+    <details class="collapse collapse-arrow border border-base-300" {{#if importOpen}}open{{/if}}>
+      <summary class="collapse-title font-medium">{{t 'lang.IMPORT_FROM_LINK'}}</summary>
+      <div class="collapse-content grid gap-2">
+        <label for="importUrl" class="sr-only">{{t 'lang.IMPORT_URL_PLACEHOLDER'}}</label>
         <div class="join w-full">
           <input
             type="url"
             id="importUrl"
             name="url"
-            class="input input-bordered input-sm join-item flex-1"
+            class="input join-item min-w-0 flex-1"
             value="{{importUrl}}"
             placeholder="{{t 'lang.IMPORT_URL_PLACEHOLDER'}}"
             inputmode="url"
             autocomplete="off"
           />
-          <button id="importBtn" type="submit" class="btn btn-sm btn-neutral join-item">
-            {{t 'lang.IMPORT'}}
-          </button>
+          <button id="importBtn" type="submit" class="btn btn-outline join-item">{{t 'lang.IMPORT'}}</button>
         </div>
         <div class="flex items-center gap-2">
-          <span id="importLoading" class="htmx-indicator loading loading-ring loading-sm"></span>
-          <span class="text-xs text-base-content/60">{{t 'lang.IMPORT_URL_HINT'}}</span>
+          {{> spinner spinnerId="importLoading" indicator=true}}
+          <span class="text-sm text-graphite">{{t 'lang.IMPORT_URL_HINT'}}</span>
         </div>
       </div>
     </details>
@@ -83,14 +64,10 @@
   placed with the page toasts would never reach the user. Outside the
   importUrlEnabled block, so the "switched off" state can still be shown. --}}
   {{#if importFailure}}
-  <div role="alert" class="alert alert-warning mb-4 text-sm">
-    <span>{{importFailureMessage}}</span>
-  </div>
+  <div class="mb-4">{{> alert kind="warning" text=importFailureMessage focus=true}}</div>
   {{/if}}
   {{#if importedFrom}}{{#unless importFailure}}
-  <div role="alert" class="alert alert-success mb-4 text-sm">
-    <span>{{importedFromMessage}}</span>
-  </div>
+  <div class="mb-4">{{> alert kind="success" text=importedFromMessage focus=true}}</div>
   {{/unless}}{{/if}}
   {{/unless}}
 
@@ -108,14 +85,12 @@
     this field reaches the server before the photo does — and the photo has to
     be stored against whoever this names. A share sheet cannot put ?ownerId on
     the URL, which is why the destination is a field at all. --}}
-    <div class="form-control">
-      <label class="label"
-        ><span class="label-text">{{t 'lang.SAVE_TO_WARDROBE'}}</span></label
-      >
+    <div class="form-control grid gap-1">
+      <label class="label flex-wrap whitespace-normal" for="destinationSelect">{{t 'lang.SAVE_TO_WARDROBE'}}</label>
       <select
         id="destinationSelect"
         name="ownerId"
-        class="select select-bordered"
+        class="select w-full"
       >
         <option value="">{{t 'lang.MY_WARDROBE_DESTINATION'}}</option>
         {{#each destinations}}
@@ -135,19 +110,17 @@
     />
     <input type="hidden" name="suggested" value="{{suggestedFields}}" />
     <input type="hidden" name="sizeOptions" value="{{join sizeOptions '|'}}" />
-    <div class="form-control">
-      <label class="label"><span class="label-text">{{t 'lang.PHOTO'}}</span></label>
+    <div class="form-control grid gap-1">
+      <label class="label flex-wrap whitespace-normal" for="photoInput">{{t 'lang.PHOTO'}}</label>
       {{> photoPicker preview=true submitBtnId='saveBtn'
       previewSrc=importPreview.dataUri hasAlpha=importPreview.hasAlpha}}
       {{#if importCandidates}}
       <div class="flex flex-wrap gap-2 mt-2">
-        <span class="text-xs self-center text-base-content/60"
-          >{{t 'lang.OTHER_IMAGES'}}</span
-        >
+        <span class="self-center text-sm text-graphite">{{t 'lang.OTHER_IMAGES'}}</span>
         {{#each importCandidates}}
         <button
           type="button"
-          class="btn btn-xs btn-outline"
+          class="btn btn-sm btn-outline"
           hx-post="/wardrobe/import/url{{#if ../viewOwner}}?ownerId={{../viewOwner}}{{/if}}"
           hx-vals='{"imageUrl": "{{this.url}}"}'
           {{!-- htmx sends this button's own form on any non-GET, which is what
@@ -172,7 +145,7 @@
         <button
           type="button"
           id="aiSuggestBtn"
-          class="btn btn-sm btn-outline self-start"
+          class="btn btn-outline self-start"
           hx-post="/wardrobe/import/analyze"
           {{!-- Without hx-encoding htmx urlencodes the request and every File
           becomes the string "[object File]", so no photo ever arrives. htmx
@@ -186,19 +159,19 @@
           hx-indicator="#aiLoading"
           hx-disabled-elt="#aiSuggestBtn"
         >
-          {{t 'lang.AI_SUGGEST_WITH'}} {{aiHost}}
+          {{aiSuggestWith}}
         </button>
         {{!-- A sentence, not just a ring: on a CPU-only server a press can
         take two minutes, and a small spinner beside a greyed button reads as
         nothing happening. --}}
         <div
           id="aiLoading"
-          class="htmx-indicator items-center gap-2 text-sm text-base-content/70"
+          class="htmx-indicator items-center gap-2 text-sm text-graphite"
         >
-          <span class="loading loading-ring loading-sm"></span>
+          {{> spinner decorative=true}}
           <span>{{t 'lang.AI_WAITING'}}</span>
         </div>
-        <div id="aiSuggestion"></div>
+        <div id="aiSuggestion" aria-live="polite"></div>
       </div>
       {{/unless}}{{/if}}
       {{#if importPreview}}
@@ -235,30 +208,26 @@
       {{/if}}
     </div>
     {{/unless}}
-    <div class="form-control">
-      <label class="label"
-        ><span class="label-text">{{t 'lang.NAME'}}</span>{{> suggestedBadge
-        field='name'}}</label
-      >
+    <div class="form-control grid gap-1">
+      <label class="label flex-wrap whitespace-normal" for="garment-name">{{t 'lang.NAME'}}{{> suggestedBadge field='name'}}</label>
       <input
         type="text"
+        id="garment-name"
         name="name"
-        class="input input-bordered"
+        class="input w-full"
         value="{{#if isClone}}{{cloneName}}{{else if garment}}{{garment.name}}{{/if}}"
-        placeholder="e.g. Black Linen Blazer"
+        placeholder="{{t 'lang.PLACEHOLDER_GARMENT_NAME'}}"
       />
     </div>
 
-    <div class="form-control">
-      <label class="label"
-        ><span class="label-text">{{t 'lang.CATEGORY'}} *</span>{{>
-        suggestedBadge field='category'}}</label
-      >
+    <div class="form-control grid gap-1">
+      <label class="label flex-wrap whitespace-normal" for="garment-category">{{t 'lang.CATEGORY'}} <span aria-hidden="true">({{t 'lang.REQUIRED'}})</span>{{> suggestedBadge field='category'}}</label>
       <input
         type="text"
+        id="garment-category"
         name="category"
         list="category-suggestions"
-        class="input input-bordered w-full"
+        class="input w-full"
         value="{{#if garment}}{{garment.category}}{{/if}}"
         required
         placeholder="{{t 'lang.TYPE_OR_SELECT_CATEGORY'}}"
@@ -271,33 +240,29 @@
       </datalist>
     </div>
 
-    <div class="form-control">
-      <label class="label"
-        ><span class="label-text">{{t 'lang.BRAND'}}</span>{{> suggestedBadge
-        field='brand'}}</label
-      >
+    <div class="form-control grid gap-1">
+      <label class="label flex-wrap whitespace-normal" for="garment-brand">{{t 'lang.BRAND'}}{{> suggestedBadge field='brand'}}</label>
       <input
         type="text"
+        id="garment-brand"
         name="brand"
-        class="input input-bordered"
+        class="input w-full"
         value="{{#if garment}}{{garment.brand}}{{/if}}"
-        placeholder="e.g. Levi's"
+        placeholder="{{t 'lang.PLACEHOLDER_BRAND'}}"
       />
     </div>
 
     {{> colorMultiSelect colors=colors garment=garment}}
 
-    <div class="form-control">
-      <label class="label"
-        ><span class="label-text">{{t 'lang.SIZE'}}</span>{{> suggestedBadge
-        field='size'}}</label
-      >
+    <div class="form-control grid gap-1">
+      <label class="label flex-wrap whitespace-normal" for="garment-size">{{t 'lang.SIZE'}}{{> suggestedBadge field='size'}}</label>
       <input
         type="text"
+        id="garment-size"
         name="size"
-        class="input input-bordered"
+        class="input w-full"
         value="{{#if garment}}{{garment.size}}{{/if}}"
-        placeholder="M, 32, One Size…"
+        placeholder="{{t 'lang.PLACEHOLDER_SIZE'}}"
         {{#if sizeOptions}}list="size-suggestions"{{/if}}
         autocomplete="off"
       />
@@ -311,52 +276,48 @@
       {{/if}}
     </div>
 
-    <div class="form-control">
-      <label class="label"><span class="label-text">{{t 'lang.WASHING_DETAILS'}}</span></label>
+    <div class="form-control grid gap-1">
+      <label class="label flex-wrap whitespace-normal" for="garment-washing">{{t 'lang.WASHING_DETAILS'}}</label>
       <textarea
+        id="garment-washing"
         name="washingDetails"
-        class="textarea textarea-bordered"
+        class="textarea w-full"
         rows="3"
-        placeholder="Wash at 30°C, do not tumble dry, do not iron…"
+        placeholder="{{t 'lang.PLACEHOLDER_WASHING'}}"
       >{{#if garment}}{{garment.washingDetails}}{{/if}}</textarea>
     </div>
 
-    <div class="form-control">
-      <label class="label"><span class="label-text">{{t 'lang.DATE_AQUIRED'}}</span></label>
+    <div class="form-control grid gap-1">
+      <label class="label flex-wrap whitespace-normal" for="garment-date">{{t 'lang.DATE_AQUIRED'}}</label>
       <input
         type="date"
+        id="garment-date"
         name="dateAquired"
-        class="input input-bordered"
+        class="input w-full"
         value="{{formatDate garment.dateAquired}}"
       />
     </div>
 
-    <div class="form-control">
-      <label class="label"
-        ><span class="label-text">{{t 'lang.NOTES'}}</span>{{> suggestedBadge
-        field='notes'}}</label
-      >
+    <div class="form-control grid gap-1">
+      <label class="label flex-wrap whitespace-normal" for="garment-notes">{{t 'lang.NOTES'}}{{> suggestedBadge field='notes'}}</label>
       <textarea
+        id="garment-notes"
         name="notes"
-        class="textarea textarea-bordered"
+        class="textarea w-full"
         rows="3"
-        placeholder="Any notes about this garment…"
-      >
-{{#if garment}}{{garment.notes}}{{/if}}</textarea
-      >
+        placeholder="{{t 'lang.PLACEHOLDER_NOTES'}}"
+      >{{#if garment}}{{garment.notes}}{{/if}}</textarea>
     </div>
 
-    <div class="form-control">
-      <label class="label"
-        ><span class="label-text">{{t 'lang.SOURCE_LINK'}}</span>{{>
-        suggestedBadge field='sourceUrl'}}</label
-      >
+    <div class="form-control grid gap-1">
+      <label class="label flex-wrap whitespace-normal" for="garment-source">{{t 'lang.SOURCE_LINK'}}{{> suggestedBadge field='sourceUrl'}}</label>
       <input
         type="url"
+        id="garment-source"
         name="sourceUrl"
-        class="input input-bordered"
+        class="input w-full"
         value="{{#if garment}}{{garment.sourceUrl}}{{/if}}"
-        placeholder="https://…"
+        placeholder="{{t 'lang.PLACEHOLDER_URL'}}"
         inputmode="url"
         autocomplete="off"
       />
@@ -365,16 +326,13 @@
     <div class="flex gap-2 mt-2">
       <a
         href="{{#if garment.id}}/wardrobe/{{garment.id}}{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}{{else}}/wardrobe{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}{{/if}}"
-        class="btn btn-ghost flex-1"
+        class="btn btn-outline flex-1"
         >{{t 'lang.CANCEL'}}</a
       >
       <button type="submit" id="saveBtn" class="btn btn-primary flex-1">
         {{t 'lang.SAVE'}}
       </button>
-      <span
-        id="saveLoading"
-        class="htmx-indicator loading loading-ring loading-sm self-center"
-      ></span>
+      {{> spinner spinnerId="saveLoading" indicator=true class="self-center"}}
     </div>
   </form>
   {{#unless garment.id}}{{> maskEditor}}{{/unless}}

@@ -392,8 +392,12 @@ export class ImportController {
 
     return reply.viewPartial('partials/aiSuggestion', {
       suggestion,
+      aiSuggestedVia: suggestion
+        ? i18n.t('lang.AI_SUGGESTED_VIA', {
+            args: { host: this.enricher.host },
+          })
+        : undefined,
       aiFailed: suggestion ? undefined : i18n.t('lang.AI_NO_SUGGESTION'),
-      aiHost: this.enricher.host,
     });
   }
 
