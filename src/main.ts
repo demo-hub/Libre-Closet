@@ -15,6 +15,7 @@ import { Logger } from 'nestjs-pino';
 import { ViewContextService } from './view-context/view-context.service';
 import { GarmentColor } from './wardrobe/garment-color.enum';
 import { renderIcon } from './icons';
+import { formatDateLong } from './i18n/format-date-long';
 
 async function bootstrap() {
   // https://docs.nestjs.com/security/rate-limiting#proxies
@@ -197,6 +198,15 @@ async function bootstrap() {
     const d = date instanceof Date ? date : new Date(date);
     return d.toISOString().split('T')[0];
   });
+  hbs.registerHelper(
+    'formatDateLong',
+    (date: string | Date | undefined, options: HelperOptions) =>
+      formatDateLong(
+        date,
+        (options.data as { root?: { i18nLang?: string } }).root?.i18nLang ??
+          'en',
+      ),
+  );
   hbs.registerHelper('uri', (str: string) =>
     encodeURIComponent(String(str ?? '')),
   );
