@@ -153,6 +153,7 @@ export type I18nTranslations = {
         "GARMENTS_IN_OUTFIT": string;
         "ADD_PHOTO": string;
         "TAKE_PHOTO": string;
+        "CHOOSE_PHOTO": string;
         "UPDATE_PHOTO": string;
         "GARMENT_SAVED": string;
         "PHOTO_SAVED": string;
@@ -180,12 +181,14 @@ export type I18nTranslations = {
         "FILTERS": string;
         "CLEAR_FILTERS": string;
         "APPLY_FILTERS": string;
+        "REMOVE": string;
         "REMOVE_FILTER": string;
         "SELECT_COLOR": string;
         "SEARCH_OR_CREATE": string;
         "NO_MATCHES": string;
         "CREATE": string;
         "SELECTED": string;
+        "COLORS_SELECTED": string;
         "CLEAR_ALL": string;
         "TYPE_OR_SELECT_CATEGORY": string;
         "PLACEHOLDER_GARMENT_NAME": string;

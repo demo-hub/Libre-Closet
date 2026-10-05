@@ -1,5 +1,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import type { HelperOptions } from 'handlebars';
+import type { I18nService } from 'nestjs-i18n';
+import { tRawHelper } from './t-raw.helper';
 
 /**
  * Nothing else enforces this: nestjs-i18n falls back to English rather than
@@ -92,6 +95,10 @@ describe('translations', () => {
       expect(lang.CLONED_NAME).toContain('{name}');
     });
 
+    it('keeps the count in the colour count', () => {
+      expect(lang.COLORS_SELECTED).toContain('{n}');
+    });
+
     it('opens each failure message the way its validation messages open', () => {
       const validation = lang.validation as Record<string, string>;
       const prefix = `${validation.IS_EMAIL.split(':')[0]}:`;
@@ -116,5 +123,19 @@ describe('translations', () => {
       expect(lang.FOOTER_CREDIT).toContain('AGPL-3.0');
       expect(lang.FOOTER_CREDIT).toContain('Lazztech LLC');
     });
+  });
+
+  it('hands {n} to the client untouched through tRaw', () => {
+    const french = load('fr');
+    const t = jest.fn(
+      (key: string) => french[key.replace(/^lang\./, '')] as string,
+    );
+    const tRaw = tRawHelper({ t } as unknown as I18nService);
+    const options = {
+      data: { root: { i18nLang: 'fr' } },
+    } as unknown as HelperOptions;
+    expect(tRaw('lang.COLORS_SELECTED', options)).toContain('{n}');
+    // No args: nestjs-i18n formats, and so blanks unknown placeholders, only when args is set.
+    expect(t).toHaveBeenCalledWith('lang.COLORS_SELECTED', { lang: 'fr' });
   });
 });
