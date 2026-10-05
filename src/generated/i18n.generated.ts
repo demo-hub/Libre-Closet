@@ -127,8 +127,11 @@ export type I18nTranslations = {
         "DELETE_ACCOUNT_FAILED": string;
         "PHOTO": string;
         "SAVE": string;
+        "REQUIRED": string;
         "DELETE": string;
+        "DELETE_GARMENT": string;
         "CANCEL": string;
+        "BACK": string;
         "CLOSE": string;
         "DISMISS": string;
         "LOADING": string;
@@ -141,6 +144,7 @@ export type I18nTranslations = {
         "NEW_GARMENT": string;
         "EDIT_GARMENT": string;
         "CLONE_GARMENT": string;
+        "CLONED_NAME": string;
         "NO_GARMENTS": string;
         "ADD_FIRST_GARMENT": string;
         "EDIT_OUTFIT": string;
@@ -184,6 +188,12 @@ export type I18nTranslations = {
         "SELECTED": string;
         "CLEAR_ALL": string;
         "TYPE_OR_SELECT_CATEGORY": string;
+        "PLACEHOLDER_GARMENT_NAME": string;
+        "PLACEHOLDER_BRAND": string;
+        "PLACEHOLDER_SIZE": string;
+        "PLACEHOLDER_WASHING": string;
+        "PLACEHOLDER_NOTES": string;
+        "PLACEHOLDER_URL": string;
         "CATEGORY_ACCESSORIES": string;
         "CATEGORY_BAGS": string;
         "CATEGORY_OUTERWEAR": string;
@@ -249,6 +259,7 @@ export type I18nTranslations = {
             "EMAIL_MUST_MATCH": string;
         };
         "MASK_EDITOR_TITLE": string;
+        "EDIT_MASK": string;
         "MASK_EDITOR_SKIP": string;
         "MASK_EDITOR_ACCEPT": string;
         "MASK_BRUSH_ERASE": string;
