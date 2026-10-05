@@ -65,16 +65,16 @@ Bugs found while working on this fork and left out of the change that found them
 - **An unreadable date acquired answers 500** (low).
   - Nothing validates `dateAquired`, so a POST to `/wardrobe` with `dateAquired=garbage` reaches `new Date(...)` and fails in the database layer instead of reporting a field error.
   - Where: `src/wardrobe/garment.service.ts`, `create` and `update`.
-  - Found in PR 8b.
+  - Found in #29.
 - **A garment without a name has an empty card title on the wardrobe grid** (low).
   - The name is optional. The garment page falls back to the category for its heading; the grid card does not.
   - Where: `views/wardrobe/index.hbs`, the card's `card-title`.
-  - Found in PR 8b.
+  - Found in #29.
 - **Copy buttons do nothing on an instance served over plain http** (medium).
   - `navigator.clipboard` exists only in a secure context (HTTPS or localhost), so on a LAN address like `http://192.168.1.10:3000` the call throws and nothing is copied or shown.
   - This affects Share on the garment page and every other copy button: outfit and file share, sharing management, the invite link.
   - A fallback (selecting the link in a field, or the Web Share API where available) would cover it.
-  - Found in PR 8b.
+  - Found in #29.
 
 ## Shell and PWA
 
@@ -87,11 +87,11 @@ Bugs found while working on this fork and left out of the change that found them
   - Every copied share link (garment, outfit, file) therefore points at someone else's server on an instance started without `SITE_URL`, as the README's quick start is. The same value feeds `twitter:domain` and the JSON-LD `@id`s.
   - A fallback to the request's host has to keep the port (`req.host`, not `req.hostname`), the same issue as the default share images below.
   - Where: `src/app.module.ts:105`, `src/view-context/view-context.service.ts:40`.
-  - Found in PR 8b.
+  - Found in #29.
 - **Most pages are titled with the bare app name** (medium).
   - The layout prints `pageTitle` when a route sets one. The wardrobe routes set it from PR 8b, but the outfits, files, sharing, auth and shared-item pages do not, so their tabs and history entries all read "Libre Closet" (WCAG 2.4.2).
   - Where: `views/layout.hbs:52`; `outfit.controller.ts`, `file.controller.ts`, `wardrobe-share.controller.ts`, `auth.controller.ts`, `open-graph.controller.ts`.
-  - Found in PR 8b.
+  - Found in #29.
 - **After a service-worker update, a search loses its terms** (low).
   - The head script turns a boosted GET into a full load of `requestConfig.path`, which for a GET form is the bare `action`. Reading `detail.pathInfo.finalRequestPath` would keep the query.
   - Where: `views/layout.hbs:207-215`.
@@ -117,7 +117,7 @@ Bugs found while working on this fork and left out of the change that found them
 - **Colour names are never translated** (low).
   - Garment colours are stored as English enum values and shown as they are: "Beige, Brown" on the garment page, the filter chips and the AI chips ("Colour: beige") in every language. There are no `COLOR_*` keys.
   - Where: the `formatColors` helper (`src/main.ts`), `views/wardrobe/index.hbs`, `views/partials/aiSuggestion.hbs`, the colour multiselect.
-  - Found in PR 8b.
+  - Found in #29.
 - **German uses two words for the wardrobe** (low).
   - `WARDROBE` is "Kleiderschrank", while `MY_WARDROBE`, the sharing strings and `WARDROBE_SWITCHER` use "Garderobe".
   - German and Italian also use two words for the calendar section.
@@ -126,7 +126,7 @@ Bugs found while working on this fork and left out of the change that found them
   - the copy pass (#26);
   - the eleven error keys (#27);
   - `REMOVE_FILTER` and `WARDROBE_SWITCHER` (#28);
-  - the eleven garment-page keys (`BACK`, `REQUIRED`, `EDIT_MASK`, `DELETE_GARMENT`, `CLONED_NAME`, six `PLACEHOLDER_*`) and the re-worded `AI_SUGGEST_WITH` and `AI_SUGGESTED_VIA` (PR 8b).
+  - the eleven garment-page keys (`BACK`, `REQUIRED`, `EDIT_MASK`, `DELETE_GARMENT`, `CLONED_NAME`, six `PLACEHOLDER_*`) and the re-worded `AI_SUGGEST_WITH` and `AI_SUGGESTED_VIA` (#29).
 
 ## Tests and tooling
 
