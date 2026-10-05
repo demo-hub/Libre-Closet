@@ -88,6 +88,10 @@ describe('translations', () => {
       expect(lang.AI_SUGGESTED_VIA).toContain('{host}');
     });
 
+    it('keeps the garment name in a clone name', () => {
+      expect(lang.CLONED_NAME).toContain('{name}');
+    });
+
     it('opens each failure message the way its validation messages open', () => {
       const validation = lang.validation as Record<string, string>;
       const prefix = `${validation.IS_EMAIL.split(':')[0]}:`;

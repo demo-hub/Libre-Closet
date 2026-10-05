@@ -12,11 +12,14 @@ describe('formatDateLong', () => {
     expect(formatDateLong(stored, 'fr')).toBe('11 septembre 2026');
   });
 
-  it('keeps the stored day whatever the server time zone', () => {
+  it('reads the stored day in UTC, whatever the server time zone', () => {
+    const format = jest.spyOn(Intl, 'DateTimeFormat');
     expect(formatDateLong('2026-01-01', 'en')).toBe('1 January 2026');
-    expect(formatDateLong(new Date('2026-01-01T23:30:00.000Z'), 'en')).toBe(
-      '1 January 2026',
+    expect(format).toHaveBeenCalledWith(
+      'en-GB',
+      expect.objectContaining({ timeZone: 'UTC' }),
     );
+    format.mockRestore();
   });
 
   it('gives nothing for a missing or unreadable date', () => {

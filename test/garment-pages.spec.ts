@@ -17,7 +17,44 @@ async function createGarment(
   return new URL(response.url()).pathname;
 }
 
+async function createGarmentWithPhoto(
+  request: APIRequestContext,
+  name: string,
+): Promise<string> {
+  const response = await request.post('/wardrobe/import', {
+    multipart: {
+      name,
+      category: 'outerwear',
+      photo: { name: 'coat.png', mimeType: 'image/png', buffer: coat },
+      nobgPhoto: { name: 'coat.png', mimeType: 'image/png', buffer: coat },
+    },
+  });
+  expect(response.ok()).toBeTruthy();
+  return new URL(response.url()).pathname;
+}
+
+const fitsItsColumn = (
+  page: import('@playwright/test').Page,
+  selector: string,
+) =>
+  page.evaluate((selector) => {
+    const main = document.querySelector('main')!;
+    const right =
+      main.getBoundingClientRect().right -
+      parseFloat(getComputedStyle(main).paddingRight);
+    return (
+      document.querySelector(selector)!.getBoundingClientRect().right <=
+      right + 0.5
+    );
+  }, selector);
+
 test.describe('the garment page', () => {
+  test('is titled with the garment name', async ({ page }, info) => {
+    const name = `Titled ${info.project.name}`;
+    await page.goto(await createGarment(page.request, { name }));
+    await expect(page).toHaveTitle(name);
+  });
+
   test('names its back link and says what Delete deletes', async ({
     page,
   }, info) => {
@@ -77,19 +114,31 @@ test.describe('the garment page', () => {
     await expect(share).toHaveText('Share');
   });
 
+  test('leaves neither "Copied" nor its toast in a page restored by Back', async ({
+    page,
+  }, info) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: () => Promise.resolve() },
+      });
+    });
+    await page.goto(
+      await createGarment(page.request, { name: `Back ${info.project.name}` }),
+    );
+    await page.locator('main button[data-copy]').click();
+    await page.getByRole('link', { name: 'Edit' }).click();
+    await expect(page).toHaveURL(/\/edit/);
+    await page.goBack();
+    await expect(page.locator('main button[data-copy]')).toHaveText('Share');
+    await expect(page.locator('#copied-toast')).toBeHidden();
+  });
+
   test('offers the mask editor by name to someone who can edit', async ({
     page,
   }, info) => {
-    const response = await page.request.post('/wardrobe/import', {
-      multipart: {
-        name: `Photo ${info.project.name}`,
-        category: 'outerwear',
-        photo: { name: 'coat.png', mimeType: 'image/png', buffer: coat },
-        nobgPhoto: { name: 'coat.png', mimeType: 'image/png', buffer: coat },
-      },
-    });
-    expect(response.ok()).toBeTruthy();
-    await page.goto(new URL(response.url()).pathname);
+    await page.goto(
+      await createGarmentWithPhoto(page.request, `Photo ${info.project.name}`),
+    );
     await expect(
       page.getByRole('button', { name: 'Clean up background' }),
     ).toBeVisible();
@@ -111,9 +160,31 @@ test.describe('the garment page', () => {
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBeLessThanOrEqual(320);
   });
+
+  test.describe('in French', () => {
+    test.use({ locale: 'fr-FR' });
+
+    test('keeps the photo row on screen at 320 px', async ({ page }, info) => {
+      await page.setViewportSize({ width: 320, height: 640 });
+      await page.goto(
+        await createGarmentWithPhoto(
+          page.request,
+          `Photo fr ${info.project.name}`,
+        ),
+      );
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+      ).toBeLessThanOrEqual(320);
+    });
+  });
 });
 
 test.describe('the garment form', () => {
+  test('is titled for what it does', async ({ page }) => {
+    await page.goto('/wardrobe/new');
+    await expect(page).toHaveTitle('New garment');
+  });
+
   test('labels every field', async ({ page }) => {
     await page.goto('/wardrobe/new');
     for (const name of [
@@ -163,11 +234,23 @@ test.describe('the garment form', () => {
     });
   });
 
-  test('does not scroll sideways at 320 px', async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 640 });
-    await page.goto('/wardrobe/new');
-    expect(
-      await page.evaluate(() => document.documentElement.scrollWidth),
-    ).toBeLessThanOrEqual(320);
+  test.describe('in Russian at 320 px', () => {
+    test.use({ locale: 'ru-RU' });
+
+    test('keeps the heading and the long values in the column', async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 320, height: 640 });
+      const show = await createGarment(page.request, {
+        name: 'Двубортноепальтоизверблюжьейшерстиоченьдлинное',
+        brand: 'Averyveryverylongbrandnamewithnobreaks',
+        sourceUrl: `https://shop.example/${'p'.repeat(120)}`,
+      });
+      await page.goto(`${show}/edit`);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+      ).toBeLessThanOrEqual(320);
+      expect(await fitsItsColumn(page, 'main h1')).toBe(true);
+    });
   });
 });

@@ -397,6 +397,9 @@ export class ImportController {
             args: { host: this.enricher.host },
           })
         : undefined,
+      aiCategoryLabel: suggestion?.category
+        ? this.garmentService.resolveCategoryLabel(suggestion.category, i18n)
+        : undefined,
       aiFailed: suggestion ? undefined : i18n.t('lang.AI_NO_SUGGESTION'),
     });
   }

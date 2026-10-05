@@ -9,8 +9,8 @@ other field does. Swapped into #aiSuggestion by htmx. --}} {{#if suggestion}}
       {{#if suggestion.name}}
       <button
         type="button"
-        class="btn btn-sm btn-outline"
-        _="on click set #garmentForm.name.value to my @data-value then remove me"
+        class="btn btn-sm btn-outline h-auto min-h-[var(--size)] max-w-full py-1 text-start wrap-anywhere"
+        _="on click set #garmentForm.name.value to my @data-value then set chip to my nextElementSibling then if chip is null set chip to my previousElementSibling end then if chip is null set chip to #aiSuggestBtn end then call chip.focus() then remove me"
         data-value="{{suggestion.name}}"
       >
         {{t 'lang.NAME'}}: {{suggestion.name}}
@@ -18,17 +18,17 @@ other field does. Swapped into #aiSuggestion by htmx. --}} {{#if suggestion}}
       {{/if}} {{#if suggestion.category}}
       <button
         type="button"
-        class="btn btn-sm btn-outline"
-        _="on click set #garmentForm.category.value to my @data-value then remove me"
+        class="btn btn-sm btn-outline h-auto min-h-[var(--size)] max-w-full py-1 text-start wrap-anywhere"
+        _="on click set #garmentForm.category.value to my @data-value then set chip to my nextElementSibling then if chip is null set chip to my previousElementSibling end then if chip is null set chip to #aiSuggestBtn end then call chip.focus() then remove me"
         data-value="{{suggestion.category}}"
       >
-        {{t 'lang.CATEGORY'}}: {{suggestion.category}}
+        {{t 'lang.CATEGORY'}}: {{aiCategoryLabel}}
       </button>
       {{/if}} {{#if suggestion.brand}}
       <button
         type="button"
-        class="btn btn-sm btn-outline"
-        _="on click set #garmentForm.brand.value to my @data-value then remove me"
+        class="btn btn-sm btn-outline h-auto min-h-[var(--size)] max-w-full py-1 text-start wrap-anywhere"
+        _="on click set #garmentForm.brand.value to my @data-value then set chip to my nextElementSibling then if chip is null set chip to my previousElementSibling end then if chip is null set chip to #aiSuggestBtn end then call chip.focus() then remove me"
         data-value="{{suggestion.brand}}"
       >
         {{t 'lang.BRAND'}}: {{suggestion.brand}}
@@ -36,8 +36,8 @@ other field does. Swapped into #aiSuggestion by htmx. --}} {{#if suggestion}}
       {{/if}} {{#if suggestion.notes}}
       <button
         type="button"
-        class="btn btn-sm btn-outline"
-        _="on click set #garmentForm.notes.value to my @data-value then remove me"
+        class="btn btn-sm btn-outline h-auto min-h-[var(--size)] max-w-full py-1 text-start wrap-anywhere"
+        _="on click set #garmentForm.notes.value to my @data-value then set chip to my nextElementSibling then if chip is null set chip to my previousElementSibling end then if chip is null set chip to #aiSuggestBtn end then call chip.focus() then remove me"
         data-value="{{suggestion.notes}}"
       >
         {{t 'lang.NOTES'}}
@@ -45,11 +45,11 @@ other field does. Swapped into #aiSuggestion by htmx. --}} {{#if suggestion}}
       {{/if}} {{#each suggestion.colors}}
       <button
         type="button"
-        class="btn btn-sm btn-outline"
+        class="btn btn-sm btn-outline h-auto min-h-[var(--size)] max-w-full py-1 text-start wrap-anywhere"
         _="on click
              set box to the first <input[name='color'][value='{{this}}']/>
              if box then set box.checked to true then send change to box end
-             then remove me"
+             then set chip to my nextElementSibling then if chip is null set chip to my previousElementSibling end then if chip is null set chip to #aiSuggestBtn end then call chip.focus() then remove me"
       >
         {{t 'lang.COLOR'}}: {{this}}
       </button>

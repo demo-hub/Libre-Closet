@@ -51,10 +51,6 @@ Bugs found while working on this fork and left out of the change that found them
   - It reads "1 results", and Russian uses one form for every count.
   - Where: `views/wardrobe/index.hbs:46`.
   - Found in #28.
-- **Deleting a garment in a shared wardrobe lands in your own** (low).
-  - The redirect drops `ownerId`.
-  - Where: `src/wardrobe/wardrobe.controller.ts:530`.
-  - Found in #28.
 - **Four category names are translated but never used** (low).
   - `CATEGORY_ACTIVEWEAR`, `_SWIMWEAR`, `_UNDERWEAR` and `_LINGERIE` exist in the locale files, but `GarmentCategory` has no such values, so a garment typed with one of those categories shows the raw word.
   - Found in #28.
@@ -66,6 +62,10 @@ Bugs found while working on this fork and left out of the change that found them
   - Found in #28.
 - **A wardrobe whose garments are all archived says "No garments yet"** (low).
   - Found in #28.
+- **An unreadable date acquired answers 500** (low).
+  - Nothing validates `dateAquired`, so a POST to `/wardrobe` with `dateAquired=garbage` reaches `new Date(...)` and fails in the database layer instead of reporting a field error.
+  - Where: `src/wardrobe/garment.service.ts`, `create` and `update`.
+  - Found in PR 8b.
 - **A garment without a name has an empty card title on the wardrobe grid** (low).
   - The name is optional. The garment page falls back to the category for its heading; the grid card does not.
   - Where: `views/wardrobe/index.hbs`, the card's `card-title`.
@@ -82,6 +82,16 @@ Bugs found while working on this fork and left out of the change that found them
   - The layout subscribes only when `document.cookie` contains `access_token`, but that cookie is `httpOnly`, so the check never passes.
   - Where: `views/layout.hbs:222-226`.
   - Found in #25.
+- **Share links point at the upstream instance unless `SITE_URL` is set** (high).
+  - `SITE_URL` defaults to `https://librecloset.lazz.tech`, and the view context only falls back to the request's host when it is unset, which with that default never happens.
+  - Every copied share link (garment, outfit, file) therefore points at someone else's server on an instance started without `SITE_URL`, as the README's quick start is. The same value feeds `twitter:domain` and the JSON-LD `@id`s.
+  - A fallback to the request's host has to keep the port (`req.host`, not `req.hostname`), the same issue as the default share images below.
+  - Where: `src/app.module.ts:105`, `src/view-context/view-context.service.ts:40`.
+  - Found in PR 8b.
+- **Most pages are titled with the bare app name** (medium).
+  - The layout prints `pageTitle` when a route sets one. The wardrobe routes set it from PR 8b, but the outfits, files, sharing, auth and shared-item pages do not, so their tabs and history entries all read "Libre Closet" (WCAG 2.4.2).
+  - Where: `views/layout.hbs:52`; `outfit.controller.ts`, `file.controller.ts`, `wardrobe-share.controller.ts`, `auth.controller.ts`, `open-graph.controller.ts`.
+  - Found in PR 8b.
 - **After a service-worker update, a search loses its terms** (low).
   - The head script turns a boosted GET into a full load of `requestConfig.path`, which for a GET form is the bare `action`. Reading `detail.pathInfo.finalRequestPath` would keep the query.
   - Where: `views/layout.hbs:207-215`.
@@ -93,9 +103,6 @@ Bugs found while working on this fork and left out of the change that found them
 - **Chrome logs "Transition was skipped" when Back follows a boosted navigation** (low).
   - This comes from htmx's global view transitions.
   - Found in #23.
-- **Hidden loading indicators can still be read by a screen reader** (low).
-  - htmx hides an `htmx-indicator` with `opacity: 0`, so the element stays in the accessibility tree. In browse mode a screen reader can read "Loading" from the spinner partial's hidden text, or the AI form's "Asking the model…" sentence, when nothing is loading.
-  - Found in PR 8b.
 
 ## Accessibility and theme
 
@@ -107,6 +114,10 @@ Bugs found while working on this fork and left out of the change that found them
 ## Translations
 
 - **"Archived" has the wrong gender for a garment** in es ("Archivado") and ru ("Архивировано") (low). Found in #28.
+- **Colour names are never translated** (low).
+  - Garment colours are stored as English enum values and shown as they are: "Beige, Brown" on the garment page, the filter chips and the AI chips ("Colour: beige") in every language. There are no `COLOR_*` keys.
+  - Where: the `formatColors` helper (`src/main.ts`), `views/wardrobe/index.hbs`, `views/partials/aiSuggestion.hbs`, the colour multiselect.
+  - Found in PR 8b.
 - **German uses two words for the wardrobe** (low).
   - `WARDROBE` is "Kleiderschrank", while `MY_WARDROBE`, the sharing strings and `WARDROBE_SWITCHER` use "Garderobe".
   - German and Italian also use two words for the calendar section.
@@ -114,7 +125,8 @@ Bugs found while working on this fork and left out of the change that found them
 - **Machine-written values await a native speaker** in de, es, fr, it and ru:
   - the copy pass (#26);
   - the eleven error keys (#27);
-  - `REMOVE_FILTER` and `WARDROBE_SWITCHER` (#28).
+  - `REMOVE_FILTER` and `WARDROBE_SWITCHER` (#28);
+  - the eleven garment-page keys (`BACK`, `REQUIRED`, `EDIT_MASK`, `DELETE_GARMENT`, `CLONED_NAME`, six `PLACEHOLDER_*`) and the re-worded `AI_SUGGEST_WITH` and `AI_SUGGESTED_VIA` (PR 8b).
 
 ## Tests and tooling
 

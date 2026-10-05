@@ -273,6 +273,24 @@ describe('ImportController', () => {
         });
       });
 
+      it('names the suggested category the way the form lists it', async () => {
+        enricher.analyzeImage.mockResolvedValueOnce({
+          category: 'outerwear',
+          colors: [],
+          confidence: { category: 0.8, colors: 0, brand: 0 },
+        });
+        garmentService.resolveCategoryLabel.mockReturnValueOnce('Outerwear');
+
+        await controller.analyze(
+          withPhoto(5, await jpeg()),
+          reply as unknown as FastifyReply,
+          i18n,
+          undefined,
+        );
+
+        expect(fragment().aiCategoryLabel).toBe('Outerwear');
+      });
+
       it('sends the wardrobe vocabulary and the language, and a JPEG', async () => {
         await controller.analyze(
           withPhoto(5, await jpeg()),

@@ -7,7 +7,7 @@
       class="btn btn-ghost btn-circle"
       aria-label="{{t 'lang.BACK'}}"
     >{{icon "arrow-left" class="size-5"}}</a>
-    <h1>{{#if isClone}}{{t 'lang.CLONE_GARMENT'}}{{else if garment.id}}{{t 'lang.EDIT_GARMENT'}}{{else}}{{t 'lang.NEW_GARMENT'}}{{/if}}</h1>
+    <h1 class="min-w-0 flex-1 hyphens-auto wrap-anywhere">{{#if isClone}}{{t 'lang.CLONE_GARMENT'}}{{else if garment.id}}{{t 'lang.EDIT_GARMENT'}}{{else}}{{t 'lang.NEW_GARMENT'}}{{/if}}</h1>
   </div>
 
   {{#unless garment.id}}
@@ -145,7 +145,7 @@
         <button
           type="button"
           id="aiSuggestBtn"
-          class="btn btn-outline self-start"
+          class="btn btn-outline h-auto min-h-11 self-start py-2"
           hx-post="/wardrobe/import/analyze"
           {{!-- Without hx-encoding htmx urlencodes the request and every File
           becomes the string "[object File]", so no photo ever arrives. htmx
@@ -158,6 +158,7 @@
           hx-swap="innerHTML"
           hx-indicator="#aiLoading"
           hx-disabled-elt="#aiSuggestBtn"
+          _="on htmx:afterRequest wait 0s then call me.focus()"
         >
           {{aiSuggestWith}}
         </button>

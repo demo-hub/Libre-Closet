@@ -98,6 +98,7 @@ export class WardrobeController {
     }));
     const owner = viewOwner ?? null;
     return {
+      pageTitle: i18n.t('lang.WARDROBE'),
       garments,
       categoryLabels: Object.fromEntries(
         garments.map((garment) => [
@@ -245,12 +246,14 @@ export class WardrobeController {
       canClone = false;
     }
 
+    const categoryLabel = this.garmentService.resolveCategoryLabel(
+      garment.category,
+      i18n,
+    );
     return {
+      pageTitle: garment.name || categoryLabel,
       garment,
-      categoryLabel: this.garmentService.resolveCategoryLabel(
-        garment.category,
-        i18n,
-      ),
+      categoryLabel,
       canEdit,
       canDelete,
       canClone,
@@ -301,6 +304,7 @@ export class WardrobeController {
     );
 
     return {
+      pageTitle: i18n.t('lang.EDIT_GARMENT'),
       garment,
       categories,
       colors: colorEnumValues,
@@ -333,6 +337,7 @@ export class WardrobeController {
       label: this.garmentService.resolveCategoryLabel(value, i18n),
     }));
     return {
+      pageTitle: i18n.t('lang.CLONE_GARMENT'),
       garment,
       isClone: true,
       cloneName: garment.name

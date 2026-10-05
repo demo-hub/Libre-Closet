@@ -1,7 +1,7 @@
-{{!-- {{> toast id=… kind=… text=… hidden=true dismiss=true}}; hidden waits to be revealed and never times out. --}}
+{{!-- {{> toast id=… kind=… text=… hidden=true dismiss=true silent=true}}; hidden waits to be revealed and never times out; silent is for feedback already announced elsewhere. --}}
 <div id="{{id}}"
   class="toast toast-top toast-center{{#if hidden}} hidden{{/if}}"
-  aria-live="polite"
+  {{#if silent}}aria-hidden="true"{{else}}aria-live="polite"{{/if}}
   {{#unless hidden}}_="init wait 4s then add .hidden to me"{{/unless}}>
   {{> alert kind=kind text=text dismiss=dismiss}}
 </div>

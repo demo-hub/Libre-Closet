@@ -1,17 +1,19 @@
 {{>navbar}}
 
 <main id="main" tabindex="-1" class="page page--narrow">
-  <div class="flex items-center gap-2 mb-6">
+  <div class="flex items-start gap-2 mb-6">
     <a href="/wardrobe{{#if viewOwner}}?ownerId={{viewOwner}}{{/if}}" class="btn btn-ghost btn-circle" aria-label="{{t 'lang.BACK'}}">{{icon "arrow-left" class="size-5"}}</a>
-    <h1 class="flex-1 min-w-0 wrap-anywhere">{{#if garment.name}}{{garment.name}}{{else}}{{categoryLabel}}{{/if}}</h1>
-    {{#if garment.archived}}<span class="badge">{{t 'lang.ARCHIVED'}}</span>{{/if}}
+    <div class="grid min-w-0 flex-1 justify-items-start gap-1">
+      <h1 class="max-w-full hyphens-auto wrap-anywhere">{{#if garment.name}}{{garment.name}}{{else}}{{categoryLabel}}{{/if}}</h1>
+      {{#if garment.archived}}<span class="badge">{{t 'lang.ARCHIVED'}}</span>{{/if}}
+    </div>
   </div>
 
   {{#if garment.photo}}
   <figure class="relative mx-auto mb-6 aspect-square w-full max-w-sm overflow-hidden rounded-box bg-base-200">
     <img src="/file/nobg/{{garment.photo.fileName}}" alt="{{#if garment.name}}{{garment.name}}{{else}}{{categoryLabel}}{{/if}}" class="size-full object-contain" />
     {{#if canEdit}}
-    <button id="editMaskBtn" type="button" class="btn btn-ghost btn-circle absolute top-2 end-2 bg-base-100" aria-label="{{t 'lang.EDIT_MASK'}}">{{icon "pencil" class="size-5"}}</button>
+    <button id="editMaskBtn" type="button" class="btn btn-ghost btn-circle absolute top-2 end-2 border-base-300 bg-base-100 hover:border-steel" aria-label="{{t 'lang.EDIT_MASK'}}">{{icon "pencil" class="size-5"}}</button>
     {{/if}}
   </figure>
   {{else}}
@@ -107,16 +109,18 @@
     <button
       type="button"
       class="btn btn-outline"
+      aria-live="polite"
       data-copy="{{siteUrl}}/share?shareableId={{garment.shareableId}}&type=garment"
       data-done="{{t 'lang.COPIED'}}"
       data-label="{{t 'lang.SHARE'}}"
       _="on click
            call navigator.clipboard.writeText(my @data-copy)
            put my @data-done into the first <span/> in me
-           remove .hidden from #copied-toast
+           add .hidden to <#garment-saved-toast, #photo-saved-toast/>
+           remove .hidden from <#copied-toast/>
            wait 2s
            put my @data-label into the first <span/> in me
-           add .hidden to #copied-toast"
+           add .hidden to <#copied-toast/>"
     >{{icon "share" class="size-5"}}<span>{{t 'lang.SHARE'}}</span></button>
   </div>
   {{/if}}
@@ -144,7 +148,7 @@
 
 {{#if justCreated}}{{> toast id="garment-saved-toast" kind="success" text=(t 'lang.GARMENT_SAVED')}}{{/if}}
 {{#if justSavedPhoto}}{{> toast id="photo-saved-toast" kind="success" text=(t 'lang.PHOTO_SAVED')}}{{/if}}
-{{#if canEdit}}{{> toast id="copied-toast" kind="success" text=(t 'lang.COPIED') hidden=true}}{{/if}}
+{{#if canEdit}}{{> toast id="copied-toast" kind="success" text=(t 'lang.COPIED') hidden=true silent=true}}{{/if}}
 <script>
   {{! Strip the one-shot save flags so refreshing or sharing this URL doesn't replay the toast }}
   var savedFlagUrl = new URL(window.location.href);
