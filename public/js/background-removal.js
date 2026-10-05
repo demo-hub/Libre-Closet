@@ -214,8 +214,12 @@ export const wireUpEditMaskBtn = async (fileName, garmentId, ownerId) => {
   const btn = document.getElementById('editMaskBtn');
   if (!btn) return;
 
+  // Not disabled while busy: the dialog hands focus back to its opener only if it can take it.
+  let busy = false;
   btn.addEventListener('click', async () => {
-    btn.disabled = true;
+    if (busy) return;
+    busy = true;
+    btn.setAttribute('aria-disabled', 'true');
     try {
       const [origResp, nobgResp] = await Promise.all([
         fetch(`/file/${fileName}`),
@@ -229,7 +233,10 @@ export const wireUpEditMaskBtn = async (fileName, garmentId, ownerId) => {
       const squaredBlob = await squarePadBlob(origBlob);
       const squaredFile = new File([squaredBlob], fileName, { type: 'image/png' });
 
-      const editedBlob = await openMaskEditor(squaredFile, nobgBlob);
+      const editing = openMaskEditor(squaredFile, nobgBlob);
+      // Now, not after the await: Accept hands focus back to this button before the promise settles.
+      btn.removeAttribute('aria-disabled');
+      const editedBlob = await editing;
 
       // openMaskEditor resolves with the exact nobgBlob reference on Skip.
       if (editedBlob === nobgBlob) return;
@@ -249,7 +256,8 @@ export const wireUpEditMaskBtn = async (fileName, garmentId, ownerId) => {
     } catch (err) {
       console.warn('[edit-mask] Failed:', err);
     } finally {
-      btn.disabled = false;
+      busy = false;
+      btn.removeAttribute('aria-disabled');
     }
   });
 };

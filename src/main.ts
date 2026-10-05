@@ -16,6 +16,8 @@ import { ViewContextService } from './view-context/view-context.service';
 import { GarmentColor } from './wardrobe/garment-color.enum';
 import { renderIcon } from './icons';
 import { formatDateLong } from './i18n/format-date-long';
+import { I18nService } from 'nestjs-i18n';
+import { tRawHelper } from './i18n/t-raw.helper';
 
 async function bootstrap() {
   // https://docs.nestjs.com/security/rate-limiting#proxies
@@ -207,6 +209,7 @@ async function bootstrap() {
           'en',
       ),
   );
+  hbs.registerHelper('tRaw', tRawHelper(app.get(I18nService)));
   hbs.registerHelper('uri', (str: string) =>
     encodeURIComponent(String(str ?? '')),
   );

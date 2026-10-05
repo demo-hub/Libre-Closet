@@ -1,57 +1,51 @@
-<script>
-  window.KNOWN_COLORS = new Set({{{json colors}}});
-</script>
 <div
-  class="form-control w-full min-w-0"
+  class="form-control grid gap-1"
   data-color-field
   data-suggested-label="{{t 'lang.SUGGESTED'}}"
 >
-  <label class="label">
-    <span class="label-text">{{t 'lang.COLOR'}}</span>{{> suggestedBadge
-    field='colors'}}
-  </label>
+  <label class="label flex-wrap whitespace-normal" id="color-label-{{@index}}">{{t 'lang.COLOR'}}{{> suggestedBadge field='colors'}}</label>
 
-  <details class="color-ms w-full min-w-0" id="color-ms-{{@index}}">
-    <summary>
-      <span class="ms-pills" id="color-pills-{{@index}}">
-        <span class="ms-placeholder">{{t 'lang.SELECT_COLOR'}}</span>
-      </span>
-      <svg class="ms-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+  <details
+    class="color-ms w-full min-w-0"
+    id="color-ms-{{@index}}"
+    data-placeholder="{{t 'lang.SELECT_COLOR'}}"
+    data-selected-template="{{tRaw 'lang.COLORS_SELECTED'}}"
+    data-remove-template="{{tRaw 'lang.REMOVE_COLOR'}}"
+    data-create-template="{{tRaw 'lang.CREATE_COLOR'}}"
+  >
+    <summary aria-labelledby="color-label-{{@index}} color-summary-{{@index}}">
+      <span class="ms-placeholder" id="color-summary-{{@index}}">{{t 'lang.SELECT_COLOR'}}</span>
+      <svg class="ms-chevron" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     </summary>
 
     <div class="ms-dropdown-anchor">
       <div class="ms-dropdown">
         <div class="ms-search">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" class="ms-search-input" placeholder="{{t 'lang.SEARCH_OR_CREATE'}}" autocomplete="off">
+          {{icon "magnifying-glass" class="size-4 shrink-0"}}
+          <input type="text" class="ms-search-input" placeholder="{{t 'lang.SEARCH_OR_CREATE'}}" aria-label="{{t 'lang.SEARCH_OR_CREATE'}}" autocomplete="off">
         </div>
-
-          <div class="ms-options">
-            {{#each colors}}
-            <label class="ms-option">
-              <input type="checkbox" name="color" value="{{this}}"
-                {{#ifInArray this ../garment.color}}checked{{/ifInArray}}>
-              <span class="ms-swatch ms-swatch--{{this}}"></span>
-              <span class="capitalize">{{this}}</span>
-            </label>
-            {{/each}}
-
-            {{#each customColors}}
-            <label class="ms-option">
-              <input type="checkbox" name="color" value="{{this}}" checked>
-              <span class="ms-swatch ms-swatch--other"></span>
-              <span class="capitalize">{{this}}</span>
-            </label>
-            {{/each}}
-          </div>
-
-        <div class="ms-empty" style="display:none">{{t 'lang.NO_MATCHES'}}</div>
-
-        <div class="ms-create" style="display:none">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span>{{t 'lang.CREATE'}} "<strong class="ms-create-label"></strong>"</span>
+        <div class="ms-options">
+          {{#each colors}}
+          <label class="ms-option">
+            <input type="checkbox" class="checkbox" name="color" value="{{this}}"
+              {{#ifInArray this ../garment.color}}checked{{/ifInArray}}>
+            <span class="ms-swatch ms-swatch--{{this}}"></span>
+            <span class="capitalize">{{this}}</span>
+          </label>
+          {{/each}}
+          {{#each customColors}}
+          <label class="ms-option">
+            <input type="checkbox" class="checkbox" name="color" value="{{this}}" checked>
+            <span class="ms-swatch ms-swatch--other"></span>
+            <span class="capitalize">{{this}}</span>
+          </label>
+          {{/each}}
         </div>
-
+        <div class="ms-empty" hidden>{{t 'lang.NO_MATCHES'}}</div>
+        <button type="button" class="ms-create" hidden>
+          {{icon "plus" class="size-4 shrink-0"}}
+          <span class="ms-create-text"></span>
+        </button>
         <div class="ms-footer">
           <span class="ms-count">0 {{t 'lang.SELECTED'}}</span>
           <button type="button" class="ms-clear">{{t 'lang.CLEAR_ALL'}}</button>
@@ -59,4 +53,8 @@
       </div>
     </div>
   </details>
+
+  {{!-- After the box, not inside its summary: a button in a summary fails axe nested-interactive, and above the box each new row would push the open list down. --}}
+  <div class="ms-pills" id="color-pills-{{@index}}"></div>
+  <span class="ms-status sr-only" role="status"></span>
 </div>
