@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { EntityRepository, wrap } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import {
@@ -40,6 +41,18 @@ export class OutfitService {
       { owner: null },
       { populate: ['garments', 'garments.photo'] },
     );
+  }
+
+  /** Its garments in slot order, the order the builder saved; garments no slot names come last. */
+  garmentsInOrder(outfit: Outfit): Garment[] {
+    const garments = outfit.garments.getItems();
+    const byId = new Map(garments.map((garment) => [garment.id, garment]));
+    const ordered: Garment[] = [];
+    for (const slot of outfit.slots ?? []) {
+      const garment = slot.garmentId != null ? byId.get(slot.garmentId) : null;
+      if (garment && !ordered.includes(garment)) ordered.push(garment);
+    }
+    return [...ordered, ...garments.filter((g) => !ordered.includes(g))];
   }
 
   async findOne(id: number, userId?: number): Promise<Outfit> {
@@ -146,11 +159,13 @@ export class OutfitService {
     }));
   }
 
+  /** `preselect` fills each row with its newest garment: right for a new outfit, wrong for an existing one. */
   buildCategoryRows(
     garments: Garment[],
     selectedIds: number[],
     i18n: I18nContext,
     slots?: OutfitSlot[],
+    preselect = true,
   ) {
     const grouped: Partial<Record<string, Garment[]>> = {};
     for (const g of garments) {
@@ -161,7 +176,8 @@ export class OutfitService {
       category: string,
       items: Garment[],
       selectedId: number | null,
-      defaultFirst = false,
+      defaultFirst: boolean,
+      key: string,
     ) => {
       const selectedIdx =
         selectedId != null ? items.findIndex((g) => g.id === selectedId) : -1;
@@ -171,20 +187,26 @@ export class OutfitService {
       } else if (defaultFirst && items.length > 0) {
         idx = 1;
       }
-      return this.buildRow(category, items, idx, i18n);
+      return this.buildRow(category, items, idx, i18n, key);
     };
 
     // Slot-based path: preserves saved order and duplicate categories
     if (slots?.length) {
       return slots
         .filter((slot) => grouped[slot.category]?.length)
-        .map((slot) => {
+        .map((slot, i) => {
           const items = grouped[slot.category]!;
           const selected =
             slot.garmentId != null
               ? (items.find((g) => g.id === slot.garmentId) ?? null)
               : null;
-          return toRow(slot.category, items, selected?.id ?? null, false);
+          return toRow(
+            slot.category,
+            items,
+            selected?.id ?? null,
+            false,
+            `r${i}`,
+          );
         });
     }
 
@@ -198,17 +220,25 @@ export class OutfitService {
         )
         .sort(),
     ];
-    return orderedKeys.map((cat) => {
+    return orderedKeys.map((cat, i) => {
       const items = grouped[cat]!;
       const selected = items.find((g) => selectedIds.includes(g.id)) ?? null;
-      return toRow(cat, items, selected?.id ?? null, true);
+      return toRow(cat, items, selected?.id ?? null, preselect, `r${i}`);
     });
   }
 
-  buildRow(category: string, items: Garment[], idx: number, i18n: I18nContext) {
+  /** `key` names the row's elements, so it must survive a re-render: pass the row's own when it has one. */
+  buildRow(
+    category: string,
+    items: Garment[],
+    idx: number,
+    i18n: I18nContext,
+    key: string = randomUUID().slice(0, 8),
+  ) {
     const count = items.length;
     const sel = idx > 0 ? (items[idx - 1] ?? null) : null;
     return {
+      key,
       value: category,
       label: this.garmentService.resolveCategoryLabel(category, i18n),
       garmentCount: count,

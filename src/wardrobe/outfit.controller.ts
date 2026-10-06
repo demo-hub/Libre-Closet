@@ -18,6 +18,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { I18n, I18nContext } from 'nestjs-i18n';
 import { ConditionalAuthGuard } from '../auth/conditional-auth.guard';
 import { Payload } from '../auth/dto/payload.dto';
+import { safeReturnTo } from '../auth/return-to';
 import { OutfitService } from './outfit.service';
 import { GarmentService } from './garment.service';
 import { CalendarService } from './calendar.service';
@@ -39,9 +40,17 @@ export class OutfitController {
 
   @Get()
   @Render('outfits/index')
-  async index(@Req() req: FastifyRequest) {
+  async index(@Req() req: FastifyRequest, @I18n() i18n: I18nContext) {
     const outfits = await this.outfitService.findAll(this.userId(req));
-    return { outfits };
+    return {
+      outfits: outfits.map((outfit) => ({
+        id: outfit.id,
+        name: outfit.name,
+        notes: outfit.notes,
+        garments: this.outfitService.garmentsInOrder(outfit),
+      })),
+      pageTitle: i18n.t('lang.OUTFITS'),
+    };
   }
 
   @Get('new')
@@ -60,8 +69,9 @@ export class OutfitController {
     );
     return {
       outfit: null,
+      pageTitle: i18n.t('lang.BUILD_OUTFIT_TITLE'),
       scheduleDate: scheduleDate || null,
-      returnTo: returnTo || '/outfits',
+      returnTo: safeReturnTo(returnTo) ?? '/outfits',
       categoryRows,
       allCategoryRows: categoryRows,
     };
@@ -108,6 +118,7 @@ export class OutfitController {
   async rowFragment(
     @Query('category') category: string,
     @Query('index') indexStr: string,
+    @Query('key') key: string | undefined,
     @Req() req: FastifyRequest,
     @Res() reply: FastifyReply,
     @I18n() i18n: I18nContext,
@@ -119,7 +130,15 @@ export class OutfitController {
     const rawIdx =
       indexStr !== undefined && indexStr !== '' ? parseInt(indexStr) : 1;
     const idx = Math.min(Math.max(isNaN(rawIdx) ? 1 : rawIdx, 0), count);
-    const row = this.outfitService.buildRow(category, items, idx, i18n);
+    const row = this.outfitService.buildRow(
+      category,
+      items,
+      idx,
+      i18n,
+      typeof key === 'string' && /^[a-z0-9]{1,16}$/i.test(key)
+        ? key
+        : undefined,
+    );
     return reply.viewPartial('partials/outfit_row', { row });
   }
 
@@ -128,10 +147,23 @@ export class OutfitController {
   async show(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: FastifyRequest,
+    @I18n() i18n: I18nContext,
   ) {
     const outfit = await this.outfitService.findOne(id, this.userId(req));
-    const garments = outfit.garments.getItems();
-    return { outfit, garments };
+    const garments = this.outfitService
+      .garmentsInOrder(outfit)
+      .map((garment) => ({
+        id: garment.id,
+        photo: garment.photo,
+        label:
+          garment.name ||
+          this.garmentService.resolveCategoryLabel(garment.category, i18n),
+      }));
+    return {
+      outfit,
+      garments,
+      pageTitle: outfit.name || i18n.t('lang.UNTITLED_OUTFIT'),
+    };
   }
 
   @Get(':id/edit')
@@ -150,13 +182,15 @@ export class OutfitController {
     const selectedGarmentIds = outfit.garments.getItems().map((g) => g.id);
     return {
       outfit,
-      returnTo: returnTo || `/outfits/${id}`,
+      pageTitle: i18n.t('lang.EDIT_OUTFIT'),
+      returnTo: safeReturnTo(returnTo) ?? `/outfits/${id}`,
       returnToWeek: returnToWeek || null,
       categoryRows: this.outfitService.buildCategoryRows(
         garments,
         selectedGarmentIds,
         i18n,
         outfit.slots,
+        false,
       ),
       allCategoryRows: this.outfitService.buildCategoryRows(garments, [], i18n),
     };
