@@ -151,6 +151,18 @@ export type I18nTranslations = {
         "NO_OUTFITS": string;
         "ADD_FIRST_OUTFIT": string;
         "GARMENTS_IN_OUTFIT": string;
+        "NO_GARMENTS_IN_OUTFIT": string;
+        "NO_GARMENT": string;
+        "VIEW_GARMENT": string;
+        "PREVIOUS": string;
+        "NEXT": string;
+        "MOVE_UP": string;
+        "MOVE_DOWN": string;
+        "ROW_MOVED": string;
+        "REMOVE_ROW": string;
+        "DELETE_OUTFIT": string;
+        "PLACEHOLDER_OUTFIT_NAME": string;
+        "PLACEHOLDER_OUTFIT_NOTES": string;
         "ADD_PHOTO": string;
         "TAKE_PHOTO": string;
         "CHOOSE_PHOTO": string;
