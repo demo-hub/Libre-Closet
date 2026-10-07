@@ -1,11 +1,20 @@
+{{!-- One row of the outfit builder; outfits/form.hbs moves rows by .outfit-row and [data-move] and names them by data-label, and the server reads the two hidden inputs. --}}
 <div
-  class="outfit-row flex items-center gap-2 py-3"
+  class="outfit-row grid gap-2 py-3"
+  role="group"
+  aria-labelledby="row-{{row.key}}-label"
+  data-key="{{row.key}}"
+  data-label="{{row.label}}"
   data-category="{{row.value}}"
   data-index="{{row.currentIndex}}"
   data-count="{{row.garmentCount}}"
   _="on touchstart
-       set my startX to event.touches[0].clientX
-       set my startY to event.touches[0].clientY
+       if event.target.closest('.drag-handle')
+         set my startX to null
+       else
+         set my startX to event.touches[0].clientX
+         set my startY to event.touches[0].clientY
+       end
      on touchmove
        if my startX is not null
          set dx to Math.abs(event.touches[0].clientX - my startX)
@@ -17,9 +26,10 @@
      on touchend
        if my startX is not null
          set dx to event.changedTouches[0].clientX - my startX
+         set dy to event.changedTouches[0].clientY - my startY
          set my startX to null
          set my startY to null
-         if Math.abs(dx) >= 30
+         if Math.abs(dx) >= 30 and Math.abs(dx) > Math.abs(dy)
            set cnt to (me's @data-count as Int)
            set idx to (me's @data-index as Int)
            if dx < 0
@@ -29,123 +39,99 @@
              set newIdx to idx - 1
              if newIdx < 0 then set newIdx to cnt end
            end
-           js(me, newIdx) htmx.ajax('GET', '/outfits/row-fragment?category=' + encodeURIComponent(me.dataset.category) + '&index=' + newIdx, {target: me, swap: 'outerHTML'}) end
+           js(me, newIdx) htmx.ajax('GET', '/outfits/row-fragment?category=' + encodeURIComponent(me.dataset.category) + '&index=' + newIdx + '&key=' + me.dataset.key, {target: me, swap: 'outerHTML settle:0ms'}) end
          end
        end"
 >
-  <span
-    class="drag-handle cursor-grab active:cursor-grabbing text-base-content/30 shrink-0 touch-none flex items-center justify-center p-3 -m-3"
-    title="{{t 'lang.DRAG_TO_REORDER'}}"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke-width="1.5"
-      stroke="currentColor"
-      class="size-5"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5"
-      />
-    </svg>
-  </span>
-  <span class="w-20 text-sm font-medium shrink-0 capitalize"
-    >{{row.label}}</span
-  >
-  <button
-    type="button"
-    class="btn btn-ghost btn-sm btn-circle shrink-0"
-    hx-get="/outfits/row-fragment?category={{uri row.value}}&index={{row.prevIndex}}"
-    hx-target="closest .outfit-row"
-    hx-swap="outerHTML"
-  >
-    &#8249;
-  </button>
-  {{#if row.currentGarment}}
-  <button
-    type="button"
-    class="flex-1 flex flex-col items-center gap-1 min-w-0 overflow-hidden"
-    data-garment-href="/wardrobe/{{row.currentGarment.id}}"
-    data-garment-name="{{row.currentGarment.name}}"
-    data-garment-photo="{{#if row.currentGarment.photo}}{{row.currentGarment.photo}}{{/if}}"
-    data-garment-brand="{{#if row.currentGarment.brand}}{{row.currentGarment.brand}}{{/if}}"
-    data-garment-color="{{#if row.currentGarment.color}}{{row.currentGarment.color}}{{/if}}"
-    data-garment-size="{{#if row.currentGarment.size}}{{row.currentGarment.size}}{{/if}}"
-    data-garment-notes="{{#if row.currentGarment.notes}}{{row.currentGarment.notes}}{{/if}}"
-    _="on click js(me)
-         const d = me.dataset;
-         document.getElementById('modal-garment-link').href = d.garmentHref;
-         document.getElementById('modal-garment-name').textContent = d.garmentName;
-         const img = document.getElementById('modal-photo-img');
-         const ph = document.getElementById('modal-photo-placeholder');
-         img.src = d.garmentPhoto || '';
-         img.classList.toggle('hidden', !d.garmentPhoto);
-         ph.classList.toggle('hidden', !!d.garmentPhoto);
-         [['modal-brand', d.garmentBrand], ['modal-color', d.garmentColor], ['modal-size', d.garmentSize], ['modal-notes', d.garmentNotes]]
-           .forEach(([id, val]) => { const el = document.getElementById(id); el.textContent = val || ''; el.classList.toggle('hidden', !val); });
-         document.getElementById('garment-modal').showModal();
-       end"
-  >
-    <img
-      class="outfit-photo size-14 rounded-box object-cover{{#unless row.currentGarment.photo}} hidden{{/unless}}"
-      src="{{#if row.currentGarment.photo}}{{row.currentGarment.photo}}{{/if}}"
-      alt="{{row.currentGarment.name}}"
-    />
-    <div
-      class="outfit-none size-14 rounded-box bg-base-200 flex items-center justify-center{{#if row.currentGarment.photo}} hidden{{/if}}"
-    >
-      <span class="text-xs text-base-content/40">—</span>
-    </div>
-    <span class="outfit-name text-xs truncate max-w-full text-center"
-      >{{row.currentGarment.name}}</span
-    >
-  </button>
-  {{else}}
-  <div class="flex-1 flex flex-col items-center gap-1 min-w-0 overflow-hidden">
-    <div
-      class="outfit-none size-14 rounded-box bg-base-200 flex items-center justify-center"
-    >
-      <span class="text-xs text-base-content/40">—</span>
-    </div>
-    <span class="outfit-name text-xs truncate max-w-full text-center"></span>
+  <div class="flex items-center gap-1">
+    {{!-- Pointer only: Move up and Move down are its keyboard and single-pointer alternative. --}}
+    <span class="drag-handle flex size-11 shrink-0 cursor-grab touch-none items-center justify-center text-graphite active:cursor-grabbing" aria-hidden="true">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5" focusable="false"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" /></svg>
+    </span>
+    <span id="row-{{row.key}}-label" class="min-w-0 flex-1 font-semibold wrap-anywhere">{{row.label}}</span>
+    <button type="button" class="btn btn-ghost btn-sm btn-circle" data-move="up" aria-label="{{t 'lang.MOVE_UP'}}">{{icon "chevron-left" class="size-5 rotate-90"}}</button>
+    <button type="button" class="btn btn-ghost btn-sm btn-circle" data-move="down" aria-label="{{t 'lang.MOVE_DOWN'}}">{{icon "chevron-right" class="size-5 rotate-90"}}</button>
+    <button
+      type="button"
+      class="btn btn-ghost btn-sm btn-circle"
+      data-remove
+      aria-label="{{t 'lang.REMOVE_ROW'}}"
+      _="on click js(me)
+           const row = me.closest('.outfit-row');
+           const near = row.nextElementSibling || row.previousElementSibling;
+           row.remove();
+           (near ? near.querySelector('[data-remove]') : document.getElementById('add-row-input')).focus();
+         end"
+    >{{icon "x-mark" class="size-5"}}</button>
   </div>
-  {{/if}}
-  <button
-    type="button"
-    class="btn btn-ghost btn-sm btn-circle shrink-0"
-    hx-get="/outfits/row-fragment?category={{uri row.value}}&index={{row.nextIndex}}"
-    hx-target="closest .outfit-row"
-    hx-swap="outerHTML"
-  >
-    &#8250;
-  </button>
-  <input type="hidden" name="category" value="{{row.value}}" />
-  <input
-    type="hidden"
-    name="garmentId"
-    value="{{#if row.garmentId}}{{row.garmentId}}{{/if}}"
-  />
-  <button
-    type="button"
-    class="btn btn-ghost btn-sm btn-circle shrink-0 text-error"
-    _="on click remove closest .outfit-row"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke-width="2"
-      stroke="currentColor"
-      class="size-4"
+  <div class="flex items-center gap-2">
+    {{!-- settle:0ms: htmx wires a swapped row's buttons when it settles, and focus is back on them before that. --}}
+    <button
+      type="button"
+      id="row-{{row.key}}-previous"
+      class="btn btn-ghost btn-circle shrink-0"
+      aria-label="{{t 'lang.PREVIOUS'}}"
+      hx-get="/outfits/row-fragment?category={{uri row.value}}&index={{row.prevIndex}}&key={{row.key}}"
+      hx-target="closest .outfit-row"
+      hx-swap="outerHTML settle:0ms"
+    >{{icon "chevron-left" class="size-5"}}</button>
+    {{#if row.currentGarment}}
+    {{!-- It focuses the close button itself: WebKit leaves focus on <body> when a daisyUI .modal opens. --}}
+    <button
+      type="button"
+      class="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-box p-1"
+      aria-haspopup="dialog"
+      data-garment-href="/wardrobe/{{row.currentGarment.id}}"
+      data-garment-name="{{#if row.currentGarment.name}}{{row.currentGarment.name}}{{else}}{{row.label}}{{/if}}"
+      data-garment-photo="{{#if row.currentGarment.photo}}{{row.currentGarment.photo}}{{/if}}"
+      data-garment-brand="{{#if row.currentGarment.brand}}{{row.currentGarment.brand}}{{/if}}"
+      data-garment-color="{{formatColors row.currentGarment.color}}"
+      data-garment-size="{{#if row.currentGarment.size}}{{row.currentGarment.size}}{{/if}}"
+      data-garment-notes="{{#if row.currentGarment.notes}}{{row.currentGarment.notes}}{{/if}}"
+      _="on click js(me)
+           const d = me.dataset;
+           const show = (id, value) => {
+             const el = document.getElementById(id);
+             el.textContent = value || '';
+             el.parentElement.hidden = !value;
+           };
+           document.getElementById('modal-garment-link').href = d.garmentHref;
+           document.getElementById('modal-garment-name').textContent = d.garmentName;
+           const img = document.getElementById('modal-photo-img');
+           img.src = d.garmentPhoto || '';
+           img.classList.toggle('hidden', !d.garmentPhoto);
+           document.getElementById('modal-photo-placeholder').classList.toggle('hidden', !!d.garmentPhoto);
+           show('modal-brand', d.garmentBrand);
+           show('modal-color', d.garmentColor);
+           show('modal-size', d.garmentSize);
+           show('modal-notes', d.garmentNotes);
+           document.getElementById('garment-modal').showModal();
+           document.getElementById('garment-modal-close').focus();
+         end"
     >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        d="M6 18 18 6M6 6l12 12"
-      />
-    </svg>
-  </button>
+      {{#if row.currentGarment.photo}}
+      <img class="size-16 rounded-box object-contain" src="{{row.currentGarment.photo}}" alt="" />
+      {{else}}
+      <span class="flex size-16 items-center justify-center rounded-box bg-base-200 text-graphite">{{icon "hanger" class="size-6"}}</span>
+      {{/if}}
+      <span class="max-w-full text-sm hyphens-auto wrap-anywhere">{{#if row.currentGarment.name}}{{row.currentGarment.name}}{{else}}{{row.label}}{{/if}}</span>
+    </button>
+    {{else}}
+    <div class="flex min-w-0 flex-1 flex-col items-center gap-1 p-1">
+      <span class="size-16 rounded-box border border-dashed border-base-300"></span>
+      <span class="text-sm text-graphite">{{t 'lang.NO_GARMENT'}}</span>
+    </div>
+    {{/if}}
+    <button
+      type="button"
+      id="row-{{row.key}}-next"
+      class="btn btn-ghost btn-circle shrink-0"
+      aria-label="{{t 'lang.NEXT'}}"
+      hx-get="/outfits/row-fragment?category={{uri row.value}}&index={{row.nextIndex}}&key={{row.key}}"
+      hx-target="closest .outfit-row"
+      hx-swap="outerHTML settle:0ms"
+    >{{icon "chevron-right" class="size-5"}}</button>
+  </div>
+  <input type="hidden" name="category" value="{{row.value}}" />
+  <input type="hidden" name="garmentId" value="{{#if row.garmentId}}{{row.garmentId}}{{/if}}" />
 </div>

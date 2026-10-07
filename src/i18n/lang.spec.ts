@@ -99,6 +99,12 @@ describe('translations', () => {
       expect(lang.COLORS_SELECTED).toContain('{n}');
     });
 
+    it('keeps the row, its place and the count in the row announcement', () => {
+      for (const placeholder of ['{name}', '{n}', '{total}']) {
+        expect(lang.ROW_MOVED).toContain(placeholder);
+      }
+    });
+
     it('keeps the colour in the names built around it', () => {
       expect(lang.REMOVE_COLOR).toContain('{name}');
       expect(lang.CREATE_COLOR).toContain('{name}');

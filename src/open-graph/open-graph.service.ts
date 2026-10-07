@@ -6,6 +6,7 @@ import { File } from '../dal/entity/file.entity';
 import { Garment } from '../dal/entity/garment.entity';
 import { Outfit } from '../dal/entity/outfit.entity';
 import { EntityManager, EntityRepository } from '@mikro-orm/core';
+import { garmentsInSlotOrder } from '../wardrobe/outfit-order';
 
 export interface OpenGraphTagValues {
   ogUrl: string;
@@ -87,9 +88,8 @@ export class OpenGraphService {
         { populate: ['owner', 'garments', 'garments.photo'] },
       );
       const createdBy = await outfit?.owner?.load();
-      const firstPhotoGarment = outfit?.garments
-        .getItems()
-        .find((g) => g.photo);
+      const garments = outfit ? garmentsInSlotOrder(outfit) : [];
+      const firstPhotoGarment = garments.find((g) => g.photo);
       const ogImage = firstPhotoGarment?.photo
         ? this.fileUrlService.getWatermarkedFileUrl(
             firstPhotoGarment.photo.shareableId,
@@ -102,7 +102,7 @@ export class OpenGraphService {
         ogDescription: `From ${createdBy?.email}`,
         ...previewImage(ogImage),
         outfit,
-        garments: outfit?.garments.getItems() ?? [],
+        garments,
         createdBy,
       };
     }

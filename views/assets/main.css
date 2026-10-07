@@ -286,6 +286,12 @@
 }
 @keyframes spinner-turn { to { rotate: 1turn; } }
 
+/* The first outfit row has nowhere to move up to and the last nowhere down; Sortable moves them, so this follows. */
+.outfit-row:first-child [data-move="up"],
+.outfit-row:last-child [data-move="down"] {
+  visibility: hidden;
+}
+
 /* No border or padding: toCanvasPos in mask-editor.js maps the border box onto the bitmap. */
 .mask-frame {
   display: block;

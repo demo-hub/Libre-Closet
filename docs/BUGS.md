@@ -62,10 +62,11 @@ Bugs found while working on this fork and left out of the change that found them
   - Found in #28.
 - **A wardrobe whose garments are all archived says "No garments yet"** (low).
   - Found in #28.
-- **An unreadable date acquired answers 500** (low).
-  - Nothing validates `dateAquired`, so a POST to `/wardrobe` with `dateAquired=garbage` reaches `new Date(...)` and fails in the database layer instead of reporting a field error.
-  - Where: `src/wardrobe/garment.service.ts`, `create` and `update`.
-  - Found in #29.
+- **An unreadable date answers 500** (low).
+  - Nothing validates the garment's `dateAquired`, an outfit's `scheduleDate` or a calendar entry's `date`, so a POST with `garbage` in any of them reaches `new Date(...)` and fails in the database layer instead of reporting a field error.
+  - An outfit is saved before its date fails, so trying again creates it twice, and an edit keeps its changes behind the error.
+  - Where: `src/wardrobe/garment.service.ts` (`create`, `update`), `src/wardrobe/outfit.controller.ts` (`create`, `update`), `src/wardrobe/calendar.controller.ts` (`create`).
+  - Found in #29 and #31.
 - **A garment without a name has an empty card title on the wardrobe grid** (low).
   - The name is optional. The garment page falls back to the category for its heading; the grid card does not.
   - Where: `views/wardrobe/index.hbs`, the card's `card-title`.
@@ -95,6 +96,26 @@ Bugs found while working on this fork and left out of the change that found them
   - The library runs with `debug: true`, and three `console.log` calls remain.
   - Where: `public/js/background-removal.js:19,97,179,202`.
   - Found in #30.
+- **An outfit loses a garment once that garment is archived** (medium).
+  - The builder's rows hold only garments that are not archived, so an outfit whose garment was archived opens in the editor with that row on "No garment", and saving it removes the garment from the outfit. A row whose category has no garment left is dropped altogether.
+  - Where: `src/wardrobe/garment.service.ts`, `findAll`; `src/wardrobe/outfit.service.ts`, `buildCategoryRows`.
+  - Found in #31.
+- **Every save of an outfit with a date adds another calendar entry** (low).
+  - The outfit form never shows the dates an outfit already has, and each save that carries a date creates a new entry, so saving twice puts the outfit on the calendar twice.
+  - Where: `src/wardrobe/outfit.controller.ts`, `create` and `update`.
+  - Found in #31.
+- **Categories typed in the outfit builder are case-sensitive, and its suggestions are not translated** (low).
+  - "Tops" adds an empty row, since garments are stored as "tops", and the saved slot then disappears from the editor. The category suggestions list the stored English values in every language.
+  - Where: `src/wardrobe/outfit.controller.ts`, `rowFragment`; `views/outfits/form.hbs`, `#add-row-suggestions`.
+  - Found in #31.
+- **Cycling a garment or adding a row in the outfit builder is silent to screen readers** (low).
+  - Focus stays on a button still named "Next", and the new garment, or the new row, is not announced.
+  - Where: `views/partials/outfit_row.hbs`, Previous and Next; `views/outfits/form.hbs`, Add row. `#outfit-rows-status` could say it.
+  - Found in #31.
+- **Fast presses on an outfit row's Next are partly lost** (low).
+  - A press that arrives while the row's request is running is sent with the old row's index, so three quick presses advance one or two garments.
+  - Where: `views/partials/outfit_row.hbs`, Previous and Next.
+  - Found in #31.
 - **Copy buttons do nothing on an instance served over plain http** (medium).
   - `navigator.clipboard` exists only in a secure context (HTTPS or localhost), so on a LAN address like `http://192.168.1.10:3000` the call throws and nothing is copied or shown.
   - This affects Share on the garment page and every other copy button: outfit and file share, sharing management, the invite link.
@@ -114,8 +135,8 @@ Bugs found while working on this fork and left out of the change that found them
   - Where: `src/app.module.ts:105`, `src/view-context/view-context.service.ts:40`.
   - Found in #29.
 - **Most pages are titled with the bare app name** (medium).
-  - The layout prints `pageTitle` when a route sets one. The wardrobe routes set it from PR 8b, but the outfits, files, sharing, auth and shared-item pages do not, so their tabs and history entries all read "Libre Closet" (WCAG 2.4.2).
-  - Where: `views/layout.hbs:52`; `outfit.controller.ts`, `file.controller.ts`, `wardrobe-share.controller.ts`, `auth.controller.ts`, `open-graph.controller.ts`.
+  - The layout prints `pageTitle` when a route sets one. The wardrobe and outfit routes set it (PRs 8b and 9a), but the files, sharing, auth, shared-item and chat pages do not, so their tabs and history entries all read "Libre Closet" (WCAG 2.4.2).
+  - Where: `views/layout.hbs:52`; `file.controller.ts`, `wardrobe-share.controller.ts`, `auth.controller.ts`, `open-graph.controller.ts`, `app.controller.ts` (`/chat`).
   - Found in #29.
 - **After a service-worker update, a search loses its terms** (low).
   - The head script turns a boosted GET into a full load of `requestConfig.path`, which for a GET form is the bare `action`. Reading `detail.pathInfo.finalRequestPath` would keep the query.
@@ -135,10 +156,10 @@ Bugs found while working on this fork and left out of the change that found them
   - Every input uses Tailwind preflight's placeholder colour, 50 % of the text colour, which measures 3.35:1 on White.
   - Plan 5.1 maps placeholders to Graphite.
   - Found in #28.
-- **In WebKit the outfit garment modal opens with focus on the page** (low).
-  - `#garment-modal` is opened with `showModal()` and nothing focuses inside it, which WebKit needs for a daisyUI `.modal`. Chromium and Firefox focus its close button.
-  - Where: `views/partials/outfit_row.hbs:89`.
-  - Found in #30.
+- **With WCAG 1.4.12 text spacing, a button label that wraps spills out of its button** (low).
+  - daisyUI's `.btn` has a fixed height, so a two-line label ("Start over", "Delete outfit" in French, "Kleidungsstück ansehen" at 320 px) crosses the button's border. Nothing is lost.
+  - Where: every `.btn`; `h-auto min-h-(--size)` would let them grow.
+  - Found in #31.
 
 ## Translations
 
@@ -160,7 +181,8 @@ Bugs found while working on this fork and left out of the change that found them
   - the eleven error keys (#27);
   - `REMOVE_FILTER` and `WARDROBE_SWITCHER` (#28);
   - the eleven garment-page keys (`BACK`, `REQUIRED`, `EDIT_MASK`, `DELETE_GARMENT`, `CLONED_NAME`, six `PLACEHOLDER_*`) and the re-worded `AI_SUGGEST_WITH` and `AI_SUGGESTED_VIA` (#29);
-  - `CHOOSE_PHOTO`, `REMOVE_COLOR`, `CREATE_COLOR`, `COLORS_SELECTED`, `MASK_CANVAS` and the re-worded `MASK_BRUSH_SIZE` (#30).
+  - `CHOOSE_PHOTO`, `REMOVE_COLOR`, `CREATE_COLOR`, `COLORS_SELECTED`, `MASK_CANVAS` and the re-worded `MASK_BRUSH_SIZE` (#30);
+  - the twelve outfit keys: `NO_GARMENTS_IN_OUTFIT`, `NO_GARMENT`, `VIEW_GARMENT`, `PREVIOUS`, `NEXT`, `MOVE_UP`, `MOVE_DOWN`, `ROW_MOVED`, `REMOVE_ROW`, `DELETE_OUTFIT`, `PLACEHOLDER_OUTFIT_NAME`, `PLACEHOLDER_OUTFIT_NOTES` (#31).
 
 ## Tests and tooling
 

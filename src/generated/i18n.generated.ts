@@ -151,6 +151,18 @@ export type I18nTranslations = {
         "NO_OUTFITS": string;
         "ADD_FIRST_OUTFIT": string;
         "GARMENTS_IN_OUTFIT": string;
+        "NO_GARMENTS_IN_OUTFIT": string;
+        "NO_GARMENT": string;
+        "VIEW_GARMENT": string;
+        "PREVIOUS": string;
+        "NEXT": string;
+        "MOVE_UP": string;
+        "MOVE_DOWN": string;
+        "ROW_MOVED": string;
+        "REMOVE_ROW": string;
+        "DELETE_OUTFIT": string;
+        "PLACEHOLDER_OUTFIT_NAME": string;
+        "PLACEHOLDER_OUTFIT_NOTES": string;
         "ADD_PHOTO": string;
         "TAKE_PHOTO": string;
         "CHOOSE_PHOTO": string;
@@ -248,7 +260,6 @@ export type I18nTranslations = {
         "BUILD_OUTFIT": string;
         "BUILD_OUTFIT_TITLE": string;
         "START_OVER": string;
-        "DRAG_TO_REORDER": string;
         "ADD_ROW": string;
         "NO_GARMENTS_FOR_BUILDER": string;
         "ADD_TO_CALENDAR": string;

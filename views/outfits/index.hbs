@@ -1,128 +1,76 @@
 {{>navbar}}
 
 <main id="main" tabindex="-1" class="page">
-  <div class="flex items-center justify-between mb-6 px-2">
-    <h1 class="text-2xl font-bold">{{t 'lang.OUTFITS'}}</h1>
-    <a href="/outfits/new" class="btn btn-primary btn-sm"
-      >+ {{t 'lang.BUILD_OUTFIT'}}</a
-    >
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <h1>{{t 'lang.OUTFITS'}}</h1>
+    {{#if outfits.length}}
+    <a href="/outfits/new" class="btn btn-primary">{{icon "plus" class="size-5"}}{{t 'lang.BUILD_OUTFIT'}}</a>
+    {{/if}}
   </div>
 
   {{#if outfits.length}}
-  <div class="flex flex-wrap gap-4 justify-center">
+  <ul role="list" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {{#each outfits}}
-    <div
-      class="card bg-base-100 w-96 shadow-sm hover:shadow-md transition-shadow"
-    >
-      <div class="card-body p-3 cursor-pointer" onclick="window.location = '/outfits/{{this.id}}'">
-        <div class="flex items-center justify-between gap-2">
-          <a href="/outfits/{{this.id}}" class="card-title text-sm hover:underline truncate">{{this.name}}</a>
-          <div class="dropdown dropdown-end shrink-0" onclick="event.stopPropagation();">
-            <label tabindex="0" class="btn btn-ghost btn-xs btn-square" title="{{t 'lang.ADD_TO_CALENDAR'}}">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
-              </svg>
-            </label>
-            <div tabindex="0" class="dropdown-content z-10 card card-compact shadow-lg bg-base-100 border border-base-300 w-64 mt-1">
-              <div class="card-body p-4 gap-3">
-                <p class="font-semibold text-sm">{{t 'lang.CALENDAR_ADD_OUTFIT_PROMPT'}}</p>
-                <form
-                  hx-post="/calendar"
-                  hx-swap="none"
-                  hx-push-url="false"
-                  _="on htmx:afterRequest[detail.successful]
-                    reset me
-                    call document.activeElement.blur()
-                    for el in <[tabindex]/> in closest .dropdown
-                      call el.blur()
-                    end
-                    remove .hidden from #calendar-toast
-                    wait 3s
-                    add .hidden to #calendar-toast"
-                  class="flex flex-col gap-2"
-                >
-                  <input type="hidden" name="outfitId" value="{{this.id}}" />
-                  <input
-                    type="date"
-                    name="date"
-                    class="input input-sm input-bordered w-full"
-                    required
-                    onblur="this.closest('form').querySelector('[type=submit]').focus()"
-                  />
-                  <button type="submit" class="btn btn-primary btn-sm w-full">{{t 'lang.SAVE'}}</button>
-                </form>
-              </div>
-            </div>
+    <li class="relative">
+      <a href="/outfits/{{this.id}}" class="card h-full hover:border-steel" aria-labelledby="outfit-{{this.id}}-title">
+        <div class="card-body gap-2">
+          <p id="outfit-{{this.id}}-title" class="card-title flex-none pe-12 hyphens-auto wrap-anywhere">{{#if this.name}}{{this.name}}{{else}}{{t 'lang.UNTITLED_OUTFIT'}}{{/if}}</p>
+          {{#if this.notes}}<p class="line-clamp-2 flex-none text-sm text-graphite wrap-anywhere">{{this.notes}}</p>{{/if}}
+          <div class="flex flex-wrap gap-2">
+            {{#each this.garments}}
+            {{#if this.photo}}
+            <img src="/file/nobg/{{this.photo.fileName}}" alt="" class="size-16 rounded-box object-contain sm:size-20" />
+            {{else}}
+            <span class="flex size-16 items-center justify-center rounded-box bg-base-200 text-graphite sm:size-20">{{icon "hanger" class="size-6"}}</span>
+            {{/if}}
+            {{/each}}
           </div>
         </div>
-        {{#if this.notes}}
-        <p class="text-xs text-base-content/60 line-clamp-2">{{this.notes}}</p>
-        {{/if}}
-        <a href="/outfits/{{this.id}}" class="flex flex-wrap gap-1 mt-1">
-          {{#each this.garments}} {{#if this.photo}}
-          <img
-            src="/file/nobg/{{this.photo.fileName}}"
-            alt="{{this.name}}"
-            class="size-20 rounded object-cover"
-          />
-          {{else}}
-          <div
-            class="size-20 rounded bg-base-200 flex items-center justify-center"
+      </a>
+      {{!-- Outside the link: a control inside it would be nested interactive content. --}}
+      <details class="dropdown dropdown-end absolute end-2 top-2">
+        <summary class="btn btn-ghost btn-circle" aria-label="{{t 'lang.ADD_TO_CALENDAR'}}">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5" aria-hidden="true" focusable="false"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" /></svg>
+        </summary>
+        <div class="dropdown-content z-10 mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-box border border-base-300 bg-base-100 p-4">
+          <form
+            hx-post="/calendar"
+            hx-swap="none"
+            hx-push-url="false"
+            class="grid gap-2"
+            _="on every htmx:afterRequest[detail.successful]
+                 reset me
+                 js(me)
+                   const menu = me.closest('details');
+                   menu.open = false;
+                   menu.querySelector('summary').focus();
+                   const status = document.getElementById('calendar-status');
+                   status.textContent = '';
+                   requestAnimationFrame(() => { status.textContent = me.dataset.done; });
+                 end
+                 remove .hidden from #calendar-toast
+                 wait 3s
+                 add .hidden to #calendar-toast
+                 set #calendar-status's textContent to ''"
+            data-done="{{t 'lang.CALENDAR_OUTFIT_ADDED'}}"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="size-5 text-base-content/30"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M9 3.75H6.912a2.25 2.25 0 0 0-2.15 1.588L2.35 13.177a2.25 2.25 0 0 0-.1.661V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 0 0-2.15-1.588H15M2.25 13.5h3.86a2.251 2.251 0 0 1 2.012 1.244l.256.512a2.251 2.251 0 0 0 2.013 1.244h3.218a2.251 2.251 0 0 0 2.013-1.244l.256-.512a2.251 2.251 0 0 1 2.013-1.244h3.859M12 3v8.25m0 0-3-3m3 3 3-3"
-              />
-            </svg>
-          </div>
-          {{/if}} {{/each}}
-        </a>
-      </div>
-    </div>
+            <input type="hidden" name="outfitId" value="{{this.id}}" />
+            <label for="outfit-date-{{this.id}}" class="label flex-wrap whitespace-normal">{{t 'lang.CALENDAR_ADD_OUTFIT_PROMPT'}}</label>
+            <input type="date" id="outfit-date-{{this.id}}" name="date" class="input input-sm w-full" required />
+            <button type="submit" class="btn btn-primary btn-sm w-full">{{t 'lang.SAVE'}}</button>
+          </form>
+        </div>
+      </details>
+    </li>
     {{/each}}
-  </div>
+  </ul>
   {{else}}
-  <div
-    class="flex flex-col items-center justify-center gap-4 pt-20 text-base-content/40"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke-width="1"
-      stroke="currentColor"
-      class="size-16"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"
-      />
-    </svg>
-    <p>{{t 'lang.NO_OUTFITS'}}</p>
-    <a href="/outfits/new" class="btn btn-primary btn-sm"
-      >{{t 'lang.ADD_FIRST_OUTFIT'}}</a
-    >
-  </div>
+  {{> empty icon="hanger" text=(t 'lang.NO_OUTFITS') href="/outfits/new" cta=(t 'lang.ADD_FIRST_OUTFIT')}}
   {{/if}}
+  {{!-- The toast is shown from display: none, which screen readers rarely announce; this region says it instead. --}}
+  <p id="calendar-status" class="sr-only" role="status"></p>
 </main>
 
-<div id="calendar-toast" class="toast toast-top toast-center hidden" aria-live="polite">
-  <div class="alert alert-success shadow-md">
-    <svg xmlns="http://www.w3.org/2000/svg" class="size-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-    <span>{{t 'lang.CALENDAR_OUTFIT_ADDED'}}</span>
-  </div>
-</div>
+{{> toast id="calendar-toast" kind="success" text=(t 'lang.CALENDAR_OUTFIT_ADDED') hidden=true silent=true}}
 
 {{>dock}}
