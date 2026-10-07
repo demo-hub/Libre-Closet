@@ -260,7 +260,6 @@ export type I18nTranslations = {
         "BUILD_OUTFIT": string;
         "BUILD_OUTFIT_TITLE": string;
         "START_OVER": string;
-        "DRAG_TO_REORDER": string;
         "ADD_ROW": string;
         "NO_GARMENTS_FOR_BUILDER": string;
         "ADD_TO_CALENDAR": string;

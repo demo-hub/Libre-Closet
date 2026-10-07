@@ -12,10 +12,10 @@
   <ul role="list" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {{#each outfits}}
     <li class="relative">
-      <a href="/outfits/{{this.id}}" class="card h-full hover:border-steel">
+      <a href="/outfits/{{this.id}}" class="card h-full hover:border-steel" aria-labelledby="outfit-{{this.id}}-title">
         <div class="card-body gap-2">
-          <p class="card-title flex-none pe-12 hyphens-auto wrap-anywhere">{{#if this.name}}{{this.name}}{{else}}{{t 'lang.UNTITLED_OUTFIT'}}{{/if}}</p>
-          {{#if this.notes}}<p class="line-clamp-2 text-sm text-graphite wrap-anywhere">{{this.notes}}</p>{{/if}}
+          <p id="outfit-{{this.id}}-title" class="card-title flex-none pe-12 hyphens-auto wrap-anywhere">{{#if this.name}}{{this.name}}{{else}}{{t 'lang.UNTITLED_OUTFIT'}}{{/if}}</p>
+          {{#if this.notes}}<p class="line-clamp-2 flex-none text-sm text-graphite wrap-anywhere">{{this.notes}}</p>{{/if}}
           <div class="flex flex-wrap gap-2">
             {{#each this.garments}}
             {{#if this.photo}}
@@ -38,13 +38,15 @@
             hx-swap="none"
             hx-push-url="false"
             class="grid gap-2"
-            _="on htmx:afterRequest[detail.successful]
+            _="on every htmx:afterRequest[detail.successful]
                  reset me
                  js(me)
                    const menu = me.closest('details');
                    menu.open = false;
                    menu.querySelector('summary').focus();
-                   document.getElementById('calendar-status').textContent = me.dataset.done;
+                   const status = document.getElementById('calendar-status');
+                   status.textContent = '';
+                   requestAnimationFrame(() => { status.textContent = me.dataset.done; });
                  end
                  remove .hidden from #calendar-toast
                  wait 3s

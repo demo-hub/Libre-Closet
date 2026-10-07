@@ -1,4 +1,10 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { test, expect, type APIRequestContext } from '@playwright/test';
+
+const coat = readFileSync(
+  join(__dirname, '../scripts/screenshots/fixtures/camel-coat.png'),
+);
 
 const form = (request: APIRequestContext, path: string, fields: string[][]) =>
   request.post(path, {
@@ -19,14 +25,26 @@ async function createGarment(
   return Number(new URL(response.url()).pathname.split('/').pop());
 }
 
+async function addPhoto(request: APIRequestContext, garmentId: number) {
+  const response = await request.post(`/wardrobe/${garmentId}/photo`, {
+    multipart: {
+      photo: { name: 'coat.png', mimeType: 'image/png', buffer: coat },
+      nobgPhoto: { name: 'coat.png', mimeType: 'image/png', buffer: coat },
+    },
+  });
+  expect(response.ok()).toBeTruthy();
+}
+
 /** An outfit whose rows are exactly these slots, in this order. */
 async function createOutfit(
   request: APIRequestContext,
   name: string,
   slots: [string, number][],
+  notes = '',
 ): Promise<string> {
   const response = await form(request, '/outfits', [
     ['name', name],
+    ['notes', notes],
     ...slots.flatMap(([category, id]) => [
       ['category', category],
       ['garmentId', String(id)],
@@ -36,10 +54,16 @@ async function createOutfit(
   return new URL(response.url()).pathname;
 }
 
-async function threePieceOutfit(request: APIRequestContext, tag: string) {
+async function threePieceOutfit(
+  request: APIRequestContext,
+  tag: string,
+  photos = false,
+) {
   const top = await createGarment(request, 'tops', `Top ${tag}`);
   const bottom = await createGarment(request, 'bottoms', `Bottom ${tag}`);
   const shoes = await createGarment(request, 'footwear', `Shoes ${tag}`);
+  if (photos)
+    for (const id of [top, bottom, shoes]) await addPhoto(request, id);
   return createOutfit(request, `Outfit ${tag}`, [
     ['tops', top],
     ['bottoms', bottom],
@@ -75,7 +99,12 @@ test.describe('the outfit pages', () => {
     await expect(page.locator('h1')).toHaveText('Untitled outfit');
   });
 
-  test('keep their back links on this site', async ({ page }) => {
+  test('keep their back links on this site', async ({ page }, info) => {
+    // The builder shows its form only once the wardrobe has a garment.
+    const show = await threePieceOutfit(
+      page.request,
+      `back ${info.project.name}`,
+    );
     await page.goto('/outfits/new?returnTo=javascript:alert(1)');
     await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
       'href',
@@ -86,6 +115,24 @@ test.describe('the outfit pages', () => {
       'href',
       '/outfits',
     );
+    await page.goto(`${show}/edit?returnTo=//example.org/`);
+    await expect(page.getByRole('link', { name: 'Back' })).toHaveAttribute(
+      'href',
+      show,
+    );
+    // From the calendar: back to the week it came from, and Start over keeps the day.
+    await page.goto('/outfits/new?scheduleDate=2026-03-03&returnTo=/calendar');
+    await expect(
+      page.getByRole('link', { name: 'Start over' }),
+    ).toHaveAttribute(
+      'href',
+      '/outfits/new?scheduleDate=2026-03-03&returnTo=%2Fcalendar',
+    );
+    await page.goto(`${show}/edit?returnTo=/calendar&returnToWeek=2026-03-02`);
+    await expect(page.getByRole('link', { name: 'Cancel' })).toHaveAttribute(
+      'href',
+      '/calendar?week=2026-03-02',
+    );
   });
 
   test('name the actions on an outfit and copy its link', async ({
@@ -93,7 +140,12 @@ test.describe('the outfit pages', () => {
   }, info) => {
     await page.addInitScript(() => {
       Object.defineProperty(navigator, 'clipboard', {
-        value: { writeText: () => Promise.resolve() },
+        value: {
+          writeText: (text: string) => {
+            (window as unknown as { copied: string }).copied = text;
+            return Promise.resolve();
+          },
+        },
       });
     });
     await page.goto(
@@ -107,6 +159,11 @@ test.describe('the outfit pages', () => {
     const share = page.locator('main button[data-copy]');
     await share.click();
     await expect(share).toHaveText('Copied');
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { copied: string }).copied,
+      ),
+    ).toMatch(/\/share\?shareableId=.+&type=outfit$/);
     await expect(share).toHaveText('Share');
   });
 
@@ -116,6 +173,7 @@ test.describe('the outfit pages', () => {
     const show = await threePieceOutfit(
       page.request,
       `order ${info.project.name}`,
+      true,
     );
     await page.goto(`${show}/edit`);
     const shoes = page.getByRole('group', { name: 'Footwear' });
@@ -129,6 +187,13 @@ test.describe('the outfit pages', () => {
       `Top order ${info.project.name}`,
       `Bottom order ${info.project.name}`,
     ]);
+    const photos = (selector: string) =>
+      page
+        .locator(selector)
+        .evaluateAll((imgs) => imgs.map((img) => img.getAttribute('src')));
+    const saved = await photos('main ul li img');
+    await page.goto('/outfits');
+    expect(await photos(`main li:has(a[href="${show}"]) img`)).toEqual(saved);
   });
 });
 
@@ -136,8 +201,8 @@ test.describe('the outfit builder', () => {
   test('names every control in a row and keeps the focus while cycling', async ({
     page,
   }, info) => {
-    // A category of its own: cycling goes by position in the category, and other tests add tops.
-    const category = `cycle-${info.project.name.replace(/\W+/g, '-').toLowerCase()}`;
+    // A category no other test or run uses: cycling goes by position among its garments.
+    const category = `cycle-${info.project.name.replace(/\W+/g, '-').toLowerCase()}-${Date.now().toString(36)}`;
     const first = await createGarment(
       page.request,
       category,
@@ -197,10 +262,16 @@ test.describe('the outfit builder', () => {
       .getByRole('button', { name: 'Remove row' })
       .click();
     expect(await rowLabels(page)).toEqual(['Bottoms', 'Footwear']);
+    const removeBottoms = page
+      .getByRole('group', { name: 'Bottoms' })
+      .getByRole('button', { name: 'Remove row' });
+    await expect(removeBottoms).toBeFocused();
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Enter');
+    // No row left to go to.
+    expect(await rowLabels(page)).toEqual([]);
     await expect(
-      page
-        .getByRole('group', { name: 'Bottoms' })
-        .getByRole('button', { name: 'Remove row' }),
+      page.getByRole('combobox', { name: 'Category' }),
     ).toBeFocused();
   });
 
@@ -236,12 +307,21 @@ test.describe('the outfit builder', () => {
     await expect(dialog).toBeVisible();
     // The backdrop is a second, unfocusable Close.
     await expect(dialog.locator('#garment-modal-close')).toBeFocused();
-    await expect(
-      dialog.getByRole('link', { name: 'View garment' }),
-    ).toHaveAttribute('href', /^\/wardrobe\/\d+$/);
+    const view = dialog.getByRole('link', { name: 'View garment' });
+    await expect(view).toHaveAttribute('href', /^\/wardrobe\/\d+$/);
     await page.keyboard.press('Escape');
     await expect(dialog).toBeHidden();
     await expect(garment).toBeFocused();
+
+    // A normal navigation, so Back finds what was typed in the builder.
+    await page.getByLabel('Name').fill('Typed before leaving');
+    await garment.focus();
+    await page.keyboard.press('Enter');
+    await expect(view).toHaveAttribute('hx-boost', 'false');
+    await view.click();
+    await expect(page).toHaveURL(/\/wardrobe\/\d+$/);
+    await page.goBack();
+    await expect(page.getByLabel('Name')).toHaveValue('Typed before leaving');
   });
 
   test('leaves the rows of an outfit with no garments empty', async ({
@@ -261,7 +341,7 @@ test.describe('the outfit builder', () => {
   test.describe('with reduced motion', () => {
     test.use({ contextOptions: { reducedMotion: 'reduce' } });
 
-    test('drags without animation, on a direct load too', async ({
+    test('creates Sortable without animation, on a direct load too', async ({
       page,
     }, info) => {
       await page.goto(
@@ -290,12 +370,22 @@ test.describe('the outfit list', () => {
   test('adds an outfit to the calendar from its card, by keyboard', async ({
     page,
   }, info) => {
-    const show = await threePieceOutfit(
+    const top = await createGarment(
       page.request,
-      `calendar ${info.project.name}`,
+      'tops',
+      `Top calendar ${info.project.name}`,
+    );
+    const show = await createOutfit(
+      page.request,
+      `Outfit calendar ${info.project.name}`,
+      [['tops', top]],
+      'Notes long enough to be clamped, which the link name must leave out.',
     );
     const id = show.split('/').pop();
     await page.goto('/outfits');
+    await expect(page.locator(`main a[href="${show}"]`)).toHaveAccessibleName(
+      `Outfit calendar ${info.project.name}`,
+    );
     const menu = page
       .locator('main li')
       .filter({ has: page.locator(`a[href="${show}"]`) });
@@ -303,10 +393,16 @@ test.describe('the outfit list', () => {
     await expect(opener).toHaveAccessibleName('Add to calendar');
     await opener.focus();
     await page.keyboard.press('Enter');
+    await expect(menu.locator('details')).toHaveAttribute('open', '');
+    await page.keyboard.press('Escape');
+    await expect(menu.locator('details')).not.toHaveAttribute('open');
+    await expect(opener).toBeFocused();
+    await page.keyboard.press('Enter');
     const date = menu.getByLabel('Add outfit to the calendar?');
     await expect(date).toHaveAttribute('id', `outfit-date-${id}`);
     await date.fill('2026-11-02');
-    await menu.getByRole('button', { name: 'Save' }).click();
+    await menu.getByRole('button', { name: 'Save' }).focus();
+    await page.keyboard.press('Enter');
     await expect(page.locator('#calendar-status')).toHaveText(
       'Outfit added to the calendar',
     );

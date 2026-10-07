@@ -1,4 +1,4 @@
-{{!-- One row of the outfit builder; outfits/form.hbs moves rows by .outfit-row and [data-move], and the server reads the two hidden inputs. --}}
+{{!-- One row of the outfit builder; outfits/form.hbs moves rows by .outfit-row and [data-move] and names them by data-label, and the server reads the two hidden inputs. --}}
 <div
   class="outfit-row grid gap-2 py-3"
   role="group"
@@ -9,8 +9,12 @@
   data-index="{{row.currentIndex}}"
   data-count="{{row.garmentCount}}"
   _="on touchstart
-       set my startX to event.touches[0].clientX
-       set my startY to event.touches[0].clientY
+       if event.target.closest('.drag-handle')
+         set my startX to null
+       else
+         set my startX to event.touches[0].clientX
+         set my startY to event.touches[0].clientY
+       end
      on touchmove
        if my startX is not null
          set dx to Math.abs(event.touches[0].clientX - my startX)
@@ -22,9 +26,10 @@
      on touchend
        if my startX is not null
          set dx to event.changedTouches[0].clientX - my startX
+         set dy to event.changedTouches[0].clientY - my startY
          set my startX to null
          set my startY to null
-         if Math.abs(dx) >= 30
+         if Math.abs(dx) >= 30 and Math.abs(dx) > Math.abs(dy)
            set cnt to (me's @data-count as Int)
            set idx to (me's @data-index as Int)
            if dx < 0
@@ -34,7 +39,7 @@
              set newIdx to idx - 1
              if newIdx < 0 then set newIdx to cnt end
            end
-           js(me, newIdx) htmx.ajax('GET', '/outfits/row-fragment?category=' + encodeURIComponent(me.dataset.category) + '&index=' + newIdx + '&key=' + me.dataset.key, {target: me, swap: 'outerHTML'}) end
+           js(me, newIdx) htmx.ajax('GET', '/outfits/row-fragment?category=' + encodeURIComponent(me.dataset.category) + '&index=' + newIdx + '&key=' + me.dataset.key, {target: me, swap: 'outerHTML settle:0ms'}) end
          end
        end"
 >
@@ -60,6 +65,7 @@
     >{{icon "x-mark" class="size-5"}}</button>
   </div>
   <div class="flex items-center gap-2">
+    {{!-- settle:0ms: htmx wires a swapped row's buttons when it settles, and focus is back on them before that. --}}
     <button
       type="button"
       id="row-{{row.key}}-previous"
@@ -67,7 +73,7 @@
       aria-label="{{t 'lang.PREVIOUS'}}"
       hx-get="/outfits/row-fragment?category={{uri row.value}}&index={{row.prevIndex}}&key={{row.key}}"
       hx-target="closest .outfit-row"
-      hx-swap="outerHTML"
+      hx-swap="outerHTML settle:0ms"
     >{{icon "chevron-left" class="size-5"}}</button>
     {{#if row.currentGarment}}
     {{!-- It focuses the close button itself: WebKit leaves focus on <body> when a daisyUI .modal opens. --}}
@@ -89,9 +95,7 @@
              el.textContent = value || '';
              el.parentElement.hidden = !value;
            };
-           const link = document.getElementById('modal-garment-link');
-           link.href = d.garmentHref;
-           htmx.process(link);
+           document.getElementById('modal-garment-link').href = d.garmentHref;
            document.getElementById('modal-garment-name').textContent = d.garmentName;
            const img = document.getElementById('modal-photo-img');
            img.src = d.garmentPhoto || '';
@@ -125,7 +129,7 @@
       aria-label="{{t 'lang.NEXT'}}"
       hx-get="/outfits/row-fragment?category={{uri row.value}}&index={{row.nextIndex}}&key={{row.key}}"
       hx-target="closest .outfit-row"
-      hx-swap="outerHTML"
+      hx-swap="outerHTML settle:0ms"
     >{{icon "chevron-right" class="size-5"}}</button>
   </div>
   <input type="hidden" name="category" value="{{row.value}}" />

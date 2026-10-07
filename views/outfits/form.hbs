@@ -2,7 +2,7 @@
 
 <main id="main" tabindex="-1" class="page page--narrow">
   <div class="mb-6 flex items-center gap-2">
-    <a href="{{returnTo}}" class="btn btn-ghost btn-circle" aria-label="{{t 'lang.BACK'}}">{{icon "arrow-left" class="size-5"}}</a>
+    <a href="{{backHref}}" class="btn btn-ghost btn-circle" aria-label="{{t 'lang.BACK'}}">{{icon "arrow-left" class="size-5"}}</a>
     <h1 class="min-w-0 flex-1 hyphens-auto wrap-anywhere">{{#if outfit}}{{t 'lang.EDIT_OUTFIT'}}{{else}}{{t 'lang.BUILD_OUTFIT_TITLE'}}{{/if}}</h1>
   </div>
 
@@ -112,9 +112,9 @@
     </div>
 
     <div class="mt-2 flex flex-wrap gap-2">
-      <a href="{{returnTo}}" class="btn btn-outline flex-1">{{t 'lang.CANCEL'}}</a>
+      <a href="{{backHref}}" class="btn btn-outline flex-1">{{t 'lang.CANCEL'}}</a>
       {{#unless outfit}}
-      <a href="/outfits/new" class="btn btn-outline flex-1">{{t 'lang.START_OVER'}}</a>
+      <a href="{{startOverHref}}" class="btn btn-outline flex-1">{{t 'lang.START_OVER'}}</a>
       {{/unless}}
       <button type="submit" class="btn btn-primary flex-1">{{t 'lang.SAVE'}}</button>
     </div>

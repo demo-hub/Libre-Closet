@@ -7,7 +7,7 @@
         <button id="garment-modal-close" class="btn btn-ghost btn-circle" aria-label="{{t 'lang.CLOSE'}}">{{icon "x-mark" class="size-5"}}</button>
       </form>
     </div>
-    <div class="flex aspect-square w-full items-center justify-center overflow-hidden rounded-box bg-base-200">
+    <div class="flex aspect-square w-full shrink-0 items-center justify-center overflow-hidden rounded-box bg-base-200">
       <img id="modal-photo-img" src="" alt="" class="size-full object-contain hidden" />
       <span id="modal-photo-placeholder" class="text-graphite">{{icon "hanger" class="size-20"}}</span>
     </div>
@@ -17,7 +17,8 @@
       <div class="contents" hidden><dt class="text-sm text-graphite">{{t 'lang.SIZE'}}</dt><dd id="modal-size" class="wrap-anywhere"></dd></div>
       <div class="contents" hidden><dt class="text-sm text-graphite">{{t 'lang.NOTES'}}</dt><dd id="modal-notes" class="whitespace-pre-line wrap-anywhere"></dd></div>
     </dl>
-    <a id="modal-garment-link" href="#" class="btn btn-outline">{{t 'lang.VIEW_GARMENT'}}</a>
+    {{!-- Not boosted: htmx's history snapshot would drop what was typed in the builder by the time Back returns to it. --}}
+    <a id="modal-garment-link" href="#" class="btn btn-outline" hx-boost="false">{{t 'lang.VIEW_GARMENT'}}</a>
   </div>
   <form method="dialog" class="modal-backdrop"><button tabindex="-1">{{t 'lang.CLOSE'}}</button></form>
 </dialog>

@@ -19,9 +19,19 @@ import { I18n, I18nContext } from 'nestjs-i18n';
 import { ConditionalAuthGuard } from '../auth/conditional-auth.guard';
 import { Payload } from '../auth/dto/payload.dto';
 import { safeReturnTo } from '../auth/return-to';
+import { garmentsInSlotOrder } from './outfit-order';
 import { OutfitService } from './outfit.service';
 import { GarmentService } from './garment.service';
 import { CalendarService } from './calendar.service';
+
+/** Where the form goes back to; the calendar takes the week the save will land on too. */
+function returnLinks(returnTo: string, week?: string) {
+  const backHref =
+    returnTo === '/calendar' && week && /^\d{4}-\d{2}-\d{2}$/.test(week)
+      ? `/calendar?week=${week}`
+      : returnTo;
+  return { returnTo, backHref };
+}
 
 @UseGuards(ConditionalAuthGuard)
 @Controller('outfits')
@@ -47,7 +57,7 @@ export class OutfitController {
         id: outfit.id,
         name: outfit.name,
         notes: outfit.notes,
-        garments: this.outfitService.garmentsInOrder(outfit),
+        garments: garmentsInSlotOrder(outfit),
       })),
       pageTitle: i18n.t('lang.OUTFITS'),
     };
@@ -67,11 +77,22 @@ export class OutfitController {
       [],
       i18n,
     );
+    const links = returnLinks(
+      safeReturnTo(returnTo) ?? '/outfits',
+      scheduleDate,
+    );
+    const startOver = new URLSearchParams();
+    if (scheduleDate) startOver.set('scheduleDate', scheduleDate);
+    if (links.returnTo !== '/outfits')
+      startOver.set('returnTo', links.returnTo);
     return {
       outfit: null,
       pageTitle: i18n.t('lang.BUILD_OUTFIT_TITLE'),
       scheduleDate: scheduleDate || null,
-      returnTo: safeReturnTo(returnTo) ?? '/outfits',
+      ...links,
+      startOverHref: startOver.size
+        ? `/outfits/new?${startOver}`
+        : '/outfits/new',
       categoryRows,
       allCategoryRows: categoryRows,
     };
@@ -150,15 +171,13 @@ export class OutfitController {
     @I18n() i18n: I18nContext,
   ) {
     const outfit = await this.outfitService.findOne(id, this.userId(req));
-    const garments = this.outfitService
-      .garmentsInOrder(outfit)
-      .map((garment) => ({
-        id: garment.id,
-        photo: garment.photo,
-        label:
-          garment.name ||
-          this.garmentService.resolveCategoryLabel(garment.category, i18n),
-      }));
+    const garments = garmentsInSlotOrder(outfit).map((garment) => ({
+      id: garment.id,
+      photo: garment.photo,
+      label:
+        garment.name ||
+        this.garmentService.resolveCategoryLabel(garment.category, i18n),
+    }));
     return {
       outfit,
       garments,
@@ -183,7 +202,7 @@ export class OutfitController {
     return {
       outfit,
       pageTitle: i18n.t('lang.EDIT_OUTFIT'),
-      returnTo: safeReturnTo(returnTo) ?? `/outfits/${id}`,
+      ...returnLinks(safeReturnTo(returnTo) ?? `/outfits/${id}`, returnToWeek),
       returnToWeek: returnToWeek || null,
       categoryRows: this.outfitService.buildCategoryRows(
         garments,
