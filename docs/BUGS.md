@@ -64,6 +64,7 @@ Bugs found while working on this fork and left out of the change that found them
   - Found in #28.
 - **An unreadable date answers 500** (low).
   - Nothing validates the garment's `dateAquired`, an outfit's `scheduleDate` or a calendar entry's `date`, so a POST with `garbage` in any of them reaches `new Date(...)` and fails in the database layer instead of reporting a field error.
+  - An outfit is saved before its date fails, so trying again creates it twice, and an edit keeps its changes behind the error.
   - Where: `src/wardrobe/garment.service.ts` (`create`, `update`), `src/wardrobe/outfit.controller.ts` (`create`, `update`), `src/wardrobe/calendar.controller.ts` (`create`).
   - Found in #29 and #31.
 - **A garment without a name has an empty card title on the wardrobe grid** (low).
@@ -107,6 +108,14 @@ Bugs found while working on this fork and left out of the change that found them
   - "Tops" adds an empty row, since garments are stored as "tops", and the saved slot then disappears from the editor. The category suggestions list the stored English values in every language.
   - Where: `src/wardrobe/outfit.controller.ts`, `rowFragment`; `views/outfits/form.hbs`, `#add-row-suggestions`.
   - Found in #31.
+- **Cycling a garment or adding a row in the outfit builder is silent to screen readers** (low).
+  - Focus stays on a button still named "Next", and the new garment, or the new row, is not announced.
+  - Where: `views/partials/outfit_row.hbs`, Previous and Next; `views/outfits/form.hbs`, Add row. `#outfit-rows-status` could say it.
+  - Found in #31.
+- **Fast presses on an outfit row's Next are partly lost** (low).
+  - A press that arrives while the row's request is running is sent with the old row's index, so three quick presses advance one or two garments.
+  - Where: `views/partials/outfit_row.hbs`, Previous and Next.
+  - Found in #31.
 - **Copy buttons do nothing on an instance served over plain http** (medium).
   - `navigator.clipboard` exists only in a secure context (HTTPS or localhost), so on a LAN address like `http://192.168.1.10:3000` the call throws and nothing is copied or shown.
   - This affects Share on the garment page and every other copy button: outfit and file share, sharing management, the invite link.
@@ -126,8 +135,8 @@ Bugs found while working on this fork and left out of the change that found them
   - Where: `src/app.module.ts:105`, `src/view-context/view-context.service.ts:40`.
   - Found in #29.
 - **Most pages are titled with the bare app name** (medium).
-  - The layout prints `pageTitle` when a route sets one. The wardrobe and outfit routes set it (PRs 8b and 9a), but the files, sharing, auth and shared-item pages do not, so their tabs and history entries all read "Libre Closet" (WCAG 2.4.2).
-  - Where: `views/layout.hbs:52`; `file.controller.ts`, `wardrobe-share.controller.ts`, `auth.controller.ts`, `open-graph.controller.ts`.
+  - The layout prints `pageTitle` when a route sets one. The wardrobe and outfit routes set it (PRs 8b and 9a), but the files, sharing, auth, shared-item and chat pages do not, so their tabs and history entries all read "Libre Closet" (WCAG 2.4.2).
+  - Where: `views/layout.hbs:52`; `file.controller.ts`, `wardrobe-share.controller.ts`, `auth.controller.ts`, `open-graph.controller.ts`, `app.controller.ts` (`/chat`).
   - Found in #29.
 - **After a service-worker update, a search loses its terms** (low).
   - The head script turns a boosted GET into a full load of `requestConfig.path`, which for a GET form is the bare `action`. Reading `detail.pathInfo.finalRequestPath` would keep the query.
@@ -147,6 +156,10 @@ Bugs found while working on this fork and left out of the change that found them
   - Every input uses Tailwind preflight's placeholder colour, 50 % of the text colour, which measures 3.35:1 on White.
   - Plan 5.1 maps placeholders to Graphite.
   - Found in #28.
+- **With WCAG 1.4.12 text spacing, a button label that wraps spills out of its button** (low).
+  - daisyUI's `.btn` has a fixed height, so a two-line label ("Start over", "Delete outfit" in French, "Kleidungsstück ansehen" at 320 px) crosses the button's border. Nothing is lost.
+  - Where: every `.btn`; `h-auto min-h-(--size)` would let them grow.
+  - Found in #31.
 
 ## Translations
 
