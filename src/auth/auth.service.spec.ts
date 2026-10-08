@@ -23,7 +23,10 @@ describe('AuthService', () => {
       ],
       providers: [
         AuthService,
-        ConfigService,
+        {
+          provide: ConfigService,
+          useValue: new ConfigService({ APP_NAME: 'Libre Closet' }),
+        },
         EmailService,
         {
           provide: getRepositoryToken(User),
@@ -37,6 +40,7 @@ describe('AuthService', () => {
         {
           provide: getRepositoryToken(PasswordReset),
           useValue: {
+            create: jest.fn((reset: object) => reset),
             findOne: jest.fn(),
             find: jest.fn(),
             persistAndFlush: jest.fn(),
@@ -102,6 +106,36 @@ describe('AuthService', () => {
       await service.resetPassword(request);
       expect(flush()).toHaveBeenCalledWith(user);
       expect(await bcrypt.compare('Password123!', user.password)).toBe(true);
+    });
+  });
+
+  describe('sendPasswordResetEmail', () => {
+    it('names the app and gives the code, but never the address', async () => {
+      const user = { email: 'someone@example.com' };
+      module
+        .get(getRepositoryToken(User))
+        .findOneOrFail.mockResolvedValue(user);
+      const send = jest
+        .spyOn(module.get(EmailService), 'sendEmailFromPrimaryAddress')
+        .mockResolvedValue('message-id');
+
+      await service.sendPasswordResetEmail(user.email);
+
+      const [[stored]] = module.get(getRepositoryToken(PasswordReset)).create
+        .mock.calls as [[{ pin: string }]];
+      expect(stored.pin).toMatch(/^\d{6}$/);
+      const [[{ to, subject, text, html }]] = send.mock.calls;
+      expect(to).toBe(user.email);
+      expect(subject).toBe('Libre Closet: password reset code');
+      expect(text).toBe(
+        `Hello. Use this code to reset your Libre Closet password: ${stored.pin}. If you did not ask for a reset, ignore this email.`,
+      );
+      expect(html).toContain('<html lang="en">');
+      expect(html).toContain('<title>Libre Closet password reset</title>');
+      expect(html).toContain(
+        `<p>Hello. Use this code to reset your Libre Closet password: <strong>${stored.pin}</strong>. If you did not ask for a reset, ignore this email.</p>`,
+      );
+      expect(`${subject} ${text} ${html}`).not.toContain(user.email);
     });
   });
 });
