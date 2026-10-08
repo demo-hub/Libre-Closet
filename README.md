@@ -72,15 +72,15 @@ Open [http://localhost:3000](http://localhost:3000). No account required by defa
 
 ## Screenshots
 
-Note, these screenshots are taken of the web application viewed as an installed standalone PWA. This tool may also be used like a traditional web app in the browser.
+These are Playwright captures of a seeded demo wardrobe in light mode: phones at 393×852 CSS pixels, desktops at 1280×800. The landing page shows the phone ones and the install dialog the first of each row; `npm run screenshots` retakes all eight (see [Scripts](#scripts)).
 
-| Wardrobe (Mobile)                                                    | Outfits (Mobile)                                               | Outfit Schedule (Mobile)                                               | Outfit Builder (Mobile)                                        |
-| -------------------------------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------- |
-| ![Wardrobe grid](public/assets/screenshots/Screenshot_mobile_1.webp) | ![Outfits](public/assets/screenshots/Screenshot_mobile_2.webp) | ![Outfit Schedule](public/assets/screenshots/Screenshot_mobile_3.webp) | ![Outfit ](public/assets/screenshots/Screenshot_mobile_4.webp) |
+| Wardrobe (phone)                                                               | Outfits (phone)                                                           | Calendar (phone)                                                                         | Outfit builder (phone)                                                               |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| ![The wardrobe on a phone](public/assets/screenshots/Screenshot_mobile_1.webp) | ![Outfits on a phone](public/assets/screenshots/Screenshot_mobile_2.webp) | ![A week of the calendar on a phone](public/assets/screenshots/Screenshot_mobile_3.webp) | ![The outfit builder on a phone](public/assets/screenshots/Screenshot_mobile_4.webp) |
 
-| Wardrobe (Desktop)                                            | Outfits (Desktop)                                       | Outfit Schedule (Desktop)                                       | Outfit Builder (Desktop)                                      |
-| ------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------- |
-| ![Wardrobe grid](public/assets/screenshots/Screenshot_1.webp) | ![Outfits](public/assets/screenshots/Screenshot_2.webp) | ![Outfit Schedule](public/assets/screenshots/Screenshot_3.webp) | ![Outfit detail](public/assets/screenshots/Screenshot_4.webp) |
+| Wardrobe (desktop)                                                        | Outfits (desktop)                                                    | Calendar (desktop)                                                                  | Outfit builder (desktop)                                                        |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| ![The wardrobe on a desktop](public/assets/screenshots/Screenshot_1.webp) | ![Outfits on a desktop](public/assets/screenshots/Screenshot_2.webp) | ![A week of the calendar on a desktop](public/assets/screenshots/Screenshot_3.webp) | ![The outfit builder on a desktop](public/assets/screenshots/Screenshot_4.webp) |
 
 ---
 
@@ -422,9 +422,12 @@ npm run test:cov        # coverage
 npm run precommit       # lint + test + lighthouse (run before committing)
 npm run test:visual     # screenshot comparison, needs Docker
 npm run test:visual:update  # re-record the screenshots after an intended change
+npm run screenshots     # retake the README, landing page and install screenshots
 ```
 
 The screenshot tests seed a throwaway wardrobe on port 3100 and compare nine key pages (listed in `test/visual.spec.ts`) against `test/__screenshots__/`. Chromium runs inside the pinned `mcr.microsoft.com/playwright` image while the app stays on your own Node, so the pixels match from run to run and in CI; the same page rendered by a different browser build or font stack would not. When a change is meant to alter how a page looks, re-record with `test:visual:update` and commit the new images: the diff between the old and new PNGs is what the reviewer looks at. The script needs Docker with host networking (Docker Engine on Linux, or Docker Desktop with host networking turned on) and free ports 3100 and 3333.
+
+`npm run screenshots` builds, then takes the eight images in `public/assets/screenshots/` from the same seeded wardrobe, also on port 3100, so it cannot run while the visual tests do. Run it after changing the wardrobe, outfits, calendar or outfit builder page, and commit the images. `-- --scheme dark` takes a dark set beside them, and `-- --out <dir>` writes them elsewhere. It uses Playwright's own Chromium, or the pinned one when `PW_VISUAL_WS` points at a run-server of that image, as the visual tests do; a glyph the app's fonts lack then comes from the image rather than from your machine.
 
 ### Migrations
 
