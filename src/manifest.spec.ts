@@ -194,3 +194,51 @@ describe('the identity assets', () => {
     ).toEqual([]);
   });
 });
+
+describe('the install screenshots', () => {
+  const screenshots = manifest.screenshots as {
+    src: string;
+    sizes: string;
+    type: string;
+    form_factor: string;
+    label: string;
+  }[];
+  const dimensions = (sizes: string) => sizes.split('x').map(Number);
+
+  it('offers wide ones for desktops and narrow ones for phones, each named', () => {
+    expect(new Set(screenshots.map((s) => s.form_factor))).toEqual(
+      new Set(['narrow', 'wide']),
+    );
+    expect(screenshots.every((s) => s.label)).toBe(true);
+  });
+
+  it.each(screenshots.map((s) => [s.src, s.sizes, s.type] as const))(
+    '%s is really %s, as %s',
+    async (src: string, sizes: string, type: string) => {
+      const { format, width, height } = await sharp(publicFile(src)).metadata();
+      expect(`${width}x${height}`).toBe(sizes);
+      expect(`image/${format}`).toBe(type);
+    },
+  );
+
+  it('keeps one aspect ratio per form factor', () => {
+    // Chrome on Android drops a screenshot whose ratio differs from the first one's.
+    for (const a of screenshots) {
+      for (const b of screenshots) {
+        if (a.form_factor !== b.form_factor) continue;
+        const [aw, ah] = dimensions(a.sizes);
+        const [bw, bh] = dimensions(b.sizes);
+        expect(aw * bh).toBe(bw * ah);
+      }
+    }
+  });
+
+  it('stays within the sizes Chrome shows', () => {
+    for (const { sizes } of screenshots) {
+      const [w, h] = dimensions(sizes);
+      expect(Math.min(w, h)).toBeGreaterThanOrEqual(320);
+      expect(Math.max(w, h)).toBeLessThanOrEqual(3840);
+      expect(Math.max(w, h) / Math.min(w, h)).toBeLessThanOrEqual(2.3);
+    }
+  });
+});
