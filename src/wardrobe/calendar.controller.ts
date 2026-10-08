@@ -73,38 +73,36 @@ export class CalendarController {
     @Res() reply: FastifyReply,
   ) {
     await this.calendarService.remove(id, this.userId(req));
-    reply.header('HX-Redirect', `/calendar?week=${body.week ?? ''}`);
-    return reply.send();
+    const location = `/calendar?week=${body.week ?? ''}`;
+    if (req.headers['hx-request'] === 'true') {
+      reply.header('HX-Redirect', location);
+      return reply.send();
+    }
+    return reply.redirect(location, 303);
   }
 
   @Post(':id/worn')
   async toggleWorn(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { week?: string },
+    @Body() body: { week?: string; worn?: string },
     @Req() req: FastifyRequest,
     @Res() reply: FastifyReply,
-    @I18n() i18n: I18nContext,
   ) {
-    const entry = await this.calendarService.toggleWorn(id, this.userId(req));
+    const entry = await this.calendarService.toggleWorn(
+      id,
+      this.userId(req),
+      body.worn === 'true' ? true : body.worn === 'false' ? false : undefined,
+    );
     const week = body.week ?? '';
 
-    if (req.headers['hx-request']) {
-      const isWorn = !!entry.wornAt;
-      const btnClass = isWorn
-        ? 'bg-success text-success-content'
-        : 'text-base-content/40 italic font-normal hover:text-base-content/70';
-      const label = isWorn
-        ? `✓ ${i18n.t('lang.CALENDAR_WORN')}`
-        : i18n.t('lang.CALENDAR_MARK_WORN_PROMPT');
+    if (req.headers['hx-request'] === 'true') {
       return reply.viewPartial('partials/calendar_worn_button', {
         entryId: id,
         week,
-        btnClass,
-        label,
+        worn: entry.wornAt != null,
       });
     }
 
-    // Non-HTMX fallback: full redirect
     return reply.redirect(`/calendar?week=${week}`, 303);
   }
 }
