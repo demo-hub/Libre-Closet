@@ -314,6 +314,17 @@
   .spinner { animation: none; border-style: dotted; border-color: var(--color-primary); }
 }
 
+/* Wraps rather than scrolls: a scrolling block the keyboard cannot reach would need a tab stop of its own. */
+.code-block {
+  padding: 1rem;
+  background: var(--color-base-200);
+  color: var(--color-base-content);
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-box);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 /* Colour multiselect: its class names are hooks for public/js/color-multiselect.js and the Playwright specs. */
 
 .color-ms {
