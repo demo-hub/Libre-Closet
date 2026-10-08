@@ -166,6 +166,7 @@ Bugs found while working on this fork and left out of the change that found them
   - Every copied share link (garment, outfit, file) therefore points at someone else's server on an instance started without `SITE_URL`, as the README's quick start is. The same value feeds `twitter:domain` and the JSON-LD `@id`s.
   - A fallback to the request's host has to keep the port (`req.host`, not `req.hostname`), the same issue as the default share images below.
   - Where: `src/app.module.ts:105`, `src/view-context/view-context.service.ts:40`.
+  - About's breadcrumb links are built from it too, so on such an instance they name upstream's host (#33).
   - Found in #29.
 - **Most pages are titled with the bare app name** (medium).
   - The layout prints `pageTitle` when a route sets one. The wardrobe and outfit routes set it (PRs 8b and 9a), but the files, sharing, auth, shared-item and chat pages do not, so their tabs and history entries all read "Libre Closet" (WCAG 2.4.2).
@@ -178,10 +179,21 @@ Bugs found while working on this fork and left out of the change that found them
 - **Default share images drop the port** (low).
   - `og:image` and the JSON-LD image use `req.hostname`, which has no port. They break on an instance reached on a non-default port without a proxy.
   - Where: `src/view-context/view-context.service.ts:29`.
+  - The landing page's canonical URL, `og:url` and JSON-LD `@id`, `url` and search target lose the port the same way (#33).
   - Found in #25.
 - **Chrome logs "Transition was skipped" when Back follows a boosted navigation** (low).
   - This comes from htmx's global view transitions.
   - Found in #23.
+- **Every page preconnects to Cloudflare** (medium).
+  - The layout's `<link rel="preconnect" href="https://static.cloudflareinsights.com">`, left from the upstream instance, makes WebKit open a connection to Cloudflare on each page load (measured on `/about`), and the CSP still allows that host for scripts and connections.
+  - The landing page says there are no third parties by default (`FEATURE_PRIVACY_DESC`).
+  - Where: `views/layout.hbs:77`, `src/main.ts:54`.
+  - Found in #33.
+- **Lighthouse puts the landing page's largest contentful paint at 2.6 s, over the plan's 2.5 s** (low).
+  - With no connection type known, as under Lighthouse, Chromium loads lazy images up to about 3,000 px from the viewport, so the four phone screenshots (308 KB, 4.4 times the size they are shown at) load with the hero, and Lighthouse's simulation counts them before the paint. Without them it measures 2.3 s.
+  - Smaller files for the list, when PR 13 regenerates the screenshots, would bring it under.
+  - Where: `views/index.hbs`, the screenshots list.
+  - Found in #33.
 
 ## Accessibility and theme
 
@@ -216,6 +228,14 @@ Bugs found while working on this fork and left out of the change that found them
   - `WARDROBE` is "Kleiderschrank", while `MY_WARDROBE`, the sharing strings and `WARDROBE_SWITCHER` use "Garderobe".
   - German and Italian also use two words for the calendar section.
   - Found in #26 and #28.
+- **"AGPL-3.0" can break across lines at its hyphen** (low).
+  - A hyphen is a break point, so About's introduction reads "AGPL-" and then "3.0" on the next line (en at 1280 px, de at 320 px).
+  - A non-breaking hyphen (U+2011) would hold it together, as the Russian badge does, but the shipped Inter subsets do not draw it, so it comes from a fallback font.
+  - Where: `ABOUT_INTRO`, `FOOTER_CREDIT`, `ABOUT_OPEN_SOURCE_DESC`, `WHY_SELF_HOST_DESC_2` and every other value with "AGPL-3.0".
+  - Found in #33.
+- **Four languages drop part of the landing page's opening paragraph** (low).
+  - de, es, fr and it `HERO_DESCRIPTION` leave out "with photos" and the closing "with no subscriptions, no ads and no third-party tracking" that en and ru have. Five languages also shorten `FEATURE_SCHEDULING_DESC`.
+  - Found in #33.
 - **Machine-written values await a native speaker** in de, es, fr, it and ru:
   - the copy pass (#26);
   - the eleven error keys (#27);
@@ -223,7 +243,8 @@ Bugs found while working on this fork and left out of the change that found them
   - the eleven garment-page keys (`BACK`, `REQUIRED`, `EDIT_MASK`, `DELETE_GARMENT`, `CLONED_NAME`, six `PLACEHOLDER_*`) and the re-worded `AI_SUGGEST_WITH` and `AI_SUGGESTED_VIA` (#29);
   - `CHOOSE_PHOTO`, `REMOVE_COLOR`, `CREATE_COLOR`, `COLORS_SELECTED`, `MASK_CANVAS` and the re-worded `MASK_BRUSH_SIZE` (#30);
   - the twelve outfit keys: `NO_GARMENTS_IN_OUTFIT`, `NO_GARMENT`, `VIEW_GARMENT`, `PREVIOUS`, `NEXT`, `MOVE_UP`, `MOVE_DOWN`, `ROW_MOVED`, `REMOVE_ROW`, `DELETE_OUTFIT`, `PLACEHOLDER_OUTFIT_NAME`, `PLACEHOLDER_OUTFIT_NOTES` (#31);
-  - the four calendar keys: `TODAY`, `PREVIOUS_MONTH`, `NEXT_MONTH`, `REMOVE_FROM_CALENDAR`, the re-worded `CALENDAR_DELETE_CONFIRM` in es, fr and ru, and fr `CALENDAR_WORN` (#32).
+  - the four calendar keys: `TODAY`, `PREVIOUS_MONTH`, `NEXT_MONTH`, `REMOVE_FROM_CALENDAR`, the re-worded `CALENDAR_DELETE_CONFIRM` in es, fr and ru, and fr `CALENDAR_WORN` (#32);
+  - the ten landing and About keys: `SOURCE_ON_GITHUB`, `COPY_COMMAND`, `WHY_SELF_HOST_DESC_2` (with `WHY_SELF_HOST_DESC` cut to its first sentence), `PRIVACY`, `TERMS`, `ABOUT`, `ABOUT_FORK`, `ABOUT_INSTANCE`, `ABOUT_RUN_BY`, `ABOUT_CONTACT` (#33).
 
 ## Tests and tooling
 
