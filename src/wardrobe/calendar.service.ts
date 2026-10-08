@@ -13,27 +13,16 @@ import { CreateCalendarEntryDto } from './dto/create-calendar-entry.dto';
 import { CalendarDay } from './view-models/calendar-day.view-model';
 import { WeekSchedule } from './view-models/week-schedule.view-model';
 import { I18nContext } from 'nestjs-i18n';
-import { WeekNavBoundaries } from './view-models/week-nav-boundaries';
+import { WeekBounds } from './view-models/week-bounds';
+import { MiniMonthDay } from './view-models/mini-month-day.view-model';
+import { intlLocale } from '../i18n/intl-locale';
+import { garmentsInSlotOrder } from './outfit-order';
+
+const CHIP_THUMBNAILS = 3;
 
 @Injectable()
 export class CalendarService {
   private readonly logger = new Logger(CalendarService.name);
-
-  /** i18n key suffixes for each month (index 0 = January). */
-  private readonly MONTH_I18N_KEYS = [
-    'MONTH_JAN',
-    'MONTH_FEB',
-    'MONTH_MAR',
-    'MONTH_APR',
-    'MONTH_MAY',
-    'MONTH_JUN',
-    'MONTH_JUL',
-    'MONTH_AUG',
-    'MONTH_SEP',
-    'MONTH_OCT',
-    'MONTH_NOV',
-    'MONTH_DEC',
-  ] as const;
 
   /** i18n key suffixes for each day of the week (index 0 = Sunday). */
   private readonly DAY_I18N_KEYS = [
@@ -46,6 +35,17 @@ export class CalendarService {
     'CALENDAR_DAY_SAT',
   ] as const;
 
+  /** The mini-month's column headings, in the same order. */
+  private readonly DAY_LETTER_I18N_KEYS = [
+    'CALENDAR_CAL_SUN_LETTER',
+    'CALENDAR_CAL_MON_LETTER',
+    'CALENDAR_CAL_TUE_LETTER',
+    'CALENDAR_CAL_WED_LETTER',
+    'CALENDAR_CAL_THU_LETTER',
+    'CALENDAR_CAL_FRI_LETTER',
+    'CALENDAR_CAL_SAT_LETTER',
+  ] as const;
+
   constructor(
     @InjectRepository(OutfitCalendar)
     private readonly calendarRepository: EntityRepository<OutfitCalendar>,
@@ -55,29 +55,26 @@ export class CalendarService {
     private readonly userRepository: EntityRepository<User>,
   ) {}
 
-  /**
-   * Returns a WeekSchedule for the 7-day window starting on the Sunday
-   * that contains `anchorDate`.  Populates outfit + garment thumbnails and
-   * annotates each entry with a repeat-wear warning when applicable.
-   */
+  /** The seven days from the Sunday on or before `anchorDate`, each with its entries in the order they were added. */
   async findWeek(anchorDate: Date, userId?: number): Promise<WeekSchedule> {
     const weekStart = startOfWeek(anchorDate);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate() + 7);
+    const weekEnd = addDays(weekStart, 7);
 
     const ownerFilter =
       userId != null ? { owner: { id: userId } } : { owner: null };
 
     const entries = await this.calendarRepository.find(
       { ...ownerFilter, date: { $gte: weekStart, $lt: weekEnd } },
-      { populate: ['outfit', 'outfit.garments', 'outfit.garments.photo'] },
+      {
+        populate: ['outfit', 'outfit.garments', 'outfit.garments.photo'],
+        orderBy: { id: 'ASC' },
+      },
     );
 
-    const days: CalendarDay[] = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date(weekStart);
-      date.setDate(date.getDate() + i);
-      return { date, entries: [] };
-    });
+    const days: CalendarDay[] = Array.from({ length: 7 }, (_, i) => ({
+      date: addDays(weekStart, i),
+      entries: [],
+    }));
 
     for (const entry of entries) {
       const dayIndex = daysBetween(weekStart, entry.date);
@@ -123,29 +120,18 @@ export class CalendarService {
     await this.calendarRepository.getEntityManager().removeAndFlush(entry);
   }
 
-  /**
-   * Toggles the wornAt field.  If wornAt is null, sets it to today.
-   * If already set, clears it (unmark worn).
-   */
-  async toggleWorn(id: number, userId?: number): Promise<OutfitCalendar> {
+  /** Sets wornAt to now or clears it; with no `worn` given, flips it. */
+  async toggleWorn(
+    id: number,
+    userId?: number,
+    worn?: boolean,
+  ): Promise<OutfitCalendar> {
     const entry = await this.findOneOwned(id, userId);
-    entry.wornAt = entry.wornAt == null ? new Date() : undefined;
+    const wornNow = entry.wornAt != null;
+    const target = worn ?? !wornNow;
+    if (target !== wornNow) entry.wornAt = target ? new Date() : undefined;
     await this.calendarRepository.getEntityManager().flush();
     return entry;
-  }
-
-  /** Returns outfits the user may add to the calendar (respects auth scoping). */
-  async findOutfitsForUser(userId?: number): Promise<Outfit[]> {
-    if (userId != null) {
-      return this.outfitRepository.find(
-        { owner: { id: userId } },
-        { populate: ['garments', 'garments.photo'] },
-      );
-    }
-    return this.outfitRepository.find(
-      { owner: null },
-      { populate: ['garments', 'garments.photo'] },
-    );
   }
 
   /**
@@ -160,61 +146,34 @@ export class CalendarService {
     i18n: I18nContext,
   ) {
     const anchor = this.parseWeekParam(weekParam);
-    const [weekSchedule, outfits] = await Promise.all([
-      this.findWeek(anchor, userId),
-      this.findOutfitsForUser(userId),
-    ]);
-
+    const weekSchedule = await this.findWeek(anchor, userId);
     const weekBounds = this.findWeekBounds(weekSchedule);
-
-    const miniMonthCal = this.getMiniMonthCal(
-      weekBounds,
-      weekSchedule,
-      calMonthParam,
-    );
-
-    const {
-      calYear,
-      calMonth,
-      calendarWeeks,
-      prevMonthParam,
-      nextMonthParam,
-      prevMonthWeekParam,
-      nextMonthWeekParam,
-    } = miniMonthCal;
-
-    const days = this.calDays(weekSchedule, i18n, weekBounds);
+    const shownMonth = parseMonthParam(calMonthParam);
 
     return {
       pageTitle: i18n.t('lang.CALENDAR_PAGE_TITLE'),
-      days,
-      outfits: outfits.map((o) => ({ id: o.id, name: o.name })),
-      weekParam: this.toWeekParam(weekSchedule.weekStart),
-      weekLabel: this.formatWeekLabel(
-        weekSchedule.weekStart,
-        weekBounds.weekEndDate,
+      days: this.calDays(weekSchedule, i18n, weekBounds),
+      monthOpen: shownMonth != null,
+      ...this.getMiniMonthCal(
+        weekBounds,
+        shownMonth ?? {
+          year: anchor.getUTCFullYear(),
+          month: anchor.getUTCMonth(),
+        },
         i18n,
       ),
-      prevWeekParam: this.toWeekParam(weekBounds.prevWeek),
-      nextWeekParam: this.toWeekParam(weekBounds.nextWeek),
-      today: weekBounds.todayStr,
-      monthName: i18n.t(`lang.${this.MONTH_I18N_KEYS[calMonth]}`),
-      year: calYear,
-      calendarWeeks,
-      prevMonthParam,
-      nextMonthParam,
-      prevMonthWeekParam,
-      nextMonthWeekParam,
     };
   }
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
-  /** Parses a YYYY-MM-DD query param into a Date, defaulting to today. */
+  /** Parses a YYYY-MM-DD query param into a UTC date, defaulting to today. */
   private parseWeekParam(param: string | undefined): Date {
-    if (!param) return new Date();
-    const d = new Date(param);
-    return isNaN(d.getTime()) ? new Date() : d;
+    if (!param || !/^[12]\d{3}-\d{2}-\d{2}$/.test(param)) return new Date();
+    const d = new Date(`${param}T00:00:00Z`);
+    return !isNaN(d.getTime()) && this.toWeekParam(d) === param
+      ? d
+      : new Date();
   }
 
   /** Formats a Date as YYYY-MM-DD for use in query params and hidden inputs. */
@@ -240,180 +199,123 @@ export class CalendarService {
   private buildCalendarWeeks(
     calYear: number,
     calMonth: number,
-    todayStr: string,
-    weekStartStr: string,
-    weekEndStr: string,
-  ): { weekParam: string; days: { dayNum: number; calCellClass: string }[] }[] {
-    const monthFirstDay = new Date(Date.UTC(calYear, calMonth, 1));
-    const gridCursor = new Date(monthFirstDay);
-    gridCursor.setUTCDate(gridCursor.getUTCDate() - gridCursor.getUTCDay());
-    const weeks: {
-      weekParam: string;
-      days: { dayNum: number; calCellClass: string }[];
-    }[] = [];
+    weekBounds: WeekBounds,
+    locale: string,
+  ) {
+    const cellLabel = new Intl.DateTimeFormat(locale, {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      timeZone: 'UTC',
+    });
+    const gridCursor = startOfWeek(new Date(Date.UTC(calYear, calMonth, 1)));
+    const weeks: { days: MiniMonthDay[] }[] = [];
     for (let w = 0; w < 6; w++) {
-      const rowSunday = new Date(gridCursor);
-      const days: { dayNum: number; calCellClass: string }[] = [];
+      const days: MiniMonthDay[] = [];
       for (let d = 0; d < 7; d++) {
         const date = new Date(gridCursor);
         const dateStr = this.toWeekParam(date);
         days.push({
           dayNum: date.getUTCDate(),
+          dateParam: dateStr,
+          label: cellLabel.format(date),
+          isToday: dateStr === weekBounds.todayStr,
           calCellClass: this.calCellClass(
             dateStr,
-            todayStr,
-            weekStartStr,
-            weekEndStr,
+            weekBounds.todayStr,
+            weekBounds.weekStartStr,
+            weekBounds.weekEndStr,
             date.getUTCMonth() === calMonth,
           ),
         });
         gridCursor.setUTCDate(gridCursor.getUTCDate() + 1);
       }
-      weeks.push({ weekParam: this.toWeekParam(rowSunday), days });
+      weeks.push({ days });
       if (gridCursor.getUTCMonth() !== calMonth && gridCursor.getUTCDay() === 0)
         break;
     }
     return weeks;
   }
 
-  /**
-   * Returns a human-readable week range label, e.g.
-   *   "Mar 25–31, 2026"  (same month)
-   *   "Mar 29 – Apr 4, 2026"  (spans two months)
-   */
-  private formatWeekLabel(start: Date, end: Date, i18n: I18nContext): string {
-    const sm = i18n.t(`lang.${this.MONTH_I18N_KEYS[start.getUTCMonth()]}`);
-    const em = i18n.t(`lang.${this.MONTH_I18N_KEYS[end.getUTCMonth()]}`);
-    const year = end.getUTCFullYear();
-    if (start.getUTCMonth() === end.getUTCMonth()) {
-      return `${sm} ${start.getUTCDate()}\u2013${end.getUTCDate()}, ${year}`;
-    }
-    return `${sm} ${start.getUTCDate()} \u2013 ${em} ${end.getUTCDate()}, ${year}`;
-  }
-
   /** Builds the day columns for the week view. */
   private calDays(
     weekSchedule: WeekSchedule,
     i18n: I18nContext,
-    weekBounds: WeekNavBoundaries,
+    weekBounds: WeekBounds,
   ) {
-    const CHIP_HUES = [220, 240, 260];
-
-    const days = weekSchedule.days.map((day) => ({
-      dayName: i18n.t(`lang.${this.DAY_I18N_KEYS[day.date.getUTCDay()]}`),
-      dayNum: day.date.getUTCDate(),
-      dateParam: this.toWeekParam(day.date),
-      isToday: this.toWeekParam(day.date) === weekBounds.todayStr,
-      entries: day.entries.map((entry, entryIndex) => {
-        const outfit = entry.outfit.unwrap();
-        const garmentPhotos = outfit.garments
-          .getItems()
-          .map((g) => g.photo?.fileName ?? null)
-          .filter((f): f is string => f !== null);
-        return {
-          id: entry.id,
-          wornAt: entry.wornAt ?? null,
-          outfit: {
-            id: outfit.id,
-            name: outfit.name || null,
-            garmentPhotos,
-            chipHue: CHIP_HUES[entryIndex % CHIP_HUES.length],
-          },
-        };
-      }),
-    }));
-    return days;
+    return weekSchedule.days.map((day) => {
+      const dateParam = this.toWeekParam(day.date);
+      return {
+        dayName: i18n.t(`lang.${this.DAY_I18N_KEYS[day.date.getUTCDay()]}`),
+        dayNum: day.date.getUTCDate(),
+        dateParam,
+        isToday: dateParam === weekBounds.todayStr,
+        entries: day.entries.map((entry) => {
+          const outfit = entry.outfit.unwrap();
+          const garments = garmentsInSlotOrder(outfit);
+          return {
+            id: entry.id,
+            worn: entry.wornAt != null,
+            outfit: {
+              id: outfit.id,
+              name: outfit.name || null,
+              thumbnails: garments
+                .slice(0, CHIP_THUMBNAILS)
+                .map((g) => g.photo?.fileName ?? null),
+              moreGarments: Math.max(0, garments.length - CHIP_THUMBNAILS),
+            },
+          };
+        }),
+      };
+    });
   }
 
-  /** Builds the mini-month calendar for the given week and month. */
+  /** Builds the mini-month calendar for the given month. */
   private getMiniMonthCal(
-    weekBounds: WeekNavBoundaries,
-    weekSchedule: WeekSchedule,
-    calMonthParam: string | undefined,
+    weekBounds: WeekBounds,
+    shown: { year: number; month: number },
+    i18n: I18nContext,
   ) {
-    let calMonth = weekSchedule.weekStart.getUTCMonth();
-    let calYear = weekSchedule.weekStart.getUTCFullYear();
-    if (calMonthParam && /^\d{4}-\d{2}$/.test(calMonthParam)) {
-      const [y, m] = calMonthParam.split('-').map(Number);
-      calYear = y;
-      calMonth = m - 1;
-    }
+    const locale = intlLocale(i18n.lang);
+    const { year: calYear, month: calMonth } = shown;
     const prevMonthDate = new Date(Date.UTC(calYear, calMonth - 1, 1));
     const nextMonthDate = new Date(Date.UTC(calYear, calMonth + 1, 1));
-    const prevMonthParam = `${prevMonthDate.getUTCFullYear()}-${String(prevMonthDate.getUTCMonth() + 1).padStart(2, '0')}`;
-    const nextMonthParam = `${nextMonthDate.getUTCFullYear()}-${String(nextMonthDate.getUTCMonth() + 1).padStart(2, '0')}`;
-
-    const todayDate = new Date();
-    const todayWeekStart = new Date(
-      Date.UTC(
-        todayDate.getUTCFullYear(),
-        todayDate.getUTCMonth(),
-        todayDate.getUTCDate(),
-      ),
-    );
-    todayWeekStart.setUTCDate(
-      todayWeekStart.getUTCDate() - todayWeekStart.getUTCDay(),
-    );
-
-    const prevMonthFirst = new Date(prevMonthDate);
-    prevMonthFirst.setUTCDate(
-      prevMonthFirst.getUTCDate() - prevMonthFirst.getUTCDay(),
-    );
-    const prevMonthIsCurrent =
-      todayDate.getUTCFullYear() === prevMonthDate.getUTCFullYear() &&
-      todayDate.getUTCMonth() === prevMonthDate.getUTCMonth();
-    const prevMonthWeekParam = this.toWeekParam(
-      prevMonthIsCurrent ? todayWeekStart : prevMonthFirst,
-    );
-
-    const nextMonthFirst = new Date(nextMonthDate);
-    nextMonthFirst.setUTCDate(
-      nextMonthFirst.getUTCDate() - nextMonthFirst.getUTCDay(),
-    );
-    const nextMonthIsCurrent =
-      todayDate.getUTCFullYear() === nextMonthDate.getUTCFullYear() &&
-      todayDate.getUTCMonth() === nextMonthDate.getUTCMonth();
-    const nextMonthWeekParam = this.toWeekParam(
-      nextMonthIsCurrent ? todayWeekStart : nextMonthFirst,
-    );
-
-    const calendarWeeks = this.buildCalendarWeeks(
-      calYear,
-      calMonth,
-      weekBounds.todayStr,
-      weekBounds.weekStartStr,
-      weekBounds.weekEndStr,
-    );
+    const monthWeekParam = (first: Date) =>
+      this.toWeekParam(first).slice(0, 7) === weekBounds.todayStr.slice(0, 7)
+        ? weekBounds.todayStr
+        : this.toWeekParam(first);
+    const monthLabel = new Intl.DateTimeFormat(locale, {
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }).format(new Date(Date.UTC(calYear, calMonth, 1)));
 
     return {
-      calMonth,
-      calYear,
-      calendarWeeks,
-      prevMonthParam,
-      nextMonthParam,
-      prevMonthWeekParam,
-      nextMonthWeekParam,
+      // Intl writes month names in lower case in es, fr, it and ru; this one starts a line.
+      monthLabel:
+        monthLabel.charAt(0).toLocaleUpperCase(locale) + monthLabel.slice(1),
+      weekdays: this.DAY_I18N_KEYS.map((key, i) => ({
+        name: i18n.t(`lang.${key}`),
+        letter: i18n.t(`lang.${this.DAY_LETTER_I18N_KEYS[i]}`),
+      })),
+      calendarWeeks: this.buildCalendarWeeks(
+        calYear,
+        calMonth,
+        weekBounds,
+        locale,
+      ),
+      prevMonthParam: this.toWeekParam(prevMonthDate).slice(0, 7),
+      nextMonthParam: this.toWeekParam(nextMonthDate).slice(0, 7),
+      prevMonthWeekParam: monthWeekParam(prevMonthDate),
+      nextMonthWeekParam: monthWeekParam(nextMonthDate),
     };
   }
 
-  private findWeekBounds(weekSchedule: WeekSchedule) {
-    const prevWeek = new Date(weekSchedule.weekStart);
-    prevWeek.setUTCDate(prevWeek.getUTCDate() - 7);
-    const nextWeek = new Date(weekSchedule.weekStart);
-    nextWeek.setUTCDate(nextWeek.getUTCDate() + 7);
-    const weekEndDate = new Date(weekSchedule.weekStart);
-    weekEndDate.setUTCDate(weekEndDate.getUTCDate() + 6);
-
-    const todayStr = this.toWeekParam(new Date());
-    const weekStartStr = this.toWeekParam(weekSchedule.weekStart);
-    const weekEndStr = this.toWeekParam(weekEndDate);
+  private findWeekBounds(weekSchedule: WeekSchedule): WeekBounds {
     return {
-      prevWeek,
-      nextWeek,
-      weekEndDate,
-      todayStr,
-      weekStartStr,
-      weekEndStr,
+      todayStr: this.toWeekParam(new Date()),
+      weekStartStr: this.toWeekParam(weekSchedule.weekStart),
+      weekEndStr: this.toWeekParam(addDays(weekSchedule.weekStart, 6)),
     };
   }
 
@@ -448,6 +350,13 @@ function startOfWeek(d: Date): Date {
   return result;
 }
 
+/** `d` moved by whole UTC days, so a daylight-saving change in the server's zone cannot shift it. */
+function addDays(d: Date, days: number): Date {
+  const result = new Date(d);
+  result.setUTCDate(result.getUTCDate() + days);
+  return result;
+}
+
 /** Number of whole days from `from` to `to` (positive when to > from). */
 function daysBetween(from: Date, to: Date): number {
   return Math.round(
@@ -455,4 +364,12 @@ function daysBetween(from: Date, to: Date): number {
       Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate())) /
       86_400_000,
   );
+}
+
+/** A YYYY-MM `calMonth` param as a year and zero-based month, or null. */
+function parseMonthParam(
+  param: string | undefined,
+): { year: number; month: number } | null {
+  const match = param ? /^([12]\d{3})-(0[1-9]|1[0-2])$/.exec(param) : null;
+  return match ? { year: Number(match[1]), month: Number(match[2]) - 1 } : null;
 }

@@ -122,6 +122,39 @@ Bugs found while working on this fork and left out of the change that found them
   - A fallback (selecting the link in a field, or the Web Share API where available) would cover it.
   - Found in #29.
 
+## Calendar
+
+- **Up to 42 links stand between the keyboard and the week** (medium).
+  - On a wide screen the month is open beside the week and each of its days is a link, so Tab passes every day of the month before it reaches the first day of the week.
+  - One tab stop for the month with the arrow keys moving between days (the WAI-ARIA date picker grid) would fix it.
+  - Where: `views/calendar/index.hbs`, `#cal-month`.
+  - Found in #32.
+- **Back can bring a removed entry back** (medium).
+  - `/calendar` sends no `Cache-Control`, so Chromium and Firefox show the old page from their cache after Back: a removed entry is there again, and its Remove answers 404 with the "request failed" toast. The worn toggle now does what the page shows, even an old one.
+  - Where: `src/wardrobe/calendar.controller.ts`, `index`.
+  - Found in #32.
+- **Removing an entry reloads the whole page** (low).
+  - The route answers htmx with `HX-Redirect`, so focus and the scroll position are lost.
+  - Where: `src/wardrobe/calendar.controller.ts`, `remove`.
+  - Found in #32.
+- **There is no previous week, next week or today control, and nothing names the week shown** (low).
+  - Weeks change only through the month's days, the page title is the same for every week, and a change of week is not announced.
+  - The month marks the shown week with a ring alone, which a screen reader does not report.
+  - Found in #32.
+- **"Today" is the server's date in UTC** (medium).
+  - Outside UTC the calendar marks and opens the wrong day for as many hours a day as the viewer's offset: from 20:00 in New York in summer, until 03:00 in Moscow.
+  - Where: `src/wardrobe/calendar.service.ts`, `findWeekBounds` and `parseWeekParam`.
+  - Found in #32.
+- **The worn toggle may move the VoiceOver cursor on iOS** (low, unconfirmed).
+  - Safari does not focus a button on a tap, so htmx has no focus to restore, and the `outerHTML` swap removes the node VoiceOver is on. Playwright's WebKit focuses the button, so this needs a device to check.
+  - A fix would keep the button and change only its `aria-pressed` and icon.
+  - Where: `views/partials/calendar_worn_button.hbs`.
+  - Found in #32.
+- **The week starts on Sunday in every language** (low).
+  - The calendars of all six languages the app speaks (en-GB, de, es, fr, it, ru) start on Monday.
+  - Where: `startOfWeek` and `buildCalendarWeeks` in `src/wardrobe/calendar.service.ts`, and the weekday headings.
+  - Found in #32.
+
 ## Shell and PWA
 
 - **Push notifications cannot be subscribed from the UI** (high).
@@ -156,6 +189,13 @@ Bugs found while working on this fork and left out of the change that found them
   - Every input uses Tailwind preflight's placeholder colour, 50 % of the text colour, which measures 3.35:1 on White.
   - Plan 5.1 maps placeholders to Graphite.
   - Found in #28.
+- **A focused control's ring is partly hidden under the header or the dock** (low).
+  - `scroll-padding` equals the bars' height, so a control scrolled into view stops flush with the bar and 3.6–4.2 px of its 4 px ring is hidden (Chromium, WebKit; 320×568 and 640×400). About 0.5rem more on both paddings would clear it.
+  - Where: `views/assets/main.css:158-159`.
+  - Found in #32.
+- **Firefox leaves a focused control partly under the dock** (low).
+  - It does not scroll a partly visible element out from under the fixed dock: at 360×568 only 19–21 px of a 44 px control can show. A control is never wholly hidden, so WCAG 2.4.11 still passes. `/wardrobe` and `/outfits` do the same.
+  - Found in #32.
 - **With WCAG 1.4.12 text spacing, a button label that wraps spills out of its button** (low).
   - daisyUI's `.btn` has a fixed height, so a two-line label ("Start over", "Delete outfit" in French, "Kleidungsstück ansehen" at 320 px) crosses the button's border. Nothing is lost.
   - Where: every `.btn`; `h-auto min-h-(--size)` would let them grow.
@@ -182,7 +222,8 @@ Bugs found while working on this fork and left out of the change that found them
   - `REMOVE_FILTER` and `WARDROBE_SWITCHER` (#28);
   - the eleven garment-page keys (`BACK`, `REQUIRED`, `EDIT_MASK`, `DELETE_GARMENT`, `CLONED_NAME`, six `PLACEHOLDER_*`) and the re-worded `AI_SUGGEST_WITH` and `AI_SUGGESTED_VIA` (#29);
   - `CHOOSE_PHOTO`, `REMOVE_COLOR`, `CREATE_COLOR`, `COLORS_SELECTED`, `MASK_CANVAS` and the re-worded `MASK_BRUSH_SIZE` (#30);
-  - the twelve outfit keys: `NO_GARMENTS_IN_OUTFIT`, `NO_GARMENT`, `VIEW_GARMENT`, `PREVIOUS`, `NEXT`, `MOVE_UP`, `MOVE_DOWN`, `ROW_MOVED`, `REMOVE_ROW`, `DELETE_OUTFIT`, `PLACEHOLDER_OUTFIT_NAME`, `PLACEHOLDER_OUTFIT_NOTES` (#31).
+  - the twelve outfit keys: `NO_GARMENTS_IN_OUTFIT`, `NO_GARMENT`, `VIEW_GARMENT`, `PREVIOUS`, `NEXT`, `MOVE_UP`, `MOVE_DOWN`, `ROW_MOVED`, `REMOVE_ROW`, `DELETE_OUTFIT`, `PLACEHOLDER_OUTFIT_NAME`, `PLACEHOLDER_OUTFIT_NOTES` (#31);
+  - the four calendar keys: `TODAY`, `PREVIOUS_MONTH`, `NEXT_MONTH`, `REMOVE_FROM_CALENDAR`, the re-worded `CALENDAR_DELETE_CONFIRM` in es, fr and ru, and fr `CALENDAR_WORN` (#32).
 
 ## Tests and tooling
 
