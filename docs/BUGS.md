@@ -122,6 +122,33 @@ Bugs found while working on this fork and left out of the change that found them
   - A fallback (selecting the link in a field, or the Web Share API where available) would cover it.
   - Found in #29.
 
+## Calendar
+
+- **Up to 42 links stand between the keyboard and the week** (medium).
+  - On a wide screen the month is open beside the week and each of its days is a link, so Tab passes every day of the month before it reaches the first day of the week.
+  - One tab stop for the month with the arrow keys moving between days (the WAI-ARIA date picker grid) would fix it.
+  - Where: `views/calendar/index.hbs`, `#cal-month`.
+  - Found in #32.
+- **Back can bring a removed entry back** (medium).
+  - `/calendar` sends no `Cache-Control`, so Chromium and Firefox show the old page from their cache after Back: a removed entry is there again, and its Remove answers 404 with the "request failed" toast. The worn toggle now does what the page shows, even an old one.
+  - Where: `src/wardrobe/calendar.controller.ts`, `index`.
+  - Found in #32.
+- **Removing an entry reloads the whole page** (low).
+  - The route answers htmx with `HX-Redirect`, so focus and the scroll position are lost and a history entry is added.
+  - Where: `src/wardrobe/calendar.controller.ts`, `remove`.
+  - Found in #32.
+- **There is no previous week, next week or today control, and nothing names the week shown** (low).
+  - Weeks change only through the month's days, the page title is the same for every week, and a change of week is not announced.
+  - Found in #32.
+- **"Today" is the server's date in UTC** (low).
+  - Near midnight in the viewer's time zone, the calendar marks and opens the wrong day.
+  - Where: `src/wardrobe/calendar.service.ts`, `findWeekBounds` and `parseWeekParam`.
+  - Found in #32.
+- **The week starts on Sunday in every language** (low).
+  - The calendars of all six languages the app speaks (en-GB, de, es, fr, it, ru) start on Monday.
+  - Where: `startOfWeek` and `buildCalendarWeeks` in `src/wardrobe/calendar.service.ts`, and the weekday headings.
+  - Found in #32.
+
 ## Shell and PWA
 
 - **Push notifications cannot be subscribed from the UI** (high).
@@ -182,7 +209,8 @@ Bugs found while working on this fork and left out of the change that found them
   - `REMOVE_FILTER` and `WARDROBE_SWITCHER` (#28);
   - the eleven garment-page keys (`BACK`, `REQUIRED`, `EDIT_MASK`, `DELETE_GARMENT`, `CLONED_NAME`, six `PLACEHOLDER_*`) and the re-worded `AI_SUGGEST_WITH` and `AI_SUGGESTED_VIA` (#29);
   - `CHOOSE_PHOTO`, `REMOVE_COLOR`, `CREATE_COLOR`, `COLORS_SELECTED`, `MASK_CANVAS` and the re-worded `MASK_BRUSH_SIZE` (#30);
-  - the twelve outfit keys: `NO_GARMENTS_IN_OUTFIT`, `NO_GARMENT`, `VIEW_GARMENT`, `PREVIOUS`, `NEXT`, `MOVE_UP`, `MOVE_DOWN`, `ROW_MOVED`, `REMOVE_ROW`, `DELETE_OUTFIT`, `PLACEHOLDER_OUTFIT_NAME`, `PLACEHOLDER_OUTFIT_NOTES` (#31).
+  - the twelve outfit keys: `NO_GARMENTS_IN_OUTFIT`, `NO_GARMENT`, `VIEW_GARMENT`, `PREVIOUS`, `NEXT`, `MOVE_UP`, `MOVE_DOWN`, `ROW_MOVED`, `REMOVE_ROW`, `DELETE_OUTFIT`, `PLACEHOLDER_OUTFIT_NAME`, `PLACEHOLDER_OUTFIT_NOTES` (#31);
+  - the four calendar keys: `TODAY`, `PREVIOUS_MONTH`, `NEXT_MONTH`, `REMOVE_FROM_CALENDAR` (#32).
 
 ## Tests and tooling
 
