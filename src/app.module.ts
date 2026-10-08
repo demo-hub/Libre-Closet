@@ -108,6 +108,8 @@ import { ViewContextModule } from './view-context/view-context.module';
           .uri({ scheme: ['https', 'http'] })
           .default('https://github.com/demo-hub/Libre-Closet'),
         IMAGE_NAME: Joi.string().default('ghcr.io/demo-hub/libre-closet'),
+        OPERATOR_NAME: Joi.string().allow('').default(''),
+        OPERATOR_CONTACT: Joi.string().allow('').default(''),
         THROTTLE_LIMIT: Joi.number().default(600),
         DATA_PATH: Joi.string().default(path.join(process.cwd(), 'data')),
         DATABASE_TYPE: Joi.string()

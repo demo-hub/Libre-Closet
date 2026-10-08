@@ -77,6 +77,8 @@ export class ViewContextService {
       ogImageHeight: 630,
       sourceUrl: this.configService.get<string>('SOURCE_URL'),
       imageName: this.configService.get<string>('IMAGE_NAME'),
+      operatorName: this.configService.get<string>('OPERATOR_NAME', ''),
+      operatorContact: this.configService.get<string>('OPERATOR_CONTACT', ''),
     };
 
     try {
