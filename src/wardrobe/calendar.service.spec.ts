@@ -151,46 +151,58 @@ describe('CalendarService', () => {
       });
     });
 
-    it.each(['', 'garbage', '1', '2026-13-01', '2026-02-30', '275760-09-13'])(
-      'shows the current week for the week param %p',
-      async (week: string) => {
-        const vm = await service.buildIndexViewModel(
-          week,
-          undefined,
-          undefined,
-          i18n(),
-        );
+    it.each([
+      '',
+      'garbage',
+      '1',
+      '2026-13-01',
+      '2026-02-30',
+      '275760-09-13',
+      '0050-06-15',
+    ])('shows the current week for the week param %p', async (week: string) => {
+      const vm = await service.buildIndexViewModel(
+        week,
+        undefined,
+        undefined,
+        i18n(),
+      );
 
-        expect(vm.days[0].dateParam).toBe('2026-03-01');
-      },
-    );
+      expect(vm.days[0].dateParam).toBe('2026-03-01');
+    });
 
-    describe('where the server keeps daylight saving time', () => {
-      const zone = process.env.TZ;
-      beforeAll(() => (process.env.TZ = 'Europe/Lisbon'));
-      afterAll(() => (process.env.TZ = zone));
+    it('lays out seven days in the week the clocks change', async () => {
+      // jest.global-setup.js runs the tests in Europe/Lisbon, whose clocks go forward on 29 March 2026.
+      expect(new Date('2026-03-29T12:00:00Z').getTimezoneOffset()).not.toBe(
+        new Date('2026-03-28T12:00:00Z').getTimezoneOffset(),
+      );
+      entries = [entry(1, '2026-04-04', outfit(4, 'Saturday', []))];
 
-      it('still lays out seven days in the week the clocks change', async () => {
-        entries = [entry(1, '2026-04-04', outfit(4, 'Saturday', []))];
+      const vm = await service.buildIndexViewModel(
+        '2026-03-29',
+        undefined,
+        undefined,
+        i18n(),
+      );
 
-        const vm = await service.buildIndexViewModel(
-          '2026-03-29',
-          undefined,
-          undefined,
-          i18n(),
-        );
-
-        expect(vm.days.map((day) => day.dateParam)).toEqual([
-          '2026-03-29',
-          '2026-03-30',
-          '2026-03-31',
-          '2026-04-01',
-          '2026-04-02',
-          '2026-04-03',
-          '2026-04-04',
-        ]);
-        expect(vm.days[6].entries.map((e) => e.id)).toEqual([1]);
-      });
+      expect(vm.days.map((day) => day.dateParam)).toEqual([
+        '2026-03-29',
+        '2026-03-30',
+        '2026-03-31',
+        '2026-04-01',
+        '2026-04-02',
+        '2026-04-03',
+        '2026-04-04',
+      ]);
+      expect(vm.days[6].entries.map((e) => e.id)).toEqual([1]);
+      expect(calendarRepository.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          date: {
+            $gte: new Date('2026-03-29T00:00:00Z'),
+            $lt: new Date('2026-04-05T00:00:00Z'),
+          },
+        }),
+        expect.anything(),
+      );
     });
   });
 
@@ -293,7 +305,7 @@ describe('CalendarService', () => {
       expect(vm.prevMonthWeekParam).toBe('2026-03-04');
     });
 
-    it.each(['2026-13', '2026-00', '2026-7'])(
+    it.each(['2026-13', '2026-00', '2026-7', '0000-01'])(
       'ignores the month %p',
       async (calMonth: string) => {
         const vm = await service.buildIndexViewModel(

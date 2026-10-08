@@ -2,8 +2,9 @@
     hx-post="/calendar/{{entryId}}/worn" hx-target="this" hx-swap="outerHTML settle:0ms transition:false">
     <input type="hidden" name="week" value="{{week}}" />
     <input type="hidden" name="worn" value="{{#if worn}}false{{else}}true{{/if}}" />
+    {{!-- htmx gives focus back to the button by its id after the swap. --}}
     <button type="submit" id="cal-worn-{{entryId}}" aria-pressed="{{#if worn}}true{{else}}false{{/if}}"
-        class="btn btn-outline aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-content">
+        class="btn btn-outline px-3 aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-content">
         {{#if worn}}{{icon "check-circle" class="size-5"}}{{else}}{{icon "circle" class="size-5"}}{{/if}}{{t 'lang.CALENDAR_WORN'}}
     </button>
 </form>

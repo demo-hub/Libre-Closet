@@ -156,6 +156,7 @@
       "!**/*.module.*"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "globalSetup": "<rootDir>/../jest.global-setup.js"
   }
 }

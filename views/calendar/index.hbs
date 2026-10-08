@@ -6,11 +6,12 @@
   <div id="week-grid" class="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 lg:grid-cols-[20rem_repeat(3,minmax(0,1fr))]">
 
     <details id="cal-month" class="cal-month group relative col-span-full self-start open:pb-2 lg:col-span-1 lg:row-span-3"{{#if monthOpen}} open{{/if}}>
-      <summary class="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-box px-3 font-medium group-open:me-24 [&::-webkit-details-marker]:hidden">
+      <summary class="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-box px-3 font-medium group-open:me-22 [&::-webkit-details-marker]:hidden">
         <span id="cal-month-label">{{monthLabel}}</span>
         {{icon "chevron-right" class="size-5 shrink-0 rotate-90 group-open:-rotate-90"}}
       </summary>
       {{!-- Beside the summary, not in it: a link inside a summary is nested interactive content. --}}
+      {{!-- The month and day links keep stable ids: htmx gives focus back by id after a boosted navigation. --}}
       <div class="absolute end-0 top-0 flex">
         <a id="cal-prev-month" href="/calendar?week={{prevMonthWeekParam}}&calMonth={{prevMonthParam}}" class="btn btn-ghost btn-circle" aria-label="{{t 'lang.PREVIOUS_MONTH'}}">{{icon "chevron-left" class="size-5"}}</a>
         <a id="cal-next-month" href="/calendar?week={{nextMonthWeekParam}}&calMonth={{nextMonthParam}}" class="btn btn-ghost btn-circle" aria-label="{{t 'lang.NEXT_MONTH'}}">{{icon "chevron-right" class="size-5"}}</a>
@@ -28,7 +29,7 @@
           <tr>
             {{#each this.days}}
             <td class="p-0">
-              <a href="/calendar?week={{this.dateParam}}" aria-label="{{this.label}}"{{#if this.isToday}} aria-current="date"{{/if}} class="mx-auto flex aspect-square w-full max-w-11 items-center justify-center rounded-full text-sm {{this.calCellClass}}">{{this.dayNum}}</a>
+              <a id="cal-day-{{this.dateParam}}" href="/calendar?week={{this.dateParam}}#day-{{this.dateParam}}" aria-label="{{this.label}}"{{#if this.isToday}} aria-current="date"{{/if}} class="mx-auto flex aspect-square w-full max-w-11 items-center justify-center rounded-full text-sm {{this.calCellClass}}">{{this.dayNum}}</a>
             </td>
             {{/each}}
           </tr>
@@ -36,11 +37,12 @@
         </tbody>
       </table>
     </details>
-    <script>if (matchMedia('(min-width: 64rem)').matches) document.getElementById('cal-month').open = true;</script>
+    {{!-- htmx runs this again on a page restored from history, which must keep the month as the user left it. --}}
+    <script>{ const month = document.getElementById('cal-month'); if (!month.dataset.ready) { month.dataset.ready = 'true'; if (matchMedia('(min-width: 64rem)').matches) month.open = true; } }</script>
 
     {{#each days}}
     <div role="group" aria-labelledby="day-{{this.dateParam}}" class="flex flex-col gap-2 rounded-box border border-base-300 bg-base-100 p-3">
-      <h2 id="day-{{this.dateParam}}" class="flex flex-wrap items-center gap-x-1.5 gap-y-1 font-sans"{{#if this.isToday}} aria-current="date"{{/if}}>
+      <h2 id="day-{{this.dateParam}}" class="flex flex-wrap items-center gap-x-1.5 gap-y-1 font-sans"{{#if this.isToday}} aria-current="date"{{/if}}{{#if this.focus}} tabindex="-1" autofocus{{/if}}>
         <span class="text-sm font-medium text-graphite">{{this.dayName}}</span>
         <span class="text-sm font-semibold tabular-nums">{{this.dayNum}}</span>
         {{#if this.isToday}}<span class="badge">{{t 'lang.TODAY'}}</span>{{/if}}
@@ -54,10 +56,10 @@
             {{#if this}}
             <img src="/file/nobg/{{this}}" alt="" class="cal-chip__thumb object-contain" />
             {{else}}
-            <span class="cal-chip__thumb text-haze">{{icon "hanger" class="size-5"}}</span>
+            <span class="cal-chip__thumb text-graphite">{{icon "hanger" class="size-5"}}</span>
             {{/if}}
             {{else}}
-            <span class="cal-chip__thumb text-haze">{{icon "hanger" class="size-5"}}</span>
+            <span class="cal-chip__thumb text-graphite">{{icon "hanger" class="size-5"}}</span>
             {{/each}}
             {{#if this.outfit.moreGarments}}<span class="ms-1.5 text-sm text-graphite">+{{this.outfit.moreGarments}}</span>{{/if}}
           </span>
@@ -74,7 +76,7 @@
       </div>
       {{/each}}
 
-      <a href="/outfits/new?scheduleDate={{this.dateParam}}&returnTo=/calendar" class="btn btn-ghost mt-auto self-start">{{icon "plus" class="size-5"}}{{t 'lang.BUILD_OUTFIT'}}</a>
+      <a href="/outfits/new?scheduleDate={{this.dateParam}}&returnTo=/calendar" class="btn btn-ghost mt-auto h-auto min-h-11 self-start py-2 text-start">{{icon "plus" class="size-5"}}{{t 'lang.BUILD_OUTFIT'}}</a>
     </div>
     {{/each}}
 

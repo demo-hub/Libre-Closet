@@ -13,20 +13,12 @@ import { CreateCalendarEntryDto } from './dto/create-calendar-entry.dto';
 import { CalendarDay } from './view-models/calendar-day.view-model';
 import { WeekSchedule } from './view-models/week-schedule.view-model';
 import { I18nContext } from 'nestjs-i18n';
-import { WeekNavBoundaries } from './view-models/week-nav-boundaries';
+import { WeekBounds } from './view-models/week-bounds';
+import { MiniMonthDay } from './view-models/mini-month-day.view-model';
 import { intlLocale } from '../i18n/intl-locale';
 import { garmentsInSlotOrder } from './outfit-order';
 
-/** How many garments a calendar chip shows before "+N". */
 const CHIP_THUMBNAILS = 3;
-
-interface MiniMonthDay {
-  dayNum: number;
-  dateParam: string;
-  label: string;
-  isToday: boolean;
-  calCellClass: string;
-}
 
 @Injectable()
 export class CalendarService {
@@ -177,7 +169,7 @@ export class CalendarService {
   // ---------------------------------------------------------------------------
   /** Parses a YYYY-MM-DD query param into a UTC date, defaulting to today. */
   private parseWeekParam(param: string | undefined): Date {
-    if (!param || !/^\d{4}-\d{2}-\d{2}$/.test(param)) return new Date();
+    if (!param || !/^[12]\d{3}-\d{2}-\d{2}$/.test(param)) return new Date();
     const d = new Date(`${param}T00:00:00Z`);
     return !isNaN(d.getTime()) && this.toWeekParam(d) === param
       ? d
@@ -207,7 +199,7 @@ export class CalendarService {
   private buildCalendarWeeks(
     calYear: number,
     calMonth: number,
-    weekBounds: WeekNavBoundaries,
+    weekBounds: WeekBounds,
     locale: string,
   ) {
     const cellLabel = new Intl.DateTimeFormat(locale, {
@@ -249,7 +241,7 @@ export class CalendarService {
   private calDays(
     weekSchedule: WeekSchedule,
     i18n: I18nContext,
-    weekBounds: WeekNavBoundaries,
+    weekBounds: WeekBounds,
   ) {
     return weekSchedule.days.map((day) => {
       const dateParam = this.toWeekParam(day.date);
@@ -280,7 +272,7 @@ export class CalendarService {
 
   /** Builds the mini-month calendar for the given month. */
   private getMiniMonthCal(
-    weekBounds: WeekNavBoundaries,
+    weekBounds: WeekBounds,
     shown: { year: number; month: number },
     i18n: I18nContext,
   ) {
@@ -319,7 +311,7 @@ export class CalendarService {
     };
   }
 
-  private findWeekBounds(weekSchedule: WeekSchedule): WeekNavBoundaries {
+  private findWeekBounds(weekSchedule: WeekSchedule): WeekBounds {
     return {
       todayStr: this.toWeekParam(new Date()),
       weekStartStr: this.toWeekParam(weekSchedule.weekStart),
@@ -378,6 +370,6 @@ function daysBetween(from: Date, to: Date): number {
 function parseMonthParam(
   param: string | undefined,
 ): { year: number; month: number } | null {
-  const match = param ? /^(\d{4})-(0[1-9]|1[0-2])$/.exec(param) : null;
+  const match = param ? /^([12]\d{3})-(0[1-9]|1[0-2])$/.exec(param) : null;
   return match ? { year: Number(match[1]), month: Number(match[2]) - 1 } : null;
 }
