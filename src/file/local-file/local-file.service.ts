@@ -115,10 +115,12 @@ export class LocalFileService extends FileService {
   }
 
   async get(fileName: string): Promise<Readable | undefined> {
-    if (fs.existsSync(path.join(this.directory, fileName))) {
-      return new Promise((resolve) =>
-        resolve(fs.createReadStream(path.join(this.directory, fileName))),
-      );
+    const filePath = path.resolve(this.directory, fileName);
+    if (
+      path.dirname(filePath) === path.resolve(this.directory) &&
+      fs.existsSync(filePath)
+    ) {
+      return new Promise((resolve) => resolve(fs.createReadStream(filePath)));
     } else {
       throw new NotFoundException(fileName);
     }
