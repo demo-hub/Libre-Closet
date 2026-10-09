@@ -32,4 +32,28 @@ describe('AppController', () => {
       });
     });
   });
+
+  describe('chat', () => {
+    afterEach(() => jest.useRealTimers());
+
+    it('titles the page', () => {
+      const i18n = { t: (key: string) => key } as unknown as I18nContext;
+      expect(appController.getChat(i18n)).toEqual({ pageTitle: 'lang.CHAT' });
+    });
+
+    it('sends a message to every open chat as text, never as markup', async () => {
+      jest.useFakeTimers();
+      const sent: string[] = [];
+      appController.getChatStream().subscribe((html) => sent.push(html));
+
+      const done = appController.postMessages({
+        message: '<img src=x onerror="alert(1)">',
+      });
+      await jest.runAllTimersAsync();
+      await done;
+
+      expect(sent[0]).toContain('&lt;img src&#x3D;x onerror&#x3D;&quot;');
+      expect(sent.join('')).not.toContain('<img');
+    });
+  });
 });
