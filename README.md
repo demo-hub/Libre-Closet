@@ -418,11 +418,15 @@ npm run start:dev       # watch mode
 npm run start:prod      # production
 npm run test            # unit tests
 npm run test:e2e        # Playwright end-to-end
+npm run test:e2e:a11y   # axe on every page, in light and dark mode
 npm run test:cov        # coverage
-npm run precommit       # lint + test + lighthouse (run before committing)
+npm run lighthouse      # Lighthouse on seven pages of a seeded wardrobe; build first
+npm run precommit       # format, lint, build, unit, smoke and accessibility tests, load test, Lighthouse (run before committing)
 npm run test:visual     # screenshot comparison, needs Docker
 npm run test:visual:update  # re-record the screenshots after an intended change
 ```
+
+The accessibility spec (`test/a11y.spec.ts`) runs axe on every page a self-hoster uses, in light and dark mode, and checks the focus ring on every keyboard stop. Like the other end-to-end tests it runs against whatever answers on port 3000, or starts the app there; it creates one garment and one outfit and deletes them when it ends. `npm run lighthouse` starts the built app on port 3200 (set `LIGHTHOUSE_PORT` to change it) with a throwaway, seeded wardrobe, audits each page three times with Lighthouse's phone profile, and writes the reports to `.lighthouseci/reports/`. The unit tests also hold the compiled stylesheet to 120,000 bytes, and to 20,480 bytes as served (`src/bundle-size.spec.ts`).
 
 The screenshot tests seed a throwaway wardrobe on port 3100 and compare nine key pages (listed in `test/visual.spec.ts`) against `test/__screenshots__/`. Chromium runs inside the pinned `mcr.microsoft.com/playwright` image while the app stays on your own Node, so the pixels match from run to run and in CI; the same page rendered by a different browser build or font stack would not. When a change is meant to alter how a page looks, re-record with `test:visual:update` and commit the new images: the diff between the old and new PNGs is what the reviewer looks at. The script needs Docker with host networking (Docker Engine on Linux, or Docker Desktop with host networking turned on) and free ports 3100 and 3333.
 

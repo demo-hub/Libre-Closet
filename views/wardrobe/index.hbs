@@ -50,7 +50,7 @@
       <a href="/wardrobe/{{this.id}}{{#if ../viewOwner}}?ownerId={{../viewOwner}}{{/if}}" class="card h-full hover:border-steel">
         <figure class="aspect-square bg-base-200">
           {{#if this.photo}}
-          <img src="/file/nobg/{{this.photo.fileName}}" alt="" class="size-full object-contain{{#if this.archived}} opacity-70{{/if}}" />
+          <img src="/file/nobg/{{this.photo.fileName}}" alt=""{{#if @first}} fetchpriority="high"{{/if}} class="size-full object-contain{{#if this.archived}} opacity-70{{/if}}" />
           {{else}}
           {{icon "hanger" class="size-12 text-graphite"}}
           {{/if}}

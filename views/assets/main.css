@@ -2,7 +2,14 @@
 @import "tailwindcss";
 @source not "../../docs";          /* Markdown under docs/ is not a class source */
 @source not "../../src/brand";      /* nor the brand spec, which names the classes it forbids */
-@plugin "daisyui" { themes: false; }
+@plugin "daisyui" {
+  themes: false;
+  /* Components no page uses; a class from one of these gets no CSS at all. */
+  exclude: stat, tooltip, indicator, filter, validator, stack, kbd, calendar, breadcrumbs, skeleton,
+    rating, radialprogress, fab, progress, diff, status, list, hovergallery, steps, timeline,
+    countdown, table, textrotate, radio, hover3d, mask, tab, avatar, swap, glass, typography,
+    loading, drawer, navbar, carousel, mockup;
+}
 
 @plugin "daisyui/theme" {
   name: "light"; default: true; color-scheme: light;

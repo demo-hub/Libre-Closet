@@ -306,6 +306,10 @@ describe('templates and client scripts', () => {
     }
   });
 
+  it('skips no file: every template and client script is swept', () => {
+    expect(KNOWN_DEBT).toEqual([]);
+  });
+
   for (const file of files) {
     it(`${file} uses only approved classes`, () => {
       const source = readFileSync(join(root, file), 'utf8');
@@ -338,5 +342,39 @@ describe('the browser chrome follows the theme', () => {
   it('paints the install splash in palette colours', () => {
     expect(hexes.has(manifest.theme_color.toLowerCase())).toBe(true);
     expect(hexes.has(manifest.background_color.toLowerCase())).toBe(true);
+  });
+});
+
+describe('the maintainer is named in one sentence', () => {
+  const spellings = /mandat[\s-]?iq/gi;
+  const locales = globSync('src/i18n/*/lang.json', { cwd: root });
+
+  it('finds the locale files', () => {
+    expect(locales.length).toBeGreaterThan(0);
+  });
+
+  for (const file of locales) {
+    it(`${file} writes mandatiq in lower case, and only in ABOUT_FORK`, () => {
+      const lang = JSON.parse(readFileSync(join(root, file), 'utf8')) as Record<
+        string,
+        unknown
+      >;
+      const uses = Object.entries(lang).flatMap(([key, value]) =>
+        [...JSON.stringify(value).matchAll(spellings)].map(
+          ([name]) => `${key}: ${name}`,
+        ),
+      );
+      expect(uses.filter((use) => use !== 'ABOUT_FORK: mandatiq')).toEqual([]);
+    });
+  }
+
+  it('appears nowhere else in src/, views/ or public/', () => {
+    const offenders = globSync(
+      '{src,views,public}/**/*.{ts,js,hbs,json,html,txt,svg,css}',
+      { cwd: root, ignore: ['src/brand/**', 'src/i18n/*/lang.json'] },
+    ).filter((file) =>
+      /mandat[\s-]?iq/i.test(readFileSync(join(root, file), 'utf8')),
+    );
+    expect(offenders).toEqual([]);
   });
 });

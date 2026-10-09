@@ -12,7 +12,7 @@ jobs:
   back-end-ci:
     name: back-end-ci
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@master
 
@@ -21,9 +21,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: npm install & build
+      - name: npm ci & build
         run: |
-          npm install
+          npm ci
           npm run build
 
       - name: npm format:check
@@ -54,6 +54,19 @@ jobs:
           DATABASE_TYPE: sqlite
           FILE_STORAGE_TYPE: local
 
+      - name: npm test:e2e:a11y
+        run: |
+          npm run test:e2e:a11y
+        env:
+          CI: true
+          APP_NAME: Lazztech.Boilerplate
+          ACCESS_TOKEN_SECRET: SecretKey
+          PUSH_NOTIFICATION_ENDPOINT: test
+          EMAIL_FROM_ADDRESS: test
+          EMAIL_PASSWORD: test
+          DATABASE_TYPE: sqlite
+          FILE_STORAGE_TYPE: local
+
       - name: npm test:load local
         run: |
           npm run test:load
@@ -66,6 +79,18 @@ jobs:
           EMAIL_PASSWORD: test
           DATABASE_TYPE: sqlite
           FILE_STORAGE_TYPE: local
+
+      # Performance, best practices, and health check
+      - name: run lighthouse
+        run: npm run lighthouse
+
+      - name: upload lighthouse reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/reports/
+          retention-days: 30
 
       - name: start postgresql db
         uses: harmon758/postgresql-action@v1
@@ -141,10 +166,6 @@ jobs:
         with:
           name: load-test-results
           path: scripts/results/
-
-      # Performance, best practices, and health check
-      - name: run lighthouse
-        run: npm run lighthouse
 
       - name: check for dependency updates
         run: npx npm-check-updates
