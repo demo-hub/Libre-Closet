@@ -110,12 +110,18 @@ describe('translations', () => {
       expect(lang.CREATE_COLOR).toContain('{name}');
     });
 
+    it('names the app under a shared item', () => {
+      expect(lang.SHARED_FROM).toContain('{appName}');
+    });
+
     it('opens each failure message the way its validation messages open', () => {
       const validation = lang.validation as Record<string, string>;
       const prefix = `${validation.IS_EMAIL.split(':')[0]}:`;
-      for (const key of Object.keys(lang).filter((k) =>
-        k.endsWith('_FAILED'),
-      )) {
+      for (const key of [
+        ...Object.keys(lang).filter((k) => k.endsWith('_FAILED')),
+        'INVITE_NOT_FOUND',
+        'INVITE_OWN',
+      ]) {
         if (key === 'REQUEST_FAILED') continue;
         expect(`${key}: ${lang[key] as string}`).toMatch(`${key}: ${prefix}`);
       }

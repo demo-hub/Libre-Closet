@@ -29,11 +29,6 @@ const KNOWN_DEBT = [
   'views/index.hbs', // PR 11a
   'views/privacy.hbs', // PR 11b
   'views/terms.hbs', // PR 11b
-  'views/chat.hbs', // PR 10
-  'views/files.hbs', // PR 10
-  'views/share.hbs', // PR 10
-  'views/wardrobe-share/manage.hbs', // PR 10
-  'views/wardrobe-share/partials/invite-link-result.hbs', // PR 10
 ];
 
 const hexes = new Set(tokens.colours.map((c) => c.value.hex.toLowerCase()));

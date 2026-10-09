@@ -1,141 +1,154 @@
 {{>navbar}}
 
 <main id="main" tabindex="-1" class="page page--narrow">
-  <h1 class="text-2xl font-bold mb-6">{{t 'lang.WARDROBE_SHARING'}}</h1>
+  <h1 class="mb-6">{{t 'lang.WARDROBE_SHARING'}}</h1>
 
   {{#if error}}
-  <div class="mb-4">{{> alert kind="error" text=error}}</div>
+  <div class="mb-6">{{> alert kind="error" text=error focus=true}}</div>
   {{/if}}
 
-  {{!-- Create invite link --}}
-  <div class="card bg-base-100 shadow-sm mb-6">
-    <div class="card-body">
-      <h2 class="card-title text-lg">{{t 'lang.SHARE_WARDROBE'}}</h2>
-      <p class="text-sm text-base-content/60 mb-4">{{t 'lang.SHARE_WARDROBE_DESC'}}</p>
-
+  <section class="card mb-6">
+    <div class="card-body gap-4">
+      <h2 class="card-title">{{t 'lang.SHARE_WARDROBE'}}</h2>
+      <p class="text-graphite">{{t 'lang.SHARE_WARDROBE_DESC'}}</p>
       <form
+        method="post"
+        action="/wardrobe-share/create-invite-link"
         hx-post="/wardrobe-share/create-invite-link"
-        hx-target="#invite-link-result"
-        hx-swap="innerHTML"
-        class="flex gap-2 items-center"
+        hx-target="main"
+        hx-select="main"
+        hx-swap="outerHTML"
+        class="flex flex-wrap items-end gap-3"
       >
-        <select name="permission" class="select select-bordered select-sm">
-          <option value="VIEW">{{t 'lang.PERMISSION_VIEW'}}</option>
-          <option value="MANAGE">{{t 'lang.PERMISSION_MANAGE'}}</option>
-        </select>
-        <button type="submit" class="btn btn-primary btn-sm">{{t 'lang.CREATE_INVITE_LINK'}}</button>
+        <div class="grid gap-1">
+          <label class="label" for="invite-permission">{{t 'lang.ACCESS'}}</label>
+          <select id="invite-permission" name="permission" class="select">
+            <option value="VIEW">{{t 'lang.PERMISSION_VIEW'}}</option>
+            <option value="MANAGE"{{#ifEquals permission 'MANAGE'}} selected{{/ifEquals}}>{{t 'lang.PERMISSION_MANAGE'}}</option>
+          </select>
+        </div>
+        <button id="create-invite" type="submit" class="btn btn-primary h-auto min-h-(--size) max-w-full py-2">{{t 'lang.CREATE_INVITE_LINK'}}</button>
       </form>
-      <div id="invite-link-result"></div>
+      {{#if inviteUrl}}
+      <div class="grid gap-1">
+        <label class="label" for="new-invite-link">{{t 'lang.INVITE_LINK'}}</label>
+        <div class="flex flex-wrap gap-2">
+          <input id="new-invite-link" type="text" class="input min-w-0 grow" value="{{inviteUrl}}" readonly autofocus _="on click call me.select()" />
+          <button
+            type="button"
+            class="btn btn-outline h-auto min-h-(--size) max-w-full py-2"
+            aria-live="polite"
+            data-copy="{{inviteUrl}}"
+            data-done="{{t 'lang.COPIED'}}"
+            data-label="{{t 'lang.COPY_INVITE_LINK'}}"
+            _="on click
+                 call navigator.clipboard.writeText(my @data-copy)
+                 put my @data-done into the first <span/> in me
+                 wait 2s
+                 put my @data-label into the first <span/> in me"
+          >{{icon "link" class="size-5"}}<span>{{t 'lang.COPY_INVITE_LINK'}}</span></button>
+        </div>
+      </div>
+      {{/if}}
     </div>
-  </div>
+  </section>
 
-  {{!-- Outbound shares (your shared wardrobes) --}}
   {{#if outbound.length}}
-  <div class="card bg-base-100 shadow-sm mb-6">
-    <div class="card-body">
-      <h2 class="card-title text-lg">{{t 'lang.YOUR_SHARED_WARDROBES'}}</h2>
-      <ul class="divide-y divide-base-200">
+  <section class="card mb-6">
+    <div class="card-body gap-2">
+      <h2 class="card-title">{{t 'lang.YOUR_SHARED_WARDROBES'}}</h2>
+      <ul role="list" class="divide-y divide-base-300">
         {{#each outbound}}
-        <li class="py-3 flex items-center justify-between">
-          <div class="flex flex-col gap-1">
-            <div class="flex items-center gap-2">
-              <span class="font-medium">{{#if this.grantee}}{{this.grantee.email}}{{else}}{{t 'lang.PENDING_INVITE'}}{{/if}}</span>
-              <span class="badge badge-sm {{#ifEquals this.permission 'VIEW'}}badge-outline{{else}}badge-primary{{/ifEquals}}">{{this.permission}}</span>
-              {{#unless this.acceptedAt}}
-              <span class="badge badge-ghost badge-sm">{{t 'lang.PENDING'}}</span>
-              {{/unless}}
-            </div>
+        <li class="grid gap-3 py-4 last:pb-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="outbound-{{this.id}}" class="font-medium wrap-anywhere">{{#if this.grantee}}{{this.grantee.email}}{{else}}{{t 'lang.PENDING_INVITE'}}{{/if}}</span>
+            <span class="badge">{{#ifEquals this.permission 'MANAGE'}}{{t 'lang.PERMISSION_MANAGE'}}{{else}}{{t 'lang.PERMISSION_VIEW'}}{{/ifEquals}}</span>
+            {{#if this.grantee}}{{#unless this.acceptedAt}}<span class="badge">{{t 'lang.PENDING'}}</span>{{/unless}}{{/if}}
+          </div>
+          {{#if this.inviteToken}}
+          <div class="grid gap-1">
+            <label class="label" for="invite-link-{{this.id}}">{{t 'lang.INVITE_LINK'}}</label>
+            <input id="invite-link-{{this.id}}" type="text" class="input input-sm w-full" value="{{../baseUrl}}/wardrobe-share/invite/{{this.inviteToken}}" readonly _="on click call me.select()" />
+          </div>
+          {{/if}}
+          <div class="flex flex-wrap gap-2">
             {{#if this.inviteToken}}
-            <div class="flex items-center gap-2">
-              <input
-                type="text"
-                class="input input-bordered input-xs flex-1"
-                value="{{../baseUrl}}/wardrobe-share/invite/{{this.inviteToken}}"
-                readonly
-                _="on click call me.select()"
-              />
-              <button
-                class="btn btn-ghost btn-xs"
-_="on click
-                     call navigator.clipboard.writeText('{{../baseUrl}}/wardrobe-share/invite/{{this.inviteToken}}')
-                     then add .btn-success then remove .btn-ghost
-                     wait 1s
-                     then remove .btn-success then add .btn-ghost"
-              >{{t 'lang.COPY_INVITE_LINK'}}</button>
-            </div>
+            <button
+              type="button"
+              class="btn btn-outline btn-sm h-auto min-h-(--size) max-w-full py-1.5"
+              aria-live="polite"
+              aria-describedby="outbound-{{this.id}}"
+              data-copy="{{../baseUrl}}/wardrobe-share/invite/{{this.inviteToken}}"
+              data-done="{{t 'lang.COPIED'}}"
+              data-label="{{t 'lang.COPY_INVITE_LINK'}}"
+              _="on click
+                   call navigator.clipboard.writeText(my @data-copy)
+                   put my @data-done into the first <span/> in me
+                   wait 2s
+                   put my @data-label into the first <span/> in me"
+            >{{icon "link" class="size-4"}}<span>{{t 'lang.COPY_INVITE_LINK'}}</span></button>
             {{/if}}
+            <form method="post" action="/wardrobe-share/{{this.id}}/remove"{{#if this.grantee}} hx-confirm="{{t 'lang.REVOKE_CONFIRM'}}"{{/if}}>
+              <button type="submit" class="btn btn-outline btn-sm h-auto min-h-(--size) max-w-full py-1.5" aria-describedby="outbound-{{this.id}}">{{icon "trash" class="size-4"}}{{#if this.grantee}}{{t 'lang.REVOKE'}}{{else}}{{t 'lang.REVOKE_INVITE'}}{{/if}}</button>
+            </form>
           </div>
-          <form method="post" action="/wardrobe-share/{{this.id}}/remove" class="inline">
-            <button type="submit" class="btn btn-ghost btn-xs text-error">{{t 'lang.REVOKE'}}</button>
-          </form>
         </li>
         {{/each}}
       </ul>
     </div>
-  </div>
+  </section>
   {{/if}}
 
-  {{!-- Pending incoming shares --}}
   {{#if pending.length}}
-  <div class="card bg-base-100 shadow-sm mb-6">
-    <div class="card-body">
-      <h2 class="card-title text-lg">{{t 'lang.PENDING_INVITES'}}</h2>
-      <ul class="divide-y divide-base-200">
+  <section class="card mb-6">
+    <div class="card-body gap-2">
+      <h2 class="card-title">{{t 'lang.PENDING_INVITES'}}</h2>
+      <ul role="list" class="divide-y divide-base-300">
         {{#each pending}}
-        <li class="py-3 flex items-center justify-between">
-          <div>
-            <span class="font-medium">{{this.grantor.email}}</span>
-            <span class="badge badge-sm {{#ifEquals this.permission 'VIEW'}}badge-outline{{else}}badge-primary{{/ifEquals}} ml-2">{{this.permission}}</span>
+        <li class="grid gap-3 py-4 last:pb-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="pending-{{this.id}}" class="font-medium wrap-anywhere">{{this.grantor.email}}</span>
+            <span class="badge">{{#ifEquals this.permission 'MANAGE'}}{{t 'lang.PERMISSION_MANAGE'}}{{else}}{{t 'lang.PERMISSION_VIEW'}}{{/ifEquals}}</span>
           </div>
-          <div class="flex gap-2">
-            <form method="post" action="/wardrobe-share/invite/{{this.inviteToken}}/accept" class="inline">
-              <button type="submit" class="btn btn-primary btn-xs">{{t 'lang.ACCEPT'}}</button>
+          <div class="flex flex-wrap gap-2">
+            <form method="post" action="/wardrobe-share/invite/{{this.inviteToken}}/accept">
+              <button type="submit" class="btn btn-primary btn-sm h-auto min-h-(--size) max-w-full py-1.5" aria-describedby="pending-{{this.id}}">{{t 'lang.ACCEPT'}}</button>
             </form>
-            <form method="post" action="/wardrobe-share/invite/{{this.inviteToken}}/decline" class="inline">
-              <button type="submit" class="btn btn-ghost btn-xs text-error">{{t 'lang.DECLINE'}}</button>
+            <form method="post" action="/wardrobe-share/invite/{{this.inviteToken}}/decline">
+              <button type="submit" class="btn btn-outline btn-sm h-auto min-h-(--size) max-w-full py-1.5" aria-describedby="pending-{{this.id}}">{{t 'lang.DECLINE'}}</button>
             </form>
           </div>
         </li>
         {{/each}}
       </ul>
     </div>
-  </div>
+  </section>
   {{/if}}
 
-  {{!-- Inbound shares (wardrobes shared with you) --}}
   {{#if inbound.length}}
-  <div class="card bg-base-100 shadow-sm mb-6">
-    <div class="card-body">
-      <h2 class="card-title text-lg">{{t 'lang.SHARED_WITH_YOU'}}</h2>
-      <ul class="divide-y divide-base-200">
+  <section class="card mb-6">
+    <div class="card-body gap-2">
+      <h2 class="card-title">{{t 'lang.SHARED_WITH_YOU'}}</h2>
+      <ul role="list" class="divide-y divide-base-300">
         {{#each inbound}}
-        <li class="py-3 flex items-center justify-between">
-          <div>
-            <a href="/wardrobe?ownerId={{this.grantor.id}}" class="font-medium link link-primary">{{this.grantor.email}}</a>
-            <span class="badge badge-sm {{#ifEquals this.permission 'VIEW'}}badge-outline{{else}}badge-primary{{/ifEquals}} ml-2">{{this.permission}}</span>
+        <li class="grid gap-3 py-4 last:pb-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <a id="inbound-{{this.id}}" href="/wardrobe?ownerId={{this.grantor.id}}" class="link link-primary font-medium wrap-anywhere">{{this.grantor.email}}</a>
+            <span class="badge">{{#ifEquals this.permission 'MANAGE'}}{{t 'lang.PERMISSION_MANAGE'}}{{else}}{{t 'lang.PERMISSION_VIEW'}}{{/ifEquals}}</span>
           </div>
-          <form method="post" action="/wardrobe-share/{{this.id}}/remove" class="inline">
-            <button type="submit" class="btn btn-ghost btn-xs text-error">{{t 'lang.LEAVE'}}</button>
+          <form method="post" action="/wardrobe-share/{{this.id}}/remove" hx-confirm="{{t 'lang.LEAVE_CONFIRM'}}">
+            <button type="submit" class="btn btn-outline btn-sm h-auto min-h-(--size) max-w-full py-1.5" aria-describedby="inbound-{{this.id}}">{{icon "trash" class="size-4"}}{{t 'lang.LEAVE'}}</button>
           </form>
         </li>
         {{/each}}
       </ul>
     </div>
-  </div>
+  </section>
   {{/if}}
 
-  {{#unless outbound.length}}
-  {{#unless inbound.length}}
-  {{#unless pending.length}}
-  <div class="text-center text-base-content/40 py-12">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="size-16 mx-auto mb-4">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.935-2.185 2.25 2.25 0 0 0-3.935 2.185Z" />
-    </svg>
-    <p>{{t 'lang.NO_SHARES_YET'}}</p>
-  </div>
-  {{/unless}}
-  {{/unless}}
-  {{/unless}}
+  {{#unless outbound.length}}{{#unless inbound.length}}{{#unless pending.length}}
+  {{> empty icon="share" text=(t 'lang.NO_SHARES_YET')}}
+  {{/unless}}{{/unless}}{{/unless}}
 </main>
 
 {{>dock}}

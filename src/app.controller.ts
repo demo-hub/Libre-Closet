@@ -8,11 +8,14 @@ import {
   Req,
   Res,
   Sse,
+  UseGuards,
 } from '@nestjs/common';
+import { escapeExpression } from 'handlebars';
 import { Subject } from 'rxjs';
 import { AppService } from './app.service';
 import { I18n, I18nContext } from 'nestjs-i18n';
 import { FastifyReply, FastifyRequest } from 'fastify';
+import { ConditionalAuthGuard } from './auth/conditional-auth.guard';
 
 @Controller()
 export class AppController {
@@ -61,26 +64,28 @@ export class AppController {
     };
   }
 
+  @UseGuards(ConditionalAuthGuard)
   @Get('chat')
   @Render('chat')
-  getChat(): any {
-    return {
-      message: this.appService.getHello(),
-    };
+  getChat(@I18n() i18n: I18nContext): any {
+    return { pageTitle: i18n.t('lang.CHAT') };
   }
 
   @Get('offline.html')
   @Render('offline')
   getOffline() {}
 
+  @UseGuards(ConditionalAuthGuard)
   @Sse('sse')
   getChatStream() {
     return this.message$;
   }
 
+  @UseGuards(ConditionalAuthGuard)
   @Post('message')
   async postMessages(@Body() body: any) {
-    const message = body.message as string;
+    // Every open /chat page swaps this in as HTML.
+    const message = escapeExpression(String(body.message ?? ''));
     this.message$.next(`
       <div class='chat chat-end'>
         <div class='chat-header'>

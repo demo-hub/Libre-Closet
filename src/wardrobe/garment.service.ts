@@ -17,7 +17,7 @@ import { CreateGarmentDto } from './dto/create-garment.dto';
 import { UpdateGarmentDto } from './dto/update-garment.dto';
 import { SearchGarmentDto } from './dto/search-garment.dto';
 import { sanitizeSourceUrl } from './source-url';
-import { GarmentCategory } from './garment-category.enum';
+import { resolveCategoryLabel } from './category-label';
 import { WardrobeShareService } from '../wardrobe-share/wardrobe-share.service';
 
 const CANONICAL_SIZES = [
@@ -47,11 +47,7 @@ export class GarmentService {
   ) {}
 
   resolveCategoryLabel(value: string, i18n: I18nContext): string {
-    const normalized = value.toLowerCase();
-    if ((Object.values(GarmentCategory) as string[]).includes(normalized)) {
-      return i18n.t(`lang.CATEGORY_${normalized.toUpperCase()}`);
-    }
-    return value;
+    return resolveCategoryLabel(value, i18n);
   }
 
   async findAll(
