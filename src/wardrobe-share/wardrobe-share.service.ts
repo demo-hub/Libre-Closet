@@ -14,6 +14,8 @@ import {
 import { User } from '../dal/entity/user.entity';
 import { randomUUID } from 'node:crypto';
 
+export const OWN_INVITE = 'You cannot accept your own invite.';
+
 @Injectable()
 export class WardrobeShareService {
   private readonly logger = new Logger(WardrobeShareService.name);
@@ -53,7 +55,7 @@ export class WardrobeShareService {
       throw new ForbiddenException('This invite has already been accepted.');
     }
     if (share.grantor.id === granteeId) {
-      throw new ForbiddenException('You cannot accept your own invite.');
+      throw new ForbiddenException(OWN_INVITE);
     }
 
     if (share.grantee && share.grantee.id !== granteeId) {

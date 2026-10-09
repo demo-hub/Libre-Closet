@@ -1,22 +1,20 @@
-{{!-- Load navbar partial --}} {{>navbar}}
-<main id="main" tabindex="-1" class="page flex flex-col h-[calc(100dvh-var(--spacing-header))]">
-  <div class="w-full p-2 gap-2 shadow-md bg-base-200 flex justify-center">
+{{>navbar}}
+<main id="main" tabindex="-1" class="page flex h-[calc(100dvh-var(--spacing-header))] flex-col gap-4">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <h1>{{t 'lang.CHAT'}}</h1>
     {{#if user}}
     <button
+      type="button"
       hx-post="/notification/test"
       hx-indicator="#loading"
       hx-swap="none"
-      class="btn btn-neutral btn-sm"
-    >
-      {{t 'lang.TEST_WEB_PUSH'}}
-    </button>
+      class="btn btn-outline btn-sm h-auto min-h-(--size) max-w-full py-1.5"
+    >{{t 'lang.TEST_WEB_PUSH'}}</button>
     {{/if}}
   </div>
 
-  <div class="flex-1 min-h-0 overflow-y-auto p-4 pb-20">
-    <div id="chat" class="flex flex-col justify-center items-center">
-      <!-- Chat messages will be displayed here -->
-    </div>
+  <div class="min-h-0 flex-1 overflow-y-auto">
+    <div id="chat" role="log" class="flex flex-col"></div>
   </div>
   <div
     id="sse-listener"
@@ -27,31 +25,26 @@
     hx-target="#chat"
   ></div>
 
-  <div
-    class="fixed bottom-15 lg:bottom-0 left-0 right-0 p-4 shadow-lg bg-gradient-to-t from-base-100 via-base-100/50 to-transparent"
+  <form
+    id="messageForm"
+    hx-post="/message"
+    hx-indicator="#loading"
+    hx-trigger="submit"
+    hx-swap="none"
+    hx-on::before-request="this.reset()"
+    class="flex gap-2"
   >
-    <div class="flex flex-row gap-2 items-center justify-center">
-      <form
-        id="messageForm"
-        hx-post="/message"
-        hx-indicator="#loading"
-        hx-trigger="submit"
-        hx-swap="beforeend"
-        hx-target="#chat"
-        class="flex flex-row gap-2 items-center"
-      >
-        <input
-          type="text"
-          id="message"
-          name="message"
-          class="input"
-          placeholder="{{t 'lang.YOUR_MESSAGE'}}"
-          required
-        />
-        <button type="submit" class="btn btn-neutral">{{t 'lang.SEND'}}</button>
-      </form>
-    </div>
-  </div>
+    <label for="message" class="sr-only">{{t 'lang.MESSAGE_LABEL'}}</label>
+    <input
+      type="text"
+      id="message"
+      name="message"
+      class="input min-w-0 grow"
+      placeholder="{{t 'lang.YOUR_MESSAGE'}}"
+      autocomplete="off"
+      required
+    />
+    <button type="submit" class="btn btn-primary">{{t 'lang.SEND'}}</button>
+  </form>
 </main>
-
-{{!-- Load dock partial --}} {{>dock}}
+{{>dock}}
