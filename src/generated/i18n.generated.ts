@@ -11,6 +11,7 @@ export type I18nTranslations = {
         "TAGLINE": string;
         "HERO_DESCRIPTION": string;
         "GET_STARTED": string;
+        "SOURCE_ON_GITHUB": string;
         "OPEN_SOURCE_BADGE": string;
         "FEATURES_TITLE": string;
         "FEATURE_PRIVACY_TITLE": string;
@@ -33,11 +34,16 @@ export type I18nTranslations = {
         "FEATURE_SHARING_DESC": string;
         "WHY_SELF_HOST_TITLE": string;
         "WHY_SELF_HOST_DESC": string;
+        "WHY_SELF_HOST_DESC_2": string;
         "SELF_HOST_TITLE": string;
         "SELF_HOST_DESC": string;
+        "COPY_COMMAND": string;
         "SELF_HOST_NOTE": string;
         "FOOTER_CREDIT": string;
         "SOURCE_CODE": string;
+        "PRIVACY": string;
+        "TERMS": string;
+        "ABOUT": string;
         "SCREENSHOTS_TITLE": string;
         "SCREENSHOT_WARDROBE_ALT": string;
         "SCREENSHOT_WARDROBE_CAPTION": string;
@@ -319,6 +325,10 @@ export type I18nTranslations = {
         "ABOUT_TITLE": string;
         "ABOUT_HEADING": string;
         "ABOUT_INTRO": string;
+        "ABOUT_FORK": string;
+        "ABOUT_INSTANCE": string;
+        "ABOUT_RUN_BY": string;
+        "ABOUT_CONTACT": string;
         "ABOUT_STORY": string;
         "ABOUT_STORY_DESC": string;
         "ABOUT_OPEN_SOURCE": string;

@@ -15,6 +15,7 @@ import { Logger } from 'nestjs-pino';
 import { ViewContextService } from './view-context/view-context.service';
 import { GarmentColor } from './wardrobe/garment-color.enum';
 import { renderIcon } from './icons';
+import { jsonForScript } from './json-script';
 import { formatDateLong } from './i18n/format-date-long';
 import { I18nService } from 'nestjs-i18n';
 import { tRawHelper } from './i18n/t-raw.helper';
@@ -165,9 +166,7 @@ async function bootstrap() {
         .flatMap((e) => Object.values(e.constraints || {}));
     },
   );
-  hbs.registerHelper('json', function (context: unknown) {
-    return JSON.stringify(context);
-  });
+  hbs.registerHelper('json', jsonForScript);
   hbs.registerHelper(
     'ifInArray',
     function (
