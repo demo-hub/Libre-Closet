@@ -1,75 +1,64 @@
 {{>navbar}}
 
-<main id="main" tabindex="-1" class="page page--narrow pb-36! flex flex-col items-center gap-6">
-  {{#if file}}
-  <div class="card bg-base-100 w-full max-w-sm shadow-sm">
-    <figure>
-      <img src="/file/{{file.fileName}}" alt="File upload" class="object-cover w-full" />
-    </figure>
-    <div class="card-body">
-      <h2 class="card-title">{{file.fileName}}</h2>
-      <p class="text-base-content/60 text-sm">{{file.mimetype}}</p>
-    </div>
+<main id="main" tabindex="-1" class="page page--narrow">
+  <h1 class="mb-6 hyphens-auto wrap-anywhere">{{pageTitle}}</h1>
+
+  {{#if garment}}
+  {{#if garment.photo}}
+  <figure class="mx-auto mb-6 aspect-square w-full max-w-sm overflow-hidden rounded-box bg-base-200">
+    <img src="/file/nobg/{{garment.photo.fileName}}" alt="{{pageTitle}}" class="size-full object-contain" />
+  </figure>
+  {{else}}
+  <div class="mx-auto mb-6 flex aspect-square w-full max-w-sm items-center justify-center rounded-box bg-base-200">
+    {{icon "hanger" class="size-20 text-graphite"}}
   </div>
-  {{/if}} {{#if garment}}
-  <div class="card bg-base-100 w-full max-w-sm shadow-sm">
-    {{#if garment.photo}}
-    <figure class="aspect-square overflow-hidden">
-      <img src="/file/nobg/{{garment.photo.fileName}}" alt="{{garment.name}}" class="object-cover w-full h-full" />
-    </figure>
-    {{else}}
-    <div class="aspect-square bg-base-200 flex items-center justify-center text-base-content/30">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"
-        class="size-20">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M9 3.75H6.912a2.25 2.25 0 0 0-2.15 1.588L2.35 13.177a2.25 2.25 0 0 0-.1.661V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 0 0-2.15-1.588H15M2.25 13.5h3.86a2.251 2.251 0 0 1 2.012 1.244l.256.512a2.251 2.251 0 0 0 2.013 1.244h3.218a2.251 2.251 0 0 0 2.013-1.244l.256-.512a2.251 2.251 0 0 1 2.013-1.244h3.859M12 3v8.25m0 0-3-3m3 3 3-3" />
-      </svg>
-    </div>
-    {{/if}}
-    <div class="card-body gap-2">
-      <h2 class="card-title">{{garment.name}}</h2>
-      <p class="capitalize text-base-content/60 text-sm">
-        {{garment.category}}
-      </p>
+  {{/if}}
+  <div class="card mb-6">
+    <dl class="card-body gap-3">
+      <div class="flex justify-between gap-4">
+        <dt class="text-sm text-graphite">{{t 'lang.CATEGORY'}}</dt>
+        <dd class="font-medium text-end wrap-anywhere">{{categoryLabel}}</dd>
+      </div>
       {{#if garment.brand}}
-      <p class="text-sm">{{garment.brand}}</p>
-      {{/if}}
-    </div>
-  </div>
-  {{/if}} {{#if outfit}}
-  <div class="card bg-base-100 w-full max-w-sm shadow-sm">
-    <div class="card-body gap-4">
-      <h2 class="card-title">{{outfit.name}}</h2>
-      {{#if outfit.notes}}
-      <p class="text-base-content/60 text-sm">{{outfit.notes}}</p>
-      {{/if}} {{#if garments.length}}
-      <div class="flex flex-wrap gap-2">
-        {{#each garments}} {{#if this.photo}}
-        <img src="/file/nobg/{{this.photo.fileName}}" alt="{{this.name}}"
-          class="size-20 rounded-box object-cover shadow-sm" />
-        {{else}}
-        <div class="size-20 rounded-box bg-base-200 flex items-center justify-center text-base-content/30">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-            stroke="currentColor" class="size-8">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M9 3.75H6.912a2.25 2.25 0 0 0-2.15 1.588L2.35 13.177a2.25 2.25 0 0 0-.1.661V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 0 0-2.15-1.588H15M2.25 13.5h3.86a2.251 2.251 0 0 1 2.012 1.244l.256.512a2.251 2.251 0 0 0 2.013 1.244h3.218a2.251 2.251 0 0 0 2.013-1.244l.256-.512a2.251 2.251 0 0 1 2.013-1.244h3.859M12 3v8.25m0 0-3-3m3 3 3-3" />
-          </svg>
-        </div>
-        {{/if}} {{/each}}
+      <div class="flex justify-between gap-4">
+        <dt class="text-sm text-graphite">{{t 'lang.BRAND'}}</dt>
+        <dd class="font-medium text-end wrap-anywhere">{{garment.brand}}</dd>
       </div>
       {{/if}}
-    </div>
+    </dl>
   </div>
   {{/if}}
 
-  <div
-    class="fixed bottom-15 lg:bottom-0 left-0 right-0 p-4 shadow-lg bg-gradient-to-t from-base-100 via-base-100/50 to-transparent">
-    <div class="flex flex-row gap-2 items-center justify-center">
-      {{#if createdBy}}
-      <p>{{t 'lang.SHARED_BY'}} {{createdBy.email}}</p>
+  {{#if outfit}}
+  {{#if outfit.notes}}
+  <p class="mb-6 whitespace-pre-line text-graphite wrap-anywhere">{{outfit.notes}}</p>
+  {{/if}}
+  <h2 class="mb-3 text-h3">{{t 'lang.GARMENTS_IN_OUTFIT'}}</h2>
+  {{#if garments.length}}
+  <ul role="list" class="mb-8 grid grid-cols-3 gap-3 sm:grid-cols-4">
+    {{#each garments}}
+    <li class="flex flex-col items-center gap-1 text-center">
+      {{#if this.photo}}
+      <img src="/file/nobg/{{this.photo.fileName}}" alt="" class="aspect-square w-full rounded-box bg-base-200 object-contain" />
+      {{else}}
+      <span class="flex aspect-square w-full items-center justify-center rounded-box bg-base-200 text-graphite">{{icon "hanger" class="size-8"}}</span>
       {{/if}}
-    </div>
-  </div>
+      <span class="line-clamp-2 text-sm hyphens-auto wrap-anywhere">{{this.label}}</span>
+    </li>
+    {{/each}}
+  </ul>
+  {{else}}
+  <p class="mb-8 text-graphite">{{t 'lang.NO_GARMENTS_IN_OUTFIT'}}</p>
+  {{/if}}
+  {{/if}}
+
+  {{#if file}}
+  <figure class="mx-auto mb-6 w-full max-w-sm overflow-hidden rounded-box bg-base-200">
+    <img src="/file/{{file.fileName}}" alt="{{t 'lang.FILE_PREVIEW_ALT'}}" class="w-full object-contain" />
+  </figure>
+  {{/if}}
+
+  <p class="text-graphite">{{sharedFrom}}</p>
 </main>
 
 {{>dock}}

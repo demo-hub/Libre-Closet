@@ -1,5 +1,6 @@
 import { EntityManager } from '@mikro-orm/core';
 import { getRepositoryToken } from '@mikro-orm/nestjs';
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { File } from '../dal/entity/file.entity';
 import { Garment } from '../dal/entity/garment.entity';
@@ -17,6 +18,7 @@ describe('OpenGraphController', () => {
       providers: [
         OpenGraphService,
         FileUrlService,
+        ConfigService,
         {
           provide: getRepositoryToken(File),
           useValue: {

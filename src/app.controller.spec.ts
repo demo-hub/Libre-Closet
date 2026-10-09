@@ -3,6 +3,8 @@ import { AppController } from './app.controller';
 import { I18nContext } from 'nestjs-i18n';
 import { AppService } from './app.service';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { AuthService } from './auth/auth.service';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -10,7 +12,12 @@ describe('AppController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService, ConfigService],
+      providers: [
+        AppService,
+        ConfigService,
+        JwtService,
+        { provide: AuthService, useValue: { verifyPwf: jest.fn() } },
+      ],
     }).compile();
 
     appController = app.get<AppController>(AppController);

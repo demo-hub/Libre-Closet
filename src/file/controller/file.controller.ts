@@ -1,10 +1,12 @@
 import { EntityRepository } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import {
+  BadRequestException,
   Controller,
   Get,
   Header,
   Logger,
+  NotFoundException,
   Param,
   Post,
   Render,
@@ -13,6 +15,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { I18n, I18nContext } from 'nestjs-i18n';
 import { AuthGuard } from '../../auth/auth.guard';
 import { Payload } from '../../auth/dto/payload.dto';
 import { User } from '../../auth/user.decorator';
@@ -34,28 +37,37 @@ export class FileController {
   @UseGuards(ConditionalAuthGuard)
   @Get('files')
   @Render('files')
-  async getFiles(@User() payload: Payload) {
-    const user = await this.userRepository.findOne(
-      { id: payload.userId },
-      { populate: ['fileUploads'] },
-    );
-    return {
-      files: user?.fileUploads,
-    };
+  async getFiles(
+    @User() payload: Payload | undefined,
+    @I18n() i18n: I18nContext,
+  ) {
+    // Only AUTH_ENABLED=false arrives without a payload, and a file needs an owner.
+    if (!payload) throw new NotFoundException();
+    return this.filesPage(payload, i18n);
   }
 
   @UseGuards(AuthGuard)
   @Post('upload')
   @Render('files')
-  async uploadFile(@User() payload: Payload, @Req() req: FastifyRequest) {
+  async uploadFile(
+    @User() payload: Payload,
+    @Req() req: FastifyRequest,
+    @I18n() i18n: I18nContext,
+  ) {
     const data = await req.file();
+    if (!data) throw new BadRequestException();
     await this.fileService.storeImageFromFileUpload(data, payload.userId);
+    return this.filesPage(payload, i18n);
+  }
+
+  private async filesPage(payload: Payload, i18n: I18nContext) {
     const user = await this.userRepository.findOne(
       { id: payload.userId },
       { populate: ['fileUploads'] },
     );
     return {
-      files: user?.fileUploads,
+      files: user?.fileUploads.getItems() ?? [],
+      pageTitle: i18n.t('lang.FILES'),
     };
   }
 
