@@ -165,7 +165,7 @@ Bugs found while working on this fork and left out of the change that found them
   - `SITE_URL` defaults to `https://librecloset.lazz.tech`, and the view context only falls back to the request's host when it is unset, which with that default never happens.
   - Every copied share link (garment, outfit, file) therefore points at someone else's server on an instance started without `SITE_URL`, as the README's quick start is. The same value feeds `twitter:domain` and the JSON-LD `@id`s.
   - A fallback to the request's host has to keep the port (`req.host`, not `req.hostname`), the same issue as the default share images below.
-  - Where: `src/app.module.ts:105`, `src/view-context/view-context.service.ts:40`.
+  - Where: `src/app.module.ts:105`, `src/view-context/view-context.service.ts:48`.
   - About's breadcrumb links are built from it too, so on such an instance they name upstream's host (#33).
   - Found in #29.
 - **Most pages are titled with the bare app name** (medium).
@@ -178,8 +178,8 @@ Bugs found while working on this fork and left out of the change that found them
   - Found in #28.
 - **Default share images drop the port** (low).
   - `og:image` and the JSON-LD image use `req.hostname`, which has no port. They break on an instance reached on a non-default port without a proxy.
-  - Where: `src/view-context/view-context.service.ts:29`.
-  - The landing page's canonical URL, `og:url` and JSON-LD `@id`, `url` and search target lose the port the same way (#33).
+  - Where: `src/view-context/view-context.service.ts:37` (`req.hostname`) and `:54`.
+  - Every page's canonical URL, `og:url` and `twitter:url`, and the landing page's JSON-LD `@id`, `url` and search target, lose the port the same way (#33).
   - Found in #25.
 - **Chrome logs "Transition was skipped" when Back follows a boosted navigation** (low).
   - This comes from htmx's global view transitions.
@@ -194,6 +194,10 @@ Bugs found while working on this fork and left out of the change that found them
   - Smaller files for the list, when PR 13 regenerates the screenshots, would bring it under.
   - Where: `views/index.hbs`, the screenshots list.
   - Found in #33.
+- **A blank OPERATOR_NAME shows an empty "Run by"** (low).
+  - A value of spaces is a non-empty string, so About shows "This instance" with nothing after "Run by". Trimming in the Joi schema would fix it, without leaving the contract PR 11b relies on (strings, '' when unset).
+  - Where: `src/app.module.ts:112`.
+  - Found in #33.
 
 ## Accessibility and theme
 
@@ -207,6 +211,7 @@ Bugs found while working on this fork and left out of the change that found them
   - Found in #32.
 - **Firefox leaves a focused control partly under the dock** (low).
   - It does not scroll a partly visible element out from under the fixed dock: at 360×568 only 19–21 px of a 44 px control can show. A control is never wholly hidden, so WCAG 2.4.11 still passes. `/wardrobe` and `/outfits` do the same.
+  - It leaves one under the sticky header too: at 640×400, Shift+Tab from the landing page's footer shows 19 of the 44 px of "Copy command" (#33).
   - Found in #32.
 - **With WCAG 1.4.12 text spacing, a button label that wraps spills out of its button** (low).
   - daisyUI's `.btn` has a fixed height, so a two-line label ("Start over", "Delete outfit" in French, "Kleidungsstück ansehen" at 320 px) crosses the button's border. Nothing is lost.
