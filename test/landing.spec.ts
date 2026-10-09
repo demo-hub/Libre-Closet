@@ -74,7 +74,9 @@ test.describe('the landing page', () => {
     ).toBeVisible();
     await expect(features.getByRole('listitem')).toHaveCount(9);
     await expect(features.getByRole('heading', { level: 3 })).toHaveCount(9);
-    for (const { text, size } of await headingSizes(page)) {
+    const sizes = await headingSizes(page);
+    expect(sizes.length).toBeGreaterThan(0);
+    for (const { text, size } of sizes) {
       expect(size, text).toBeGreaterThanOrEqual(19);
     }
   });
@@ -243,7 +245,9 @@ test.describe('About', () => {
     await expect(
       main.getByRole('link', { name: 'Original project' }),
     ).toHaveAttribute('href', 'https://github.com/Lazztech/Libre-Closet');
-    for (const { text, size } of await headingSizes(page)) {
+    const sizes = await headingSizes(page);
+    expect(sizes.length).toBeGreaterThan(0);
+    for (const { text, size } of sizes) {
       expect(size, text).toBeGreaterThanOrEqual(19);
     }
   });

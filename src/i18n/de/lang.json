@@ -318,7 +318,7 @@
   "ABOUT_TITLE": "Über Libre Closet",
   "ABOUT_HEADING": "Über Libre Closet",
   "ABOUT_INTRO": "Libre Closet ist ein kostenloser, quelloffener, selbst gehosteter Kleiderschrank-Organizer, ursprünglich entwickelt von Lazztech LLC und lizenziert unter der GNU Affero General Public License (AGPL-3.0).",
-  "ABOUT_FORK": "Dieser Fork ergänzt den Import über einen Link, das Teilen aus anderen Apps in die App, Farbvorschläge aus dem freigestellten Foto und optionale KI-Vorschläge. Dieser Fork wird von mandatiq gepflegt.",
+  "ABOUT_FORK": "Dieser Fork ergänzt den Import aus einem Link, das Teilen aus anderen Apps in die App, Farbvorschläge aus dem freigestellten Foto und optionale KI-Vorschläge. Dieser Fork wird von mandatiq gepflegt.",
   "ABOUT_INSTANCE": "Diese Instanz",
   "ABOUT_RUN_BY": "Betrieben von",
   "ABOUT_CONTACT": "Kontakt",

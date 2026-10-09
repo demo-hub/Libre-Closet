@@ -108,6 +108,7 @@ import { ViewContextModule } from './view-context/view-context.module';
           .uri({ scheme: ['https', 'http'] })
           .default('https://github.com/demo-hub/Libre-Closet'),
         IMAGE_NAME: Joi.string().default('ghcr.io/demo-hub/libre-closet'),
+        // allow(''): a compose file passes an unset variable through as an empty string.
         OPERATOR_NAME: Joi.string().allow('').default(''),
         OPERATOR_CONTACT: Joi.string().allow('').default(''),
         THROTTLE_LIMIT: Joi.number().default(600),
