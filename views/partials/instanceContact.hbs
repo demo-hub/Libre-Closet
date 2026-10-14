@@ -1,0 +1,8 @@
+{{#if operatorContact}}
+<address class="mb-4 not-italic wrap-anywhere">{{#if operatorName}}{{operatorName}}<br>{{/if}}{{operatorContact}}</address>
+{{else}}
+<p class="mb-4">{{fallback}}</p>
+{{#if operatorName}}
+<address class="mb-4 not-italic wrap-anywhere">{{operatorName}}</address>
+{{/if}}
+{{/if}}

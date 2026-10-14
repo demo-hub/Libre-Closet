@@ -134,7 +134,32 @@ describe('translations', () => {
       expect(lang.FOOTER_CREDIT).toContain('AGPL-3.0');
       expect(lang.FOOTER_CREDIT).toContain('Lazztech LLC');
     });
+
+    it('keeps the licence in the terms of service', () => {
+      expect(lang.TERMS_LICENSE_DESC).toContain('AGPL-3.0');
+    });
+
+    it('describes this instance, not a hosted service, on the privacy and terms pages', () => {
+      const hosted = flatten(lang)
+        .filter(([key]) => /^(PRIVACY|TERMS)_/.test(key))
+        .filter(([, value]) => /Lazztech|lazz\.tech/.test(value))
+        .map(([key]) => key);
+      expect(hosted).toEqual([]);
+    });
   });
+
+  const informal: [string, RegExp][] = [
+    ['de', /(?<!\p{L})(du|dich|dir|dein\p{L}*)(?!\p{L})/iu],
+    ['es', /(?<!\p{L})(tú|tu|tus|ti|te|contigo)(?!\p{L})/iu],
+  ];
+  for (const [locale, pronoun] of informal)
+    it(`${locale} addresses the reader formally on the privacy and terms pages`, () => {
+      const informalKeys = flatten(load(locale))
+        .filter(([key]) => /^(PRIVACY|TERMS)_/.test(key))
+        .filter(([, value]) => pronoun.test(value))
+        .map(([key]) => key);
+      expect(informalKeys).toEqual([]);
+    });
 
   it('hands {n} to the client untouched through tRaw', () => {
     const french = load('fr');
