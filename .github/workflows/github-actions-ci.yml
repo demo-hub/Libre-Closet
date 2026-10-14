@@ -75,14 +75,15 @@ jobs:
           postgresql user: "test"
           postgresql password: "Password123"
 
-      - name: start minio s3 object storage
+      # minio/minio is gone from Docker Hub; silo is a maintained build of the same server.
+      - name: start silo s3 object storage
         run: |
-          docker run -d -p 9000:9000 --name minio \
-                      -e "MINIO_ACCESS_KEY=minioadmin" \
-                      -e "MINIO_SECRET_KEY=minioadmin" \
+          docker run -d -p 9000:9000 --name silo \
+                      -e "MINIO_ROOT_USER=minioadmin" \
+                      -e "MINIO_ROOT_PASSWORD=minioadmin" \
                       -v /tmp/data:/data \
                       -v /tmp/config:/root/.minio \
-                      minio/minio server /data
+                      pgsty/silo:RELEASE.2026-09-16T00-00-00Z server /data
 
           export AWS_ACCESS_KEY_ID=minioadmin
           export AWS_SECRET_ACCESS_KEY=minioadmin
