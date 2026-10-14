@@ -201,6 +201,12 @@
   :where(.toast.toast-top) { top: calc(var(--spacing-header) + 0.5rem); z-index: 60; }
 }
 
+/* daisyUI opens a details collapse with a discrete content-visibility transition, which keeps its fields unfocusable for a frame or more:
+   a link pasted straight after opening the import box went nowhere. Opening drops it; closing keeps it, so the content still folds away. */
+.collapse:is(details)[open]::details-content {
+  transition: min-height .2s ease-out allow-discrete, padding .1s ease-out 20ms, background-color .2s ease-out, height .2s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important; scroll-behavior: auto !important; }

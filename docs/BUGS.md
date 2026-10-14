@@ -254,9 +254,6 @@ Bugs found while working on this fork and left out of the change that found them
 
 ## Tests and tooling
 
-- **The url-import end-to-end tests fail in WebKit** (medium).
-  - Under the pinned Playwright Docker image, the import POST arrives with an empty URL, so five tests fail in WebKit and Mobile Safari. They fail on `main` too.
-  - Found in #27.
 - **A local Playwright run writes into whatever app answers on :3000** (medium).
   - `playwright.config.ts` reuses an existing server, and the smoke test creates garments, so a local run against your own instance adds test garments to your wardrobe.
   - Found in #26.
