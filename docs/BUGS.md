@@ -192,6 +192,7 @@ Bugs found while working on this fork and left out of the change that found them
 - **Lighthouse puts the landing page's largest contentful paint at 2.6 s, over the plan's 2.5 s** (low).
   - With no connection type known, as under Lighthouse, Chromium loads lazy images up to about 3,000 px from the viewport, so the four phone screenshots (308 KB, 4.4 times the size they are shown at) load with the hero, and Lighthouse's simulation counts them before the paint. Without them it measures 2.3 s.
   - Smaller files for the list, when PR 13 regenerates the screenshots, would bring it under.
+  - The same files fail Lighthouse's `uses-responsive-images` on `/`, which is set to warn in `lighthouserc.js` until PR 13 (#39).
   - Where: `views/index.hbs`, the screenshots list.
   - Found in #33.
 - **A blank OPERATOR_NAME shows an empty "Run by"** (low).
