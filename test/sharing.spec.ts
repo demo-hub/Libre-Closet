@@ -13,21 +13,37 @@ const coat = readFileSync(
   join(__dirname, '../scripts/screenshots/fixtures/camel-coat.png'),
 );
 
-const form = (request: APIRequestContext, path: string, fields: string[][]) =>
+const form = (
+  request: APIRequestContext,
+  path: string,
+  fields: string[][],
+  maxRedirects?: number,
+) =>
   request.post(path, {
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     data: new URLSearchParams(fields).toString(),
+    maxRedirects,
   });
 
-/** Signs this context in as a new account; five projects share one database, so every address is new. */
+/**
+ * Signs this context in as a new account; five projects share one database, so every address is new.
+ * The redirect is not followed: it goes to /auth/profile, which answers 404 with AUTH_ENABLED=false,
+ * as the suite's own server runs. The session cookie is what signs the context in.
+ */
 async function register(request: APIRequestContext, who: string) {
   const email = `${who}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
-  const response = await form(request, '/auth/register', [
-    ['email', email],
-    ['password', PASSWORD],
-    ['confirmPassword', PASSWORD],
-  ]);
-  expect(response.ok()).toBeTruthy();
+  const response = await form(
+    request,
+    '/auth/register',
+    [
+      ['email', email],
+      ['password', PASSWORD],
+      ['confirmPassword', PASSWORD],
+    ],
+    0,
+  );
+  expect(response.status()).toBe(302);
+  expect(response.headers()['set-cookie']).toContain('access_token=');
   return email;
 }
 
@@ -80,11 +96,15 @@ async function shareLink(page: Page, itemPath: string): Promise<string> {
   return pathname + search;
 }
 
-/** An invite link made through the page, as its path. */
-async function createInvite(page: Page, permission = 'VIEW') {
+/** An invite link made through the page, as its path; `names` are the page's labels in the context's language. */
+async function createInvite(
+  page: Page,
+  permission = 'VIEW',
+  names = { access: 'Access', create: 'Create invite link' },
+) {
   await page.goto('/wardrobe-share/manage');
-  await page.getByLabel('Access').selectOption(permission);
-  await page.getByRole('button', { name: 'Create invite link' }).click();
+  await page.getByLabel(names.access).selectOption(permission);
+  await page.getByRole('button', { name: names.create }).click();
   const url = await page.locator('#new-invite-link').inputValue();
   return new URL(url).pathname;
 }
@@ -462,14 +482,15 @@ test.describe('sharing management', () => {
     test.use({ locale: 'de-DE' });
 
     test('every row fits', async ({ page, browser }) => {
+      const de = { access: 'Zugriff', create: 'Einladungslink erstellen' };
       await register(page.request, 'de-owner');
-      await createInvite(page);
-      const invite = await createInvite(page, 'MANAGE');
+      await createInvite(page, 'VIEW', de);
+      const invite = await createInvite(page, 'MANAGE', de);
       const friendContext = await browser.newContext({ locale: 'de-DE' });
       const friend = await friendContext.newPage();
       await register(friend.request, 'de-friend');
       expect((await friend.request.post(`${invite}/accept`)).ok()).toBeTruthy();
-      const back = await createInvite(friend);
+      const back = await createInvite(friend, 'VIEW', de);
       expect((await page.request.post(`${back}/accept`)).ok()).toBeTruthy();
       await friendContext.close();
 
