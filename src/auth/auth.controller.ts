@@ -15,6 +15,7 @@ import type { FastifyReply } from 'fastify';
 import { I18n, I18nContext } from 'nestjs-i18n';
 import { AuthGuard } from './auth.guard';
 import { RegistrationGuard } from './registration.guard';
+import { ConfigService } from '@nestjs/config';
 import { AuthService, RESET_CODE_LIFETIME_MINUTES } from './auth.service';
 import { EmailDto } from './dto/email.dto';
 import { LoginDto } from './dto/login.dto';
@@ -63,7 +64,21 @@ async function validateTyped<T extends object>(
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  /**
+   * Where a sign-in lands. /auth/profile exists only with accounts on; without
+   * them the register and login routes still answer a typed address, so they
+   * go to the wardrobe instead of a 404.
+   */
+  private afterSignIn(): string {
+    return this.configService.get<boolean>('AUTH_ENABLED')
+      ? '/auth/profile'
+      : '/wardrobe';
+  }
 
   /** @fastify/view merges the request's locals underneath, so ogTitle and friends given here win over the defaults. */
   private rerender(
@@ -112,7 +127,7 @@ export class AuthController {
       maxAge: 365 * 24 * 60 * 60 * 1000, // 365 days
       httpOnly: true, // Prevents client-side JS from reading it
     });
-    return navigate(reply, '/auth/profile');
+    return navigate(reply, this.afterSignIn());
   }
 
   @UseGuards(RegistrationGuard)
@@ -147,7 +162,7 @@ export class AuthController {
         maxAge: 365 * 24 * 60 * 60 * 1000, // 365 days
         httpOnly: true, // Prevents client-side JS from reading it
       });
-      return navigate(reply, returnTo ?? '/auth/profile');
+      return navigate(reply, returnTo ?? this.afterSignIn());
     } catch (error) {
       this.logger.warn(error);
       return this.rerender(reply, 'auth/login', {

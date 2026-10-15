@@ -25,10 +25,11 @@ Bugs found while working on this fork and left out of the change that found them
   - The head script puts what was typed into the swapped-in field, but a value set by script fires no `change`, so leaving that field sends no validation. The next edit, or the submit, reports its errors.
   - Where: the head script's `htmx:afterSwap` handler in `views/layout.hbs`.
   - Found in #49.
-- **With AUTH_ENABLED=false, registering lands on a 404** (low).
-  - `/auth/register` still accepts a POST and signs the browser in, then redirects to `/auth/profile`, which exists only with accounts on. The header offers no Register link in that mode, so only a typed address reaches it.
-  - Where: `src/auth/auth.controller.ts`, `postRegister`.
-  - Found in #36.
+- **With AUTH_ENABLED=false, anyone can still create an account** (low).
+  - `/auth/register` answers without accounts, and since #47 a sign-in lands on the wardrobe rather than a 404. The account does nothing until the operator turns `AUTH_ENABLED` on, but then it works, and it holds the address the owner may want.
+  - A 404, or refusing to create the account, would fix it. The register page's own specs (`a11y.spec.ts`, `auth-pages.spec.ts`, `shell.spec.ts`) run against the suite's server, which has no accounts, so they would need a server with accounts first.
+  - Where: `src/auth/registration.guard.ts`, `src/auth/auth.controller.ts` (`postRegister`).
+  - Found in #47.
 
 ## Wardrobe
 

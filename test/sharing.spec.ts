@@ -27,8 +27,8 @@ const form = (
 
 /**
  * Signs this context in as a new account; five projects share one database, so every address is new.
- * The redirect is not followed: it goes to /auth/profile, which answers 404 with AUTH_ENABLED=false,
- * as the suite's own server runs. The session cookie is what signs the context in.
+ * The redirect is not followed: the session cookie is what signs the context in. It goes to
+ * /auth/profile with AUTH_ENABLED=true and to /wardrobe without, as the suite's own server runs.
  */
 async function register(request: APIRequestContext, who: string) {
   const email = `${who}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
