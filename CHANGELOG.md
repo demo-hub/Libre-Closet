@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-10-15
+
+#### Security
+
+- Each instance now makes its own session secret and web push keys on first boot and keeps them in `DATA_PATH/instance-secrets.json`. The published defaults (`ChangeMe!` and the push keys that shipped in `.env`) are ignored, even when set by hand
+- A session token is trusted only with its password fingerprint, so a token signed with a known secret no longer shows another account's email address in the header
+- Deleting your account asks for your own password; another account's email and password no longer pass
+- A password-reset code works for 15 minutes, and only the newest one; it is deleted once used
+- The reset form answers the same way whether or not an address has an account
+- Typed passwords are no longer sent back into the page by live validation
+
+#### Changed
+
+- Upgrading signs everyone out once on an instance that used the default secret, and ends push subscriptions made with the old shared keys
+- Upgrading cancels every outstanding password-reset code, so a reset in progress has to be asked for again
+- Set `ACCESS_TOKEN_SECRET`, `PUBLIC_VAPID_KEY` and `PRIVATE_VAPID_KEY` yourself when `DATA_PATH` is not a persistent volume shared by every instance, or each container makes its own and every deploy signs everyone out
+- The reset email says how long its code lasts, and the code page says a code is on its way if an account uses the address
+- Live validation reports only the fields you have filled in, so leaving the email field no longer lists the password rules
+- A request refused for coming too often says to wait, instead of that it failed
+
+#### Fixed
+
+- Without accounts, a typed register or login address lands on the wardrobe instead of a missing page
+- The landing page's Copy command button works on the first click in Safari
+
 ## [1.0.0] - 2026-10-15
 
 #### Added
