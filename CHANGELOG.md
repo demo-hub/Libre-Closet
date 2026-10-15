@@ -11,6 +11,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - With `PWA_ENABLED`, the first page after an upgrade no longer loads the previous version's stylesheet and scripts from the service worker, so it is no longer nearly unstyled until a reload
 
+## [1.2.0] - 2026-10-15
+
+#### Added
+
+- Turn push notifications on or off for each browser on your profile page. The page says when the browser blocks them and where to allow them
+- Copy buttons work on an instance reached over plain http, such as a LAN address: the link is copied from a field, or left selected there with a hint to press Ctrl+C (⌘C on a Mac)
+
+#### Changed
+
+- Without `SITE_URL`, share, invite, canonical and preview links use the address each visit came in on, port included, instead of the upstream instance. `SITE_URL` may now be `http://`, and an empty value counts as unset
+- `X-Forwarded-Host` and `X-Forwarded-Proto` count only from a proxy on the same machine. Behind a proxy in another container, set `SITE_URL`, or links name the address the proxy used, over `http://`
+- No page asks for notification permission by itself any more, and signing out stops that browser's notifications
+- A value of spaces in `OPERATOR_NAME` or `OPERATOR_CONTACT` counts as unset, so About no longer shows an empty "Run by"
+
+#### Fixed
+
+- Share links on an instance started without `SITE_URL`, as the quick start is, pointed at someone else's server
+- Default share images, canonical URLs and the sitemap dropped the port
+- Push notifications could not be turned on at all, and a second account on the same browser could not subscribe
+- After an app update, the next wardrobe search showed every garment instead of its results
+- After an upgrade with the app installed, the first page could load the previous release's stylesheet and scripts
+- The account pages (log in, register, reset password, profile, delete account, update email) are titled after their heading instead of the app's name
+
 ## [1.1.0] - 2026-10-15
 
 #### Security
