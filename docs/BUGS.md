@@ -142,10 +142,6 @@ Bugs found while working on this fork and left out of the change that found them
 
 ## Shell and PWA
 
-- **Most pages are titled with the bare app name** (medium).
-  - The layout prints `pageTitle` when a route sets one. The wardrobe and outfit routes set it (PRs 8b and 9a), but the files, sharing, auth, shared-item and chat pages do not, so their tabs and history entries all read "Libre Closet" (WCAG 2.4.2).
-  - Where: `views/layout.hbs:52`; `file.controller.ts`, `wardrobe-share.controller.ts`, `auth.controller.ts`, `open-graph.controller.ts`, `app.controller.ts` (`/chat`).
-  - Found in #29.
 - **A push endpoint whose name resolves to a private address is still posted to** (low).
   - `/notification/subscribe` refuses http, loopback, private and link-local literals and odd ports, but does not resolve a host name, so a signed-in user can store `https://name-that-resolves-internally/` and make `/notification/test` POST an encrypted body there. Nothing of the answer comes back.
   - Resolving at send time, as the importer's `SafeFetchService` does, would close it; web-push takes an `agent`, which could carry that lookup.

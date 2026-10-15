@@ -351,6 +351,50 @@ describe('AuthController', () => {
     });
   });
 
+  describe('page titles', () => {
+    afterEach(() => jest.restoreAllMocks());
+
+    it('title each page after its heading', async () => {
+      jest.spyOn(authService, 'findEmail').mockResolvedValue('a@example.com');
+      expect(controller.getLogin(i18n, undefined)).toMatchObject({
+        pageTitle: 'lang.LOGIN_OG_TITLE',
+      });
+      expect(controller.getRegister(i18n)).toMatchObject({
+        pageTitle: 'lang.REGISTER_OG_TITLE',
+      });
+      expect(controller.getReset(i18n, 'a@example.com')).toMatchObject({
+        pageTitle: 'lang.RESET_PASSWORD',
+      });
+      expect(controller.getResetCode(i18n, 'a@example.com')).toMatchObject({
+        pageTitle: 'lang.CHANGE_PASSWORD',
+      });
+      expect(controller.getProfile(i18n)).toEqual({
+        pageTitle: 'lang.PROFILE',
+      });
+      await expect(
+        controller.getDeleteAccount({ userId: 1 }, i18n),
+      ).resolves.toMatchObject({ pageTitle: 'lang.DELETE_ACCOUNT' });
+      expect(controller.getUpdateEmail(i18n)).toEqual({
+        pageTitle: 'lang.UPDATE_EMAIL',
+      });
+    });
+
+    it('keep the title when a failed submit renders the page again', async () => {
+      jest.spyOn(I18nContext, 'current').mockReturnValue(i18n);
+      jest.spyOn(authService, 'signIn').mockRejectedValue(new Error('nope'));
+      const reply = { view: jest.fn() };
+      await controller.postLogin(
+        i18n,
+        { email: 'a@example.com', password: 'secret' },
+        reply as unknown as FastifyReply,
+      );
+      expect(reply.view).toHaveBeenCalledWith(
+        'auth/login',
+        expect.objectContaining({ pageTitle: 'lang.LOGIN_OG_TITLE' }),
+      );
+    });
+  });
+
   describe('RegistrationGuard', () => {
     const guardedMethods = [
       'postRegister',
