@@ -10,6 +10,7 @@ function render(view: string, context: Record<string, unknown>): string {
   hbs.registerHelper('icon', () => '');
   hbs.registerPartial('navbar', '');
   hbs.registerPartial('dock', '');
+  hbs.registerPartial('phoneScreenshot', '');
   const source = readFileSync(
     join(__dirname, '..', 'views', `${view}.hbs`),
     'utf8',

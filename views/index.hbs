@@ -126,45 +126,25 @@
     </ul>
   </section>
 
-  <section class="grid gap-6">
+  <section class="below-fold grid gap-6">
     <h2 id="screenshots-title">{{t 'lang.SCREENSHOTS_TITLE'}}</h2>
     <div role="region" aria-labelledby="screenshots-title" tabindex="0" class="snap-x snap-mandatory overflow-x-auto pb-2">
       <ul role="list" class="flex w-max gap-4">
-        <li class="snap-start">
-          <figure class="grid w-56 gap-2">
-            <img src="/assets/screenshots/Screenshot_mobile_1-448.webp" srcset="/assets/screenshots/Screenshot_mobile_1-448.webp 448w, /assets/screenshots/Screenshot_mobile_1.webp 1179w" sizes="224px" alt="{{t 'lang.SCREENSHOT_WARDROBE_ALT'}}" width="1179" height="2556" loading="lazy" class="h-auto w-full rounded-box border border-base-300" />
-            <figcaption class="text-sm text-graphite">{{t 'lang.SCREENSHOT_WARDROBE_CAPTION'}}</figcaption>
-          </figure>
-        </li>
-        <li class="snap-start">
-          <figure class="grid w-56 gap-2">
-            <img src="/assets/screenshots/Screenshot_mobile_2-448.webp" srcset="/assets/screenshots/Screenshot_mobile_2-448.webp 448w, /assets/screenshots/Screenshot_mobile_2.webp 1179w" sizes="224px" alt="{{t 'lang.SCREENSHOT_GARMENT_ALT'}}" width="1179" height="2556" loading="lazy" class="h-auto w-full rounded-box border border-base-300" />
-            <figcaption class="text-sm text-graphite">{{t 'lang.SCREENSHOT_GARMENT_CAPTION'}}</figcaption>
-          </figure>
-        </li>
-        <li class="snap-start">
-          <figure class="grid w-56 gap-2">
-            <img src="/assets/screenshots/Screenshot_mobile_3-448.webp" srcset="/assets/screenshots/Screenshot_mobile_3-448.webp 448w, /assets/screenshots/Screenshot_mobile_3.webp 1179w" sizes="224px" alt="{{t 'lang.SCREENSHOT_OUTFIT_BUILDER_ALT'}}" width="1179" height="2556" loading="lazy" class="h-auto w-full rounded-box border border-base-300" />
-            <figcaption class="text-sm text-graphite">{{t 'lang.SCREENSHOT_OUTFIT_BUILDER_CAPTION'}}</figcaption>
-          </figure>
-        </li>
-        <li class="snap-start">
-          <figure class="grid w-56 gap-2">
-            <img src="/assets/screenshots/Screenshot_mobile_4-448.webp" srcset="/assets/screenshots/Screenshot_mobile_4-448.webp 448w, /assets/screenshots/Screenshot_mobile_4.webp 1179w" sizes="224px" alt="{{t 'lang.SCREENSHOT_OUTFIT_ALT'}}" width="1179" height="2556" loading="lazy" class="h-auto w-full rounded-box border border-base-300" />
-            <figcaption class="text-sm text-graphite">{{t 'lang.SCREENSHOT_OUTFIT_CAPTION'}}</figcaption>
-          </figure>
-        </li>
+        {{> phoneScreenshot n=1 alt=(t 'lang.SCREENSHOT_WARDROBE_ALT') caption=(t 'lang.SCREENSHOT_WARDROBE_CAPTION')}}
+        {{> phoneScreenshot n=2 alt=(t 'lang.SCREENSHOT_GARMENT_ALT') caption=(t 'lang.SCREENSHOT_GARMENT_CAPTION')}}
+        {{> phoneScreenshot n=3 alt=(t 'lang.SCREENSHOT_OUTFIT_BUILDER_ALT') caption=(t 'lang.SCREENSHOT_OUTFIT_BUILDER_CAPTION')}}
+        {{> phoneScreenshot n=4 alt=(t 'lang.SCREENSHOT_OUTFIT_ALT') caption=(t 'lang.SCREENSHOT_OUTFIT_CAPTION')}}
       </ul>
     </div>
   </section>
 
-  <section class="grid max-w-3xl gap-4">
+  <section class="below-fold grid max-w-3xl gap-4">
     <h2>{{t 'lang.WHY_SELF_HOST_TITLE'}}</h2>
     <p>{{t 'lang.WHY_SELF_HOST_DESC'}}</p>
     <p>{{t 'lang.WHY_SELF_HOST_DESC_2'}}</p>
   </section>
 
-  <section class="grid max-w-3xl gap-4">
+  <section class="below-fold grid max-w-3xl gap-4">
     <h2>{{t 'lang.SELF_HOST_TITLE'}}</h2>
     <p>{{t 'lang.SELF_HOST_DESC'}}</p>
     <pre class="code-block"><code>docker run -d \

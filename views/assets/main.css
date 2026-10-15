@@ -327,6 +327,12 @@
   .spinner { animation: none; border-style: dotted; border-color: var(--color-primary); }
 }
 
+/* A landing section far below the hero: not laid out, so its lazy images and fonts are not fetched, until it nears the viewport. */
+.below-fold {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto 30rem;
+}
+
 /* Wraps rather than scrolls: a scrolling block the keyboard cannot reach would need a tab stop of its own. */
 .code-block {
   padding: 1rem;

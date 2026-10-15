@@ -223,13 +223,17 @@ describe('the install screenshots', () => {
 
   it('keeps one aspect ratio per form factor', () => {
     // Chrome on Android drops a screenshot whose ratio differs from the first one's.
-    for (const a of screenshots) {
-      for (const b of screenshots) {
-        if (a.form_factor !== b.form_factor) continue;
-        const [aw, ah] = dimensions(a.sizes);
-        const [bw, bh] = dimensions(b.sizes);
-        expect(aw * bh).toBe(bw * ah);
-      }
+    for (const factor of new Set(screenshots.map((s) => s.form_factor))) {
+      const ratios = screenshots
+        .filter((s) => s.form_factor === factor)
+        .map((s) => {
+          const [w, h] = dimensions(s.sizes);
+          return w / h;
+        });
+      expect({ factor, ratios: new Set(ratios).size }).toEqual({
+        factor,
+        ratios: 1,
+      });
     }
   });
 
