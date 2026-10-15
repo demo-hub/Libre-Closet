@@ -63,6 +63,7 @@ https://nestjs-i18n.com/quick-start --}}
     <script defer src="/modules/_hyperscript.min.js"></script>
     <script defer src="/modules/sse.js"></script>
     <script defer src="/js/color-multiselect.js"></script>
+    <script defer src="/js/copy.js"></script>
     <script type="importmap">
       {
         "imports": {
@@ -104,6 +105,7 @@ https://nestjs-i18n.com/quick-start --}}
           // A restored snapshot must not keep a toast, a "Copied" label, an open dialog (it would come back non-modal) or values a script wrote into a form.
           document.querySelectorAll('.toast').forEach(function (t) { t.classList.add('hidden'); });
           document.querySelectorAll('[data-copy][data-label] span').forEach(function (s) { s.textContent = s.closest('[data-label]').dataset.label; });
+          document.querySelectorAll('.copy-fallback').forEach(function (f) { f.remove(); });
           document.querySelectorAll('dialog[open]').forEach(function (d) { d.close(); });
           document.querySelectorAll('input[data-initial]').forEach(function (i) { i.value = i.dataset.initial; });
           document.querySelectorAll('#photoFileName').forEach(function (p) { p.hidden = true; p.textContent = ''; });
@@ -180,6 +182,8 @@ https://nestjs-i18n.com/quick-start --}}
     rate-limited request looks to the user like nothing happened at all. }}
     {{> toast id="requestErrorToast" kind="error" text=(t 'lang.REQUEST_FAILED') hidden=true dismiss=true}}
     {{> toast id="rateLimitedToast" kind="error" text=(t 'lang.ERROR_429') hidden=true dismiss=true}}
+    {{!-- Read by /js/copy.js where the browser has no clipboard (plain http on a LAN address). --}}
+    <span id="copy-texts" hidden data-keys="{{tRaw 'lang.COPY_BY_HAND'}}" data-touch="{{t 'lang.COPY_BY_HAND_TOUCH'}}"></span>
     {{! The
     service worker is used in conjunction with the manifest.json to enable PWA
     (Progressive Web App) functionality. This script tag uses JavaScript

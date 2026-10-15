@@ -106,11 +106,6 @@ Bugs found while working on this fork and left out of the change that found them
   - A press that arrives while the row's request is running is sent with the old row's index, so three quick presses advance one or two garments.
   - Where: `views/partials/outfit_row.hbs`, Previous and Next.
   - Found in #31.
-- **Copy buttons do nothing on an instance served over plain http** (medium).
-  - `navigator.clipboard` exists only in a secure context (HTTPS or localhost), so on a LAN address like `http://192.168.1.10:3000` the call throws and nothing is copied or shown.
-  - This affects Share on the garment page and every other copy button: outfit and file share, sharing management, the invite link.
-  - A fallback (selecting the link in a field, or the Web Share API where available) would cover it.
-  - Found in #29.
 
 ## Calendar
 
@@ -231,7 +226,8 @@ Bugs found while working on this fork and left out of the change that found them
   - the four calendar keys: `TODAY`, `PREVIOUS_MONTH`, `NEXT_MONTH`, `REMOVE_FROM_CALENDAR`, the re-worded `CALENDAR_DELETE_CONFIRM` in es, fr and ru, and fr `CALENDAR_WORN` (#32);
   - the ten landing and About keys: `SOURCE_ON_GITHUB`, `COPY_COMMAND`, `WHY_SELF_HOST_DESC_2` (with `WHY_SELF_HOST_DESC` cut to its first sentence), `PRIVACY`, `TERMS`, `ABOUT`, `ABOUT_FORK`, `ABOUT_INSTANCE`, `ABOUT_RUN_BY`, `ABOUT_CONTACT` (#33);
   - `RESET_CODE_SENT` and the re-worded `RESET_FAILED` and `RESET_CODE_FAILED` (#44);
-  - the re-worded `DELETE_ACCOUNT_FAILED` (#46).
+  - the re-worded `DELETE_ACCOUNT_FAILED` (#46);
+  - `COPY_BY_HAND` and `COPY_BY_HAND_TOUCH` (#55).
 
 ## Tests and tooling
 

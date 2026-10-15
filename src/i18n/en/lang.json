@@ -89,6 +89,8 @@
   "NO_FILES": "No files yet.",
   "FILE_PREVIEW_ALT": "Uploaded image",
   "COPIED": "Copied",
+  "COPY_BY_HAND": "Press {keys} to copy.",
+  "COPY_BY_HAND_TOUCH": "Select the text above and copy it.",
   "NAME": "Name",
   "CATEGORY": "Category",
   "BRAND": "Brand",

@@ -89,6 +89,8 @@
   "NO_FILES": "Noch keine Dateien.",
   "FILE_PREVIEW_ALT": "Hochgeladenes Bild",
   "COPIED": "Kopiert",
+  "COPY_BY_HAND": "Drücke {keys}, um zu kopieren.",
+  "COPY_BY_HAND_TOUCH": "Markiere den Text oben und kopiere ihn.",
   "NAME": "Name",
   "CATEGORY": "Kategorie",
   "BRAND": "Marke",

@@ -110,6 +110,10 @@ describe('translations', () => {
       expect(lang.CREATE_COLOR).toContain('{name}');
     });
 
+    it('keeps the keys to press in the copy-by-hand hint', () => {
+      expect(lang.COPY_BY_HAND).toContain('{keys}');
+    });
+
     it('names the app under a shared item', () => {
       expect(lang.SHARED_FROM).toContain('{appName}');
     });

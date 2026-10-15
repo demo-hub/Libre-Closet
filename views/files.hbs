@@ -48,11 +48,6 @@
             data-copy="{{../siteUrl}}/share?shareableId={{this.shareableId}}&type=file"
             data-done="{{t 'lang.COPIED'}}"
             data-label="{{t 'lang.COPY_LINK'}}"
-            _="on click
-                 call navigator.clipboard.writeText(my @data-copy)
-                 put my @data-done into the first <span/> in me
-                 wait 2s
-                 put my @data-label into the first <span/> in me"
           >{{icon "link" class="size-4"}}<span>{{t 'lang.COPY_LINK'}}</span></button>
           <button
             type="button"
