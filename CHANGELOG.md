@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-10-15
+
+#### Added
+
+- A new look on every page: Libre Closet's own mark, icons, palette and fonts (served by your instance), a header that stays in view, and a dock on phones that shows where you are
+- Every page can be used from the keyboard, has labelled controls, and works in light and dark mode down to 320 px wide
+- A privacy policy and terms of service written for a self-hosted instance, naming whoever runs it through the new `OPERATOR_NAME` and `OPERATOR_CONTACT` settings
+- `SOURCE_URL` and `IMAGE_NAME` settings, so a modified copy can point its landing page and About at its own source code and image, as the AGPL asks
+- A `THROTTLE_LIMIT` setting for the number of requests allowed per minute (600 by default, as before)
+- Push notifications show their text and icon, and open the app when tapped
+- New screenshots on the landing page and in the install dialog, taken from a demo wardrobe
+
+#### Changed
+
+- The app's text is in plain British English and sentence case, and the landing page and About make plainer claims
+- Error pages, and sign-in and registration errors, say what went wrong in your language
+- Wardrobe search and filters sit in the page, with a filter sheet you can use from the keyboard
+- The password-reset email names the app instead of your email address
+- Pages load faster: a smaller stylesheet, the first garment photo fetched first, and a landing page whose screenshots no longer hold up its first paint
+- The offline app no longer stores the marketing screenshots, so it downloads about 0.4 MB instead of 1.3 MB
+- `ICON_NAME` defaults to the new icon; a setting that names the old Lazztech icon falls back to it, with a warning in the log
+
+#### Fixed
+
+- A public share link no longer shows the owner's email address, on the page or in its link preview
+- File links serve only files the app stored; any other name answers 404
+- A share link to something that does not exist answers 404 instead of an empty page
+- An error under a file link was cached by browsers for a year
+- The link import box's field takes focus as soon as it opens, in Safari too
+
 ## [0.6.0] - 2026-09-10
 
 #### Added
