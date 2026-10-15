@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Locator, Page } from '@playwright/test';
 
 const SOURCE_URL =
   process.env.SOURCE_URL || 'https://github.com/demo-hub/Libre-Closet';
@@ -28,6 +28,28 @@ const fakeClipboard = (page: Page) =>
       },
     });
   });
+
+/**
+ * Brings a control below the fold into view and waits for the page to stop
+ * moving. A `.below-fold` block renders once it is on screen, swapping its
+ * 30rem placeholder for its real height, which moves whatever sits below it:
+ * a click in that frame lands where the control was.
+ */
+const scrollIntoViewSettled = async (page: Page, target: Locator) => {
+  let last: number | undefined;
+  for (let i = 0; i < 20; i++) {
+    await target.scrollIntoViewIfNeeded();
+    await page.evaluate(
+      () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        ),
+    );
+    const y = (await target.boundingBox())?.y;
+    if (y !== undefined && y === last) return;
+    last = y;
+  }
+};
 
 /** Font sizes of the headings in <main>, which brand rule 4 keeps at the h3 size or above. */
 const headingSizes = (page: Page) =>
@@ -117,6 +139,7 @@ test.describe('the landing page', () => {
     await expect(page.locator('main pre code')).toContainText(IMAGE_NAME);
     const copy = page.locator('main button[data-copy]');
     await expect(copy).toHaveAccessibleName('Copy command');
+    await scrollIntoViewSettled(page, copy);
     await copy.click();
     await expect(copy).toHaveText('Copied');
     expect(
@@ -132,7 +155,11 @@ test.describe('the landing page', () => {
   test('leaves "Copied" out of a page restored by Back', async ({ page }) => {
     await fakeClipboard(page);
     await page.goto('/');
-    await page.getByRole('button', { name: 'Copy command' }).click();
+    const copy = page.locator('main button[data-copy]');
+    await scrollIntoViewSettled(page, copy);
+    await copy.click();
+    // Or the Back below would pass without "Copied" ever having been shown.
+    await expect(copy).toHaveText('Copied');
     await page
       .locator('main footer')
       .getByRole('link', { name: 'About', exact: true })
