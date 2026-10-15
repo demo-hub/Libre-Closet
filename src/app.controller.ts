@@ -12,7 +12,9 @@ import {
 } from '@nestjs/common';
 import { escapeExpression } from 'handlebars';
 import { Subject } from 'rxjs';
+import { ConfigService } from '@nestjs/config';
 import { AppService } from './app.service';
+import { publicBaseUrl } from './public-url';
 import { I18n, I18nContext } from 'nestjs-i18n';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { ConditionalAuthGuard } from './auth/conditional-auth.guard';
@@ -23,7 +25,10 @@ export class AppController {
 
   private message$ = new Subject<string>();
 
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Get()
   @Render('index')
@@ -140,10 +145,10 @@ export class AppController {
 
   @Get('sitemap.xml')
   sitemap(@Req() req: FastifyRequest, @Res() reply: FastifyReply): void {
-    const protocol =
-      (req.headers['x-forwarded-proto'] as string) ?? req.protocol;
-    const host = (req.headers['x-forwarded-host'] as string) ?? req.host;
-    const baseUrl = `${protocol}://${host}`;
+    const baseUrl = publicBaseUrl(
+      this.configService.get<string>('SITE_URL'),
+      req,
+    );
     reply.header('Content-Type', 'application/xml; charset=utf-8');
     reply.send(
       `<?xml version="1.0" encoding="UTF-8"?>
