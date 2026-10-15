@@ -7,6 +7,7 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../dal/entity/user.entity';
 import * as bcrypt from 'bcryptjs';
@@ -33,6 +34,7 @@ export class AuthService {
     private emailService: EmailService,
     @InjectRepository(PasswordReset)
     private passwordResetRepository: EntityRepository<PasswordReset>,
+    private readonly configService: ConfigService,
   ) {
     this.passwordResetTemplate = Handlebars.compile(
       readFileSync(
@@ -129,11 +131,12 @@ export class AuthService {
     this.logger.debug(this.sendPasswordResetEmail.name);
     const user = await this.userRepository.findOneOrFail({ email });
     const pin = randomInt(100000, 999999).toString();
+    const appName = this.configService.get<string>('APP_NAME');
     await this.emailService.sendEmailFromPrimaryAddress({
       to: user.email!,
-      subject: `Password reset for ${user.email}`,
-      text: `Hello, ${user.email}, please paste in the follow to reset your password: ${pin}`,
-      html: this.passwordResetTemplate({ email: user.email, pin }),
+      subject: `${appName}: password reset code`,
+      text: `Hello. Use this code to reset your ${appName} password: ${pin}. If you did not ask for a reset, ignore this email.`,
+      html: this.passwordResetTemplate({ appName, pin }),
     });
 
     const passwordReset = this.passwordResetRepository.create({ pin, user });
