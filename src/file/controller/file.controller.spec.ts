@@ -1,21 +1,24 @@
 import { EntityManager } from '@mikro-orm/core';
 import { getRepositoryToken } from '@mikro-orm/nestjs';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import type { FastifyReply } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import { Readable } from 'node:stream';
 import { File } from '../../dal/entity/file.entity';
 import { User } from '../../dal/entity/user.entity';
 import { FileService } from '../file-service.abstract';
 import { FileController } from './file.controller';
 import { AuthService } from '../../auth/auth.service';
+import type { I18nContext } from 'nestjs-i18n';
 
 describe('FileController', () => {
   let controller: FileController;
   let fileService: { get: jest.Mock; getNobgVariant: jest.Mock };
   let fileRepository: { count: jest.Mock };
+  let users: { findOne: jest.Mock };
+  const i18n = { t: (key: string) => key } as unknown as I18nContext;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -50,11 +53,7 @@ describe('FileController', () => {
         },
         {
           provide: getRepositoryToken(User),
-          useValue: {
-            findOne: jest.fn(),
-            find: jest.fn(),
-            persistAndFlush: jest.fn(),
-          },
+          useValue: (users = { findOne: jest.fn() }),
         },
         {
           provide: EntityManager,
@@ -101,5 +100,35 @@ describe('FileController', () => {
       });
       expect(fileService.get).toHaveBeenCalledWith('2f1c.webp');
     });
+  });
+
+  it('has no files page without sign-in, where no one owns a file', async () => {
+    await expect(controller.getFiles(undefined, i18n)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it('lists the signed-in user’s files under a title', async () => {
+    const file = { fileName: 'a.webp' };
+    users.findOne.mockResolvedValue({
+      fileUploads: { getItems: () => [file] },
+    });
+
+    await expect(controller.getFiles({ userId: 1 }, i18n)).resolves.toEqual({
+      files: [file],
+      pageTitle: 'lang.FILES',
+    });
+  });
+
+  it('refuses an upload that carries no file', async () => {
+    const req = { file: () => Promise.resolve(undefined) };
+
+    await expect(
+      controller.uploadFile(
+        { userId: 1 },
+        req as unknown as FastifyRequest,
+        i18n,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });

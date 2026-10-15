@@ -1,77 +1,78 @@
 {{>navbar}}
-<main id="main" tabindex="-1" class="page pb-36!">
-  <div class="flex flex-wrap gap-4 p-4 items-center justify-center">
-    {{#each files}}
-    <div class="card bg-base-100 w-96 shadow-sm">
-      <figure>
-        <img src="/file/{{this.fileName}}" alt="File upload" />
-      </figure>
-      <div class="card-body">
-        <h2 class="card-title">{{this.fileName}}</h2>
-        <p>{{this.mimetype}}</p>
-        <div class="card-actions justify-end">
-          <button
-            class="btn btn-primary"
-            onclick="navigator.clipboard.writeText('{{../siteUrl}}/share?shareableId={{this.shareableId}}&type=file'); alert('{{t 'lang.COPIED'}}')"
-          >
-            {{t 'lang.COPY_TEXT'}}
-          </button>
-          <button
-            class="btn btn-primary"
-            onclick="shareFile('{{this.fileName}}', '/share?shareableId={{this.shareableId}}&type=file')"
-          >
-            {{t 'lang.SHARE'}}
-          </button>
-        </div>
-      </div>
-    </div>
-    {{/each}}
-  </div>
+<main id="main" tabindex="-1" class="page">
+  <h1 class="mb-6">{{t 'lang.FILES'}}</h1>
 
-  <div
-    class="fixed bottom-15 lg:bottom-0 left-0 right-0 p-4 shadow-lg bg-gradient-to-t from-base-100 via-base-100/50 to-transparent"
+  <form
+    id="form"
+    method="post"
+    action="/file/upload"
+    enctype="multipart/form-data"
+    hx-encoding="multipart/form-data"
+    hx-post="/file/upload"
+    hx-indicator="#uploadLoading"
+    hx-target="main"
+    hx-select="main"
+    hx-swap="outerHTML"
+    class="mb-8 flex flex-wrap items-end gap-3"
   >
-    <form
-      id="form"
-      hx-encoding="multipart/form-data"
-      hx-post="/file/upload"
-      hx-indicator="#loading"
-      hx-target="main"
-      hx-select="main"
-      hx-swap="outerHTML"
-      class="flex gap-2 items-center justify-center"
-    >
+    <div class="grid min-w-0 grow gap-1 sm:max-w-sm">
+      <label class="label" for="file-input">{{t 'lang.PHOTO'}}</label>
       <input
+        id="file-input"
         type="file"
         name="file"
-        class="file-input"
+        class="file-input w-full"
         accept="image/jpeg,image/png,image/gif,image/webp"
+        required
       />
-      <button class="btn btn-neutral">{{t 'lang.UPLOAD'}}</button>
-      <span
-        id="loading"
-        class="htmx-indicator loading loading-ring loading-sm"
-      ></span>
-    </form>
-  </div>
+    </div>
+    <button id="upload-button" class="btn btn-primary">{{t 'lang.UPLOAD'}}</button>
+    {{> spinner spinnerId="uploadLoading" indicator=true class="mb-3"}}
+  </form>
+
+  {{#if files.length}}
+  <ul role="list" class="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+    {{#each files}}
+    <li class="card">
+      <figure class="aspect-square bg-base-200">
+        <img src="/file/{{this.fileName}}" alt="{{t 'lang.FILE_PREVIEW_ALT'}}" class="size-full object-contain" />
+      </figure>
+      <div class="card-body gap-3 p-4">
+        <p id="file-{{this.id}}" class="text-sm text-graphite wrap-anywhere">{{this.fileName}}</p>
+        <div class="grid gap-2">
+          <button
+            type="button"
+            class="btn btn-outline btn-sm h-auto min-h-(--size) max-w-full py-1.5"
+            aria-live="polite"
+            aria-describedby="file-{{this.id}}"
+            data-copy="{{../siteUrl}}/share?shareableId={{this.shareableId}}&type=file"
+            data-done="{{t 'lang.COPIED'}}"
+            data-label="{{t 'lang.COPY_LINK'}}"
+            _="on click
+                 call navigator.clipboard.writeText(my @data-copy)
+                 put my @data-done into the first <span/> in me
+                 wait 2s
+                 put my @data-label into the first <span/> in me"
+          >{{icon "link" class="size-4"}}<span>{{t 'lang.COPY_LINK'}}</span></button>
+          <button
+            type="button"
+            class="btn btn-outline btn-sm h-auto min-h-(--size) max-w-full py-1.5"
+            hidden
+            aria-describedby="file-{{this.id}}"
+            data-share="/share?shareableId={{this.shareableId}}&type=file"
+            _="init if navigator.share then remove @hidden from me end
+               on click
+                 call navigator.share({ url: my @data-share })
+               catch e
+                 if e.name is not 'AbortError' then log e end"
+          >{{icon "share" class="size-4"}}{{t 'lang.SHARE'}}</button>
+        </div>
+      </div>
+    </li>
+    {{/each}}
+  </ul>
+  {{else}}
+  {{> empty icon="photo" text=(t 'lang.NO_FILES')}}
+  {{/if}}
 </main>
 {{>dock}}
-<script>
-  async function shareFile(title, url) {
-    if (!navigator.share) {
-      alert('{{t 'lang.SHARING_NOT_SUPPORTED'}}');
-      return;
-    }
-
-    try {
-      await navigator.share({
-        title,
-        url,
-      });
-    } catch (err) {
-      if (err.name !== 'AbortError') {
-        console.error('Share failed:', err);
-      }
-    }
-  }
-</script>

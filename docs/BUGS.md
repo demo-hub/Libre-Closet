@@ -36,6 +36,10 @@ Bugs found while working on this fork and left out of the change that found them
 - **Password rules are reported before a password is typed** (low).
   - Live validation checks every field on any change, so leaving the email field shows the password errors.
   - Found in #27.
+- **With AUTH_ENABLED=false, registering lands on a 404** (low).
+  - `/auth/register` still accepts a POST and signs the browser in, then redirects to `/auth/profile`, which exists only with accounts on. The header offers no Register link in that mode, so only a typed address reaches it.
+  - Where: `src/auth/auth.controller.ts`, `postRegister`.
+  - Found in #36.
 
 ## Wardrobe
 

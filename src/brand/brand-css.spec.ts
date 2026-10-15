@@ -25,13 +25,7 @@ type Tokens = {
 };
 
 /** Skipped files, each tagged with the PR that sweeps it; only ever shrinks, and PR 12 asserts it is empty. */
-const KNOWN_DEBT = [
-  'views/chat.hbs', // PR 10
-  'views/files.hbs', // PR 10
-  'views/share.hbs', // PR 10
-  'views/wardrobe-share/manage.hbs', // PR 10
-  'views/wardrobe-share/partials/invite-link-result.hbs', // PR 10
-];
+const KNOWN_DEBT: string[] = [];
 
 const hexes = new Set(tokens.colours.map((c) => c.value.hex.toLowerCase()));
 const idByHex = new Map(
