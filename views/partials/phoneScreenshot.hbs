@@ -1,0 +1,7 @@
+{{!-- {{> phoneScreenshot n=1 alt=… caption=…}}: a 224 px phone screenshot, at 2x and 3x (scripts/screenshots.ts writes the widths). --}}
+<li class="snap-start">
+  <figure class="grid w-56 gap-2">
+    <img src="/assets/screenshots/Screenshot_mobile_{{n}}-448.webp" srcset="/assets/screenshots/Screenshot_mobile_{{n}}-448.webp 448w, /assets/screenshots/Screenshot_mobile_{{n}}-672.webp 672w" sizes="224px" alt="{{alt}}" width="1179" height="2556" loading="lazy" class="h-auto w-full rounded-box border border-base-300" />
+    <figcaption class="text-sm text-graphite">{{caption}}</figcaption>
+  </figure>
+</li>

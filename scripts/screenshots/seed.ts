@@ -1,4 +1,4 @@
-import type { APIRequestContext } from '@playwright/test';
+import { request, type APIRequestContext } from '@playwright/test';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -109,4 +109,32 @@ export async function seed(request: APIRequestContext): Promise<void> {
       data: `week=${SEED_WEEK}`,
     }),
   );
+}
+
+/** Whether anything answers 200 on url yet. */
+export async function answers(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url);
+    await response.body?.cancel();
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+/** Waits up to a minute for baseURL to answer, while alive() holds, then seeds it. */
+export async function waitAndSeed(
+  baseURL: string,
+  alive: () => boolean = () => true,
+): Promise<void> {
+  const deadline = Date.now() + 60_000;
+  while (!(await answers(baseURL))) {
+    if (!alive() || Date.now() > deadline) {
+      throw new Error(`${baseURL} did not answer`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  const api = await request.newContext({ baseURL });
+  await seed(api);
+  await api.dispose();
 }

@@ -54,12 +54,7 @@ module.exports = {
     },
     assert: {
       assertMatrix: [
-        // The landing page's largest paint is its hero paragraph, which Lighthouse's
-        // throttled mobile profile puts at about 2.56 s: HTML, then CSS, then the font.
-        recommended(`^${origin}/$`, {
-          'largest-contentful-paint': ['error', { maxNumericValue: 3000 }],
-        }),
-        recommended(`^${origin}/(about|auth/login)$`),
+        recommended(`^${origin}/(about|auth/login)?$`),
         // robots.txt keeps the app's own pages out of search engines.
         recommended(`^${origin}/wardrobe/new$`, { 'is-crawlable': 'off' }),
         // Photos are served at 1080 px into 182 px boxes (docs/BUGS.md).

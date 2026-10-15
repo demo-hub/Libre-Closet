@@ -3,13 +3,9 @@ import { once } from 'events';
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { parseArgs } from 'util';
-import {
-  chromium,
-  request,
-  type BrowserContextOptions,
-} from '@playwright/test';
+import { chromium, type BrowserContextOptions } from '@playwright/test';
 import sharp from 'sharp';
-import { SEED_WEEK, seed } from './screenshots/seed';
+import { SEED_WEEK, answers, waitAndSeed } from './screenshots/seed';
 
 const root = join(__dirname, '..');
 const baseURL = 'http://localhost:3100';
@@ -22,39 +18,43 @@ const pages = [
   '/outfits/1/edit',
 ];
 
-// 1179×2556 and 2560×1600, the sizes index.hbs and the manifest declare.
-const devices: [string, BrowserContextOptions][] = [
-  [
-    'Screenshot_mobile_',
-    {
+// 1179×2556 and 2560×1600, the sizes the manifest declares; `widths` are the
+// smaller copies index.hbs's phoneScreenshot partial shows at 224 px, 2x and 3x.
+const devices: {
+  prefix: string;
+  options: BrowserContextOptions;
+  widths?: number[];
+}[] = [
+  {
+    prefix: 'Screenshot_mobile_',
+    options: {
       viewport: { width: 393, height: 852 },
       deviceScaleFactor: 3,
       isMobile: true,
       hasTouch: true,
     },
-  ],
-  [
-    'Screenshot_',
-    { viewport: { width: 1280, height: 800 }, deviceScaleFactor: 2 },
-  ],
+    widths: [448, 672],
+  },
+  {
+    prefix: 'Screenshot_',
+    options: { viewport: { width: 1280, height: 800 }, deviceScaleFactor: 2 },
+  },
 ];
 
-async function answers(url: string): Promise<boolean> {
-  try {
-    return (await fetch(url)).ok;
-  } catch {
-    return false;
-  }
+async function write(image: sharp.Sharp, file: string): Promise<void> {
+  const { size } = await image.webp({ quality: 80 }).toFile(file);
+  console.log(`${file} ${size} B`);
 }
 
 async function capture(scheme: 'light' | 'dark', out: string): Promise<void> {
+  const suffix = scheme === 'dark' ? '_dark' : '';
   // The visual tests' pinned Chromium, so glyphs missing from the app's fonts do not come from this machine's.
   const ws = process.env.PW_VISUAL_WS;
   const browser = ws ? await chromium.connect(ws) : await chromium.launch();
   try {
-    for (const [prefix, device] of devices) {
+    for (const { prefix, options, widths = [] } of devices) {
       const context = await browser.newContext({
-        ...device,
+        ...options,
         baseURL,
         colorScheme: scheme,
         locale: 'en-GB',
@@ -72,23 +72,16 @@ async function capture(scheme: 'light' | 'dark', out: string): Promise<void> {
             return box.width === 0 || box.top >= innerHeight || img.complete;
           }),
         );
-        const png = await page.screenshot({
-          animations: 'disabled',
-          caret: 'hide',
-        });
-        const suffix = scheme === 'dark' ? '_dark' : '';
-        const file = join(out, `${prefix}${i + 1}${suffix}.webp`);
-        const { size } = await sharp(png).webp({ quality: 80 }).toFile(file);
-        console.log(`${file} ${size} B`);
-        if (prefix === 'Screenshot_mobile_' && !suffix) {
-          // index.hbs shows these at 224 px; 448 covers a 2x screen.
-          const small = join(out, `${prefix}${i + 1}-448.webp`);
-          const { size: smaller } = await sharp(png)
-            .resize({ width: 448 })
-            .webp({ quality: 80 })
-            .toFile(small);
-          console.log(`${small} ${smaller} B`);
-        }
+        const image = sharp(
+          await page.screenshot({ animations: 'disabled', caret: 'hide' }),
+        );
+        const name = join(out, `${prefix}${i + 1}${suffix}`);
+        await Promise.all([
+          write(image.clone(), `${name}.webp`),
+          ...widths.map((width) =>
+            write(image.clone().resize({ width }), `${name}-${width}.webp`),
+          ),
+        ]);
       }
       await context.close();
     }
@@ -123,16 +116,7 @@ async function main() {
   );
   const exited = once(server, 'exit');
   try {
-    const deadline = Date.now() + 60_000;
-    while (!(await answers(baseURL))) {
-      if (server.exitCode !== null || Date.now() > deadline) {
-        throw new Error(`The app did not start on ${baseURL}`);
-      }
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    }
-    const api = await request.newContext({ baseURL });
-    await seed(api);
-    await api.dispose();
+    await waitAndSeed(baseURL, () => server.exitCode === null);
     await capture(scheme, out);
   } finally {
     server.kill('SIGTERM');
