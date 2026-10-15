@@ -35,6 +35,7 @@
     "test:e2e:a11y": "playwright test test/a11y.spec.ts --project=chromium --project=\"Mobile Chrome\"",
     "test:visual": "npm run build && sh scripts/screenshots/visual.sh",
     "test:visual:update": "npm run build && sh scripts/screenshots/visual.sh --update-snapshots",
+    "screenshots": "npm run build && ts-node scripts/screenshots.ts",
     "postinstall": "patch-package",
     "test:load": "ts-node scripts/load-test.ts",
     "test:load:baseline": "ts-node scripts/load-test.ts --baseline",
