@@ -1,5 +1,6 @@
 import { EntityManager } from '@mikro-orm/core';
 import { getRepositoryToken } from '@mikro-orm/nestjs';
+import { BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -11,6 +12,7 @@ import { AuthService } from '../auth/auth.service';
 
 describe('NotificationController', () => {
   let controller: NotificationController;
+  let service: NotificationService;
 
   const DUMMY_VAPID_KEYS = {
     publicKey:
@@ -73,9 +75,62 @@ describe('NotificationController', () => {
     }).compile();
 
     controller = module.get<NotificationController>(NotificationController);
+    service = module.get(NotificationService);
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('refuses a subscription the server should not post to', async () => {
+    await expect(
+      controller.postSubscribe(
+        'Firefox',
+        { userId: 1 },
+        {
+          endpoint: 'https://127.0.0.1/1',
+          keys: {
+            p256dh: 'p256dh-key-value-1234',
+            auth: 'auth-key-value-1234',
+          },
+        },
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('forgets a browser by its endpoint, for the signed-in user only', async () => {
+    const remove = jest
+      .spyOn(service, 'removeUserWebPushNotificationSubscription')
+      .mockResolvedValue();
+
+    await controller.postUnsubscribe(
+      { userId: 1 },
+      {
+        endpoint: 'https://push.example/1',
+      },
+    );
+    await expect(
+      controller.postUnsubscribe({ userId: 1 }, {}),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(remove).toHaveBeenCalledTimes(1);
+    expect(remove).toHaveBeenCalledWith(1, 'https://push.example/1');
+  });
+
+  it('says whether this browser is subscribed for the signed-in user', async () => {
+    const has = jest
+      .spyOn(service, 'hasUserWebPushSubscription')
+      .mockResolvedValue(true);
+
+    await expect(
+      controller.postSubscribed(
+        { userId: 1 },
+        { endpoint: 'https://push.example/1' },
+      ),
+    ).resolves.toEqual({ subscribed: true });
+    await expect(
+      controller.postSubscribed({ userId: 1 }, {}),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(has).toHaveBeenCalledWith(1, 'https://push.example/1');
   });
 });
