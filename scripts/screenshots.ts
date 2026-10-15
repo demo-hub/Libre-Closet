@@ -80,6 +80,15 @@ async function capture(scheme: 'light' | 'dark', out: string): Promise<void> {
         const file = join(out, `${prefix}${i + 1}${suffix}.webp`);
         const { size } = await sharp(png).webp({ quality: 80 }).toFile(file);
         console.log(`${file} ${size} B`);
+        if (prefix === 'Screenshot_mobile_' && !suffix) {
+          // index.hbs shows these at 224 px; 448 covers a 2x screen.
+          const small = join(out, `${prefix}${i + 1}-448.webp`);
+          const { size: smaller } = await sharp(png)
+            .resize({ width: 448 })
+            .webp({ quality: 80 })
+            .toFile(small);
+          console.log(`${small} ${smaller} B`);
+        }
       }
       await context.close();
     }
