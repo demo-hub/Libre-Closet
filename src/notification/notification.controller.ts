@@ -1,19 +1,21 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
   Headers,
+  HttpCode,
   Post,
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { I18n, I18nContext } from 'nestjs-i18n';
-import { type PushSubscription } from 'web-push';
 import { AuthGuard } from '../auth/auth.guard';
 import { Payload } from '../auth/dto/payload.dto';
 import { User } from '../auth/user.decorator';
 import { NotificationService } from './notification.service';
 import { PushNotificationDto } from './dto/pushNotification.dto';
+import { pushSubscriptionFrom } from './push-subscription';
 
 @Controller('notification')
 export class NotificationController {
@@ -32,12 +34,46 @@ export class NotificationController {
   async postSubscribe(
     @Headers('user-agent') userAgent: string,
     @User() payload: Payload,
-    @Body() body: PushSubscription,
+    @Body() body: unknown,
   ) {
+    const subscription = pushSubscriptionFrom(body);
+    if (!subscription) throw new BadRequestException();
     await this.notificationService.addUserWebPushNotificationSubscription(
-      payload.userId,
-      body,
-      userAgent,
+      Number(payload.userId),
+      subscription,
+      String(userAgent ?? '').slice(0, 512),
+    );
+  }
+
+  /** Whether this browser's subscription is the signed-in user's: after a sign-out without JavaScript it is still the last account's. */
+  @UseGuards(AuthGuard)
+  @Post('subscribed')
+  @HttpCode(200)
+  async postSubscribed(
+    @User() payload: Payload,
+    @Body() body: { endpoint?: unknown },
+  ) {
+    if (typeof body?.endpoint !== 'string') throw new BadRequestException();
+    return {
+      subscribed: await this.notificationService.hasUserWebPushSubscription(
+        Number(payload.userId),
+        body.endpoint,
+      ),
+    };
+  }
+
+  /** Sign-out calls this before the session ends, so the browser stops receiving this user's notifications. */
+  @UseGuards(AuthGuard)
+  @Post('unsubscribe')
+  @HttpCode(204)
+  async postUnsubscribe(
+    @User() payload: Payload,
+    @Body() body: { endpoint?: unknown },
+  ) {
+    if (typeof body?.endpoint !== 'string') throw new BadRequestException();
+    await this.notificationService.removeUserWebPushNotificationSubscription(
+      Number(payload.userId),
+      body.endpoint,
     );
   }
 
@@ -51,7 +87,7 @@ export class NotificationController {
     };
     await this.notificationService.sendWebPushNotification(
       notification,
-      payload.userId,
+      Number(payload.userId),
     );
   }
 }

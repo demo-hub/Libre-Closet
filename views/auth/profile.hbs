@@ -8,5 +8,28 @@
   <a class="link" href="/wardrobe-share/manage">{{t 'lang.WARDROBE_SHARING'}}</a>
   {{/if}}
   <a class="link" href="/auth/delete-account">{{t 'lang.DELETE_ACCOUNT'}}</a>
+  {{#if pwaEnabled}}
+  {{!-- Hidden until the script finds push in this browser: iOS has it only once the app is installed. --}}
+  <section
+    id="push-settings"
+    class="mt-4 grid gap-2"
+    aria-labelledby="push-title"
+    hidden
+    data-turn-on="{{t 'lang.NOTIFICATIONS_TURN_ON'}}"
+    data-turn-off="{{t 'lang.NOTIFICATIONS_TURN_OFF'}}"
+    data-on="{{t 'lang.NOTIFICATIONS_ON'}}"
+    data-off="{{t 'lang.NOTIFICATIONS_OFF'}}"
+    data-blocked="{{t 'lang.NOTIFICATIONS_BLOCKED'}}"
+    data-failed="{{t 'lang.NOTIFICATIONS_FAILED'}}"
+  >
+    <h2 id="push-title">{{t 'lang.NOTIFICATIONS'}}</h2>
+    <p role="status" class="text-graphite empty:hidden"></p>
+    <button type="button" class="btn btn-outline h-auto min-h-(--size) py-1.5">{{t 'lang.NOTIFICATIONS_TURN_ON'}}</button>
+  </section>
+  <script type="module">
+    import { wireUpPushToggle } from '/js/webPush.js';
+    wireUpPushToggle(document.getElementById('push-settings'));
+  </script>
+  {{/if}}
 </main>
 {{>dock}}
