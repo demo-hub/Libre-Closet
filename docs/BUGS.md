@@ -171,6 +171,10 @@ Bugs found while working on this fork and left out of the change that found them
   - Where: `src/view-context/view-context.service.ts:37` (`req.hostname`) and `:54`.
   - Every page's canonical URL, `og:url` and `twitter:url`, and the landing page's JSON-LD `@id`, `url` and search target, lose the port the same way (#33).
   - Found in #25.
+- **After an upgrade, the first page view can show the previous release's icons and manifest** (low).
+  - The stylesheet and the app's scripts are asked for with a content hash, so an older service worker's precache cannot answer them. `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `manifest.json` and `assets/icons/` keep their bare URLs and come from the old precache until the new worker takes over.
+  - Where: `views/layout.hbs`, `workbox-config.js` (`manifestTransforms`), `src/asset-url.ts`.
+  - Found in #PR.
 - **Chrome logs "Transition was skipped" when Back follows a boosted navigation** (low).
   - This comes from htmx's global view transitions.
   - Found in #23.
