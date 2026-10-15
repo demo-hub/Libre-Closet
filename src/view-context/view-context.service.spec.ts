@@ -50,3 +50,38 @@ describe('ViewContextService operator values', () => {
     expect(context.operatorContact).toBe('closet@example.com');
   });
 });
+
+describe('ViewContextService signed-in user', () => {
+  const user = {
+    id: 1,
+    email: 'a@example.com',
+    password: 'hash-ending-ABCDEFGH',
+  };
+  const contextFor = (payload: Record<string, unknown>) =>
+    new ViewContextService(
+      {
+        findOne: jest.fn().mockResolvedValue(user),
+      } as unknown as EntityRepository<User>,
+      { get: () => undefined } as unknown as ConfigService,
+      {
+        verifyAsync: jest.fn().mockResolvedValue(payload),
+      } as unknown as JwtService,
+      { available: false } as unknown as GarmentEnricher,
+    ).buildContext({ ...request, cookies: { access_token: 'token' } });
+
+  it("is the token's user when the password fingerprint matches", async () => {
+    const context = await contextFor({ userId: 1, pwf: 'ABCDEFGH' });
+    expect(context.user).toBe(user);
+  });
+
+  const wrong: [string, Record<string, unknown>][] = [
+    ['a wrong fingerprint', { userId: 1, pwf: 'XXXXXXXX' }],
+    ['no fingerprint', { userId: 1 }],
+  ];
+  for (const [name, payload] of wrong) {
+    it(`is nobody for a signed token with ${name}`, async () => {
+      const context = await contextFor(payload);
+      expect(context.user).toBeUndefined();
+    });
+  }
+});

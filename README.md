@@ -62,7 +62,7 @@ volumes:
 - **HTTPS and the PWA:** service workers need a secure context. Once you have HTTPS, set `PWA_ENABLED: 'true'`. The easiest route is `sudo tailscale serve --bg 3000`, which gives you a real certificate on your tailnet. First enable MagicDNS and HTTPS Certificates on the [DNS page of the admin console](https://console.tailscale.com/admin/dns), or `serve` waits on that switch and looks hung. It listens on 443 only, so type the `https://` address that `tailscale serve status` prints.
 - **Reverse proxy:** the app trusts forwarded headers from loopback only. Behind a containerized proxy, rate limiting shares one bucket and `/share` previews say `http://`. Set nginx `client_max_body_size 25m` (uploads can be large) and a `proxy_read_timeout` above `AI_TIMEOUT_MS`.
 - **Access control:** with `AUTH_ENABLED=false` everyone who reaches the port shares one wardrobe with full write access. If you expose it publicly, enable auth *before* adding garments (existing ones are left unowned), and register your account *before* setting `DISABLE_REGISTRATION=true`.
-- **Backups:** everything lives in `DATA_PATH`. Stop the app and archive the whole directory; copying `sqlite3.db` alone can restore as an empty database.
+- **Backups:** everything lives in `DATA_PATH`. Stop the app and archive the whole directory; copying `sqlite3.db` alone can restore as an empty database. The archive holds `instance-secrets.json` too, so keep it private.
 
   ```bash
   docker compose stop
@@ -108,7 +108,7 @@ Defaults live in `.env` (baked into the image). Override them with real environm
 | `SITE_URL` | Public address for share links. Must be `https://` | upstream's instance |
 | `AUTH_ENABLED` | Enable JWT accounts and login | `false` |
 | `DISABLE_REGISTRATION` | Disallow sign ups | `false` |
-| `ACCESS_TOKEN_SECRET` | JWT secret - **change for production** | `ChangeMe!` |
+| `ACCESS_TOKEN_SECRET` | Signs sessions. Generated on first boot when unset (see below) | generated |
 | `PWA_ENABLED` | Enable service worker and install prompt (needs HTTPS) | `false` |
 | `IMPORT_URL_ENABLED` | Allow importing from a pasted link | `true` |
 | `AI_PROVIDER` | `none`, `ollama`, `openai` or `anthropic` | `none` |
@@ -122,12 +122,12 @@ Defaults live in `.env` (baked into the image). Override them with real environm
 | `OBJECT_STORAGE_*` | `ACCESS_KEY_ID`, `SECRET_ACCESS_KEY`, `ENDPOINT`, `REGION`, `BUCKET_NAME` (required for S3) | - |
 | `EMAIL_TRANSPORT` | `gmail` or `mailgun`; unset means no password-reset mail | - |
 | `EMAIL_FROM_ADDRESS`, `EMAIL_PASSWORD`, `EMAIL_DOMAIN`, `EMAIL_API_KEY` | Email credentials for the chosen transport | - |
-| `PUBLIC_VAPID_KEY` / `PRIVATE_VAPID_KEY` | Web push keys; generate your own for production | shared default |
+| `PUBLIC_VAPID_KEY` / `PRIVATE_VAPID_KEY` | Web push key pair. Generated on first boot when unset (see below) | generated |
 | `OPERATOR_NAME` / `OPERATOR_CONTACT` | Who runs this instance, shown on About, privacy and terms | - |
 | `SOURCE_URL`, `IMAGE_NAME`, `ICON_NAME` | Source link, `docker run` image and share-preview icon on the landing page | this fork |
 | `IMPORT_FETCH_TIMEOUT_MS`, `IMPORT_URL_RATE_LIMIT`, `THROTTLE_LIMIT` | Importer and rate-limit tuning | see `.env` |
 
-Generate secrets:
+Secrets: when `ACCESS_TOKEN_SECRET` and the VAPID pair are unset, the first boot generates them and keeps them in `DATA_PATH/instance-secrets.json`, readable by the app's user only. The log says whether they were loaded or generated. Set all three yourself when `DATA_PATH` is not a persistent volume shared by every instance, as with PostgreSQL and S3 and no volume: otherwise each container makes its own, and every deploy signs everyone out. The old published defaults (`ChangeMe!` and the VAPID pair that shipped in `.env`) are ignored.
 
 ```bash
 openssl rand -base64 60            # ACCESS_TOKEN_SECRET
