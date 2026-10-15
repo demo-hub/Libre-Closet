@@ -19,6 +19,7 @@ import { jsonForScript } from './json-script';
 import { formatDateLong } from './i18n/format-date-long';
 import { I18nService } from 'nestjs-i18n';
 import { tRawHelper } from './i18n/t-raw.helper';
+import { assetRevisions, assetUrl, importMap } from './asset-url';
 
 async function bootstrap() {
   // https://docs.nestjs.com/security/rate-limiting#proxies
@@ -232,6 +233,17 @@ async function bootstrap() {
         renderIcon(name, (options.hash as { class?: string }).class),
       ),
   );
+
+  // {{asset "/bundle.css"}} and {{{importMap}}}: URLs that change with each build.
+  // Hashed once here, since the files only change with a build and a restart.
+  const revisions = assetRevisions(join(__dirname, '..', 'public'));
+  // Safe: the template names the path, and the revision is hex.
+  hbs.registerHelper(
+    'asset',
+    (path: string) => new hbs.handlebars.SafeString(assetUrl(revisions, path)),
+  );
+  const importMapJson = jsonForScript(importMap(revisions));
+  hbs.registerHelper('importMap', () => importMapJson);
 
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 }
