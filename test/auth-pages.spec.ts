@@ -115,3 +115,57 @@ for (const path of [
     ).toBeLessThanOrEqual(320);
   });
 }
+
+test('leaving the email field does not list the password rules', async ({
+  page,
+}) => {
+  await page.goto('/auth/register');
+  const validated = page.waitForResponse('**/auth/validate/register');
+  await page.locator('#email').fill('someone@example.com');
+  await page.locator('#email').press('Tab');
+  await validated;
+  await expect(page.locator('#password')).not.toHaveAttribute(
+    'aria-invalid',
+    'true',
+  );
+  await expect(page.locator('#password-error')).toHaveCount(0);
+  await expect(page.locator('#confirmPassword-error')).toHaveCount(0);
+});
+
+test('live validation never sends a typed password back', async ({ page }) => {
+  await page.goto('/auth/register');
+  // One validation at a time: a swap that lands mid-fill would eat the change.
+  await page.locator('#email').fill('someone@example.com');
+  const emailSettled = page.evaluate(
+    () =>
+      new Promise((resolve) =>
+        document.addEventListener('htmx:afterSettle', resolve, { once: true }),
+      ),
+  );
+  await page.locator('#email').press('Tab');
+  await emailSettled;
+  await page.locator('#password').fill('Typed-Secret-123');
+  const validated = page.waitForResponse('**/auth/validate/register');
+  await page.locator('#password').press('Tab');
+  expect(await (await validated).text()).not.toContain('Typed-Secret-123');
+  await expect(page.locator('#password')).toHaveValue('Typed-Secret-123');
+});
+
+test('a rate-limited submit says to wait, not that the request failed', async ({
+  page,
+}) => {
+  await page.route('**/auth/login', (route) =>
+    route.request().method() === 'POST'
+      ? route.fulfill({ status: 429, body: '' })
+      : route.continue(),
+  );
+  await page.goto('/auth/login');
+  await page.locator('#email').fill('someone@example.com');
+  await page.locator('#password').fill('Password123!');
+  await page.getByRole('button', { name: 'Log in' }).click();
+  await expect(page.locator('#rateLimitedToast')).toBeVisible();
+  await expect(page.locator('#rateLimitedToast')).toContainText(
+    'Too many requests',
+  );
+  await expect(page.locator('#requestErrorToast')).toBeHidden();
+});

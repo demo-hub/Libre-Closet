@@ -10,7 +10,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { plainToInstance } from 'class-transformer';
+import { ClassConstructor, plainToInstance } from 'class-transformer';
 import type { FastifyReply } from 'fastify';
 import { I18n, I18nContext } from 'nestjs-i18n';
 import { AuthGuard } from './auth.guard';
@@ -32,6 +32,32 @@ function navigate(reply: FastifyReply, url: string) {
   if (!reply.request.headers['hx-request']) return reply.redirect(url, 302);
   reply.header('HX-Redirect', url);
   return reply.send();
+}
+
+/** Passwords never go back into a page: the head script keeps what was typed across a live-validation swap. */
+function withoutPasswords<T extends object>(body: T): Partial<T> {
+  const rest = { ...body } as Record<string, unknown>;
+  for (const key of ['password', 'confirmPassword']) delete rest[key];
+  return rest as Partial<T>;
+}
+
+/**
+ * Live validation runs on every change in the form, so only the fields that
+ * hold something are reported: leaving the email field must not list the
+ * rules for a password not typed yet. A submit still reports every field.
+ */
+async function validateTyped<T extends object>(
+  i18n: I18nContext,
+  dto: ClassConstructor<T>,
+  body: T,
+) {
+  const validationErrors = (
+    await i18n.validate(plainToInstance(dto, body))
+  ).filter((error) => !!(body as Record<string, unknown>)[error.property]);
+  return {
+    input: withoutPasswords(body),
+    ...(validationErrors.length ? { validationErrors } : {}),
+  };
 }
 
 @Controller('auth')
@@ -79,7 +105,7 @@ export class AuthController {
     if (validationErrors.length) {
       return this.rerender(reply, 'auth/register', {
         ...page,
-        input: body,
+        input: withoutPasswords(body),
         validationErrors,
         firstError: validationErrors[0].property,
       });
@@ -111,16 +137,7 @@ export class AuthController {
     @I18n() i18n: I18nContext,
     @Body() body: RegisterDto,
   ) {
-    const instance = plainToInstance(RegisterDto, body);
-    const validationErrors = await i18n.validate(instance);
-    if (validationErrors.length) {
-      return {
-        input: body,
-        validationErrors,
-      };
-    }
-
-    return { input: body };
+    return validateTyped(i18n, RegisterDto, body);
   }
 
   @Throttle({ default: { limit: 5, ttl: seconds(60) } })
@@ -238,16 +255,7 @@ export class AuthController {
     @I18n() i18n: I18nContext,
     @Body() body: ResetPasswordDto,
   ) {
-    const instance = plainToInstance(ResetPasswordDto, body);
-    const validationErrors = await i18n.validate(instance);
-    if (validationErrors.length) {
-      return {
-        input: body,
-        validationErrors,
-      };
-    }
-
-    return { input: body };
+    return validateTyped(i18n, ResetPasswordDto, body);
   }
 
   @Throttle({ default: { limit: 5, ttl: minutes(10) } })
@@ -261,7 +269,7 @@ export class AuthController {
     const validationErrors = await i18n.validate(instance);
     if (validationErrors.length) {
       return this.rerender(reply, 'auth/reset-code', {
-        input: body,
+        input: withoutPasswords(body),
         validationErrors,
         firstError: validationErrors[0].property,
       });
@@ -332,16 +340,7 @@ export class AuthController {
     @I18n() i18n: I18nContext,
     @Body() body: UpdateEmailDto,
   ) {
-    const instance = plainToInstance(UpdateEmailDto, body);
-    const validationErrors = await i18n.validate(instance);
-    if (validationErrors.length) {
-      return {
-        input: body,
-        validationErrors,
-      };
-    }
-
-    return { input: body };
+    return validateTyped(i18n, UpdateEmailDto, body);
   }
 
   @UseGuards(AuthGuard)

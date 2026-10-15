@@ -87,8 +87,12 @@ https://nestjs-i18n.com/quick-start --}}
     <script>
       if (!window.__lcToastBound) (function () {
         window.__lcToastBound = true;
-        document.addEventListener('htmx:responseError', function () {
-          var toast = document.getElementById('requestErrorToast');
+        document.addEventListener('htmx:responseError', function (e) {
+          // A rate limit says to wait rather than that the request failed.
+          var limited = e.detail && e.detail.xhr && e.detail.xhr.status === 429;
+          var other = document.getElementById(limited ? 'requestErrorToast' : 'rateLimitedToast');
+          if (other) other.classList.add('hidden');
+          var toast = document.getElementById(limited ? 'rateLimitedToast' : 'requestErrorToast');
           if (!toast) return;
           if (toast.classList.contains('hidden')) return toast.classList.remove('hidden');
           // Already up: hide and re-show so a repeated failure is announced again.
@@ -175,6 +179,7 @@ https://nestjs-i18n.com/quick-start --}}
     htmx does not swap a 4xx or 5xx response, so without this a refused or
     rate-limited request looks to the user like nothing happened at all. }}
     {{> toast id="requestErrorToast" kind="error" text=(t 'lang.REQUEST_FAILED') hidden=true dismiss=true}}
+    {{> toast id="rateLimitedToast" kind="error" text=(t 'lang.ERROR_429') hidden=true dismiss=true}}
     {{! The
     service worker is used in conjunction with the manifest.json to enable PWA
     (Progressive Web App) functionality. This script tag uses JavaScript

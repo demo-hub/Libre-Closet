@@ -6,6 +6,7 @@ import Joi from 'joi';
 import * as path from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { resolveInstanceSecrets } from './instance-secrets';
 import { AuthModule } from './auth/auth.module';
 import { DalModule } from './dal/dal.module';
 import { NotificationModule } from './notification/notification.module';
@@ -95,13 +96,11 @@ import { ViewContextModule } from './view-context/view-context.module';
         // Development and testing: also lifts loopback and the port allowlist.
         IMPORT_ALLOW_PRIVATE_NETWORKS: Joi.boolean().default(false),
         IMPORT_FETCH_TIMEOUT_MS: Joi.number().default(10000),
-        ACCESS_TOKEN_SECRET: Joi.string().default('ChangeMe!'),
-        PUBLIC_VAPID_KEY: Joi.optional().default(
-          'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
-        ),
-        PRIVATE_VAPID_KEY: Joi.optional().default(
-          'UUxI4O8-FbRouAevSmBQ6o18hgE4nSG3qwvJTfKc-ls',
-        ),
+        // Unset (or '') means this instance's own, resolved below once
+        // DATA_PATH is known.
+        ACCESS_TOKEN_SECRET: Joi.string().allow('').optional(),
+        PUBLIC_VAPID_KEY: Joi.string().allow('').optional(),
+        PRIVATE_VAPID_KEY: Joi.string().allow('').optional(),
         SITE_URL: Joi.string().default('https://librecloset.lazz.tech'),
         ICON_NAME: Joi.string().default('icons/icon-512.png'),
         SOURCE_URL: Joi.string()
@@ -183,7 +182,13 @@ import { ViewContextModule } from './view-context/view-context.module';
           then: Joi.string().default('us-east-1'),
           otherwise: Joi.optional(),
         }),
-      }),
+      }).custom(
+        // After every key's default, so DATA_PATH is resolved.
+        (config: Parameters<typeof resolveInstanceSecrets>[0]) => ({
+          ...config,
+          ...resolveInstanceSecrets(config, new Logger('InstanceSecrets')),
+        }),
+      ),
       validationOptions: {
         abortEarly: true,
       },

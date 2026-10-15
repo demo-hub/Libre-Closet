@@ -21,17 +21,10 @@ Bugs found while working on this fork and left out of the change that found them
   - `on delete set null` would be safe, but changing the key means rebuilding the `user` table in SQLite, which cascades in turn (the rule in the README's migrations section).
   - Where: `src/dal/entity/user.entity.ts`, `passwordReset`; migrations `Migration20251104025338` (SQLite) and `Migration20260305215234` (Postgres).
   - Found in #44.
-- **Live validation echoes typed passwords into the HTML** (medium).
-  - The `validate/register` and `validate/reset-code` responses render the typed password and confirmation in the inputs' `value` attributes.
-  - It goes back only to the same client, but whether htmx's history cache can then store it has not been checked.
-  - Where: `views/auth/register.hbs:23-24` and `views/auth/reset-code.hbs:10-11` (`value=input.password`).
-  - Found in #27.
-- **A rate-limited submit shows the generic error toast** (low).
-  - An htmx submit answered 429 shows the "request failed" toast, not an in-page message.
-  - Found in #27.
-- **Password rules are reported before a password is typed** (low).
-  - Live validation checks every field on any change, so leaving the email field shows the password errors.
-  - Found in #27.
+- **A field typed while a live validation is in flight is not validated when left** (low).
+  - The head script puts what was typed into the swapped-in field, but a value set by script fires no `change`, so leaving that field sends no validation. The next edit, or the submit, reports its errors.
+  - Where: the head script's `htmx:afterSwap` handler in `views/layout.hbs`.
+  - Found in #49.
 - **With AUTH_ENABLED=false, anyone can still create an account** (low).
   - `/auth/register` answers without accounts, and since #47 a sign-in lands on the wardrobe rather than a 404. The account does nothing until the operator turns `AUTH_ENABLED` on, but then it works, and it holds the address the owner may want.
   - A 404, or refusing to create the account, would fix it. The register page's own specs (`a11y.spec.ts`, `auth-pages.spec.ts`, `shell.spec.ts`) run against the suite's server, which has no accounts, so they would need a server with accounts first.
