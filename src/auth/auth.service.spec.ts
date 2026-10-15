@@ -51,6 +51,7 @@ describe('AuthService', () => {
           useValue: {
             query: jest.fn(),
             persistAndFlush: jest.fn(),
+            removeAndFlush: jest.fn(),
             // you can mock other functions inside
             // the entity manager object, my case only needed query method
           },
@@ -63,6 +64,40 @@ describe('AuthService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('deleteOwnAccount', () => {
+    const user = { id: 1, password: '' };
+    const em = () =>
+      module.get<{ removeAndFlush: jest.Mock }>(EntityManager).removeAndFlush;
+
+    beforeAll(async () => {
+      user.password = await bcrypt.hash('Password123!', 4);
+    });
+
+    beforeEach(() => {
+      module
+        .get(getRepositoryToken(User))
+        .findOneOrFail.mockResolvedValue(user);
+    });
+
+    it('looks up the signed-in user, not an address', async () => {
+      await service.deleteOwnAccount(1, 'Password123!');
+      expect(
+        module.get(getRepositoryToken(User)).findOneOrFail,
+      ).toHaveBeenCalledWith({ id: 1 });
+      expect(em()).toHaveBeenCalledWith(user);
+    });
+
+    it.each<[string, string]>([
+      ['a wrong password', 'Wrong123!'],
+      ['no password', ''],
+    ])('keeps the account given %s', async (_, password) => {
+      await expect(
+        service.deleteOwnAccount(1, password),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(em()).not.toHaveBeenCalled();
+    });
   });
 
   describe('resetPassword', () => {

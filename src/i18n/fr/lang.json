@@ -128,7 +128,7 @@
   "RESET_FAILED": "Erreur : le code de réinitialisation n'a pas pu être envoyé. Vérifiez l'adresse e-mail. Si elle est correcte, cette instance n'est peut-être pas configurée pour envoyer des e-mails.",
   "RESET_CODE_FAILED": "Erreur : l'adresse e-mail ou le code de réinitialisation est incorrect. Votre mot de passe n'a pas été modifié.",
   "UPDATE_EMAIL_FAILED": "Erreur : l'adresse e-mail n'a pas été modifiée. Elle appartient peut-être déjà à un autre compte.",
-  "DELETE_ACCOUNT_FAILED": "Erreur : l'e-mail ou le mot de passe est incorrect. Votre compte n'a pas été supprimé.",
+  "DELETE_ACCOUNT_FAILED": "Erreur : le mot de passe est incorrect. Votre compte n'a pas été supprimé.",
   "PHOTO": "Photo",
   "SAVE": "Enregistrer",
   "REQUIRED": "obligatoire",

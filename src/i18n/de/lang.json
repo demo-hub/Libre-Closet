@@ -128,7 +128,7 @@
   "RESET_FAILED": "Fehler: Der Zurücksetzungscode konnte nicht gesendet werden. Prüfe die E-Mail-Adresse. Wenn sie stimmt, ist diese Instanz vielleicht nicht für den E-Mail-Versand eingerichtet.",
   "RESET_CODE_FAILED": "Fehler: Die E-Mail-Adresse oder der Zurücksetzungscode ist falsch. Dein Passwort wurde nicht geändert.",
   "UPDATE_EMAIL_FAILED": "Fehler: Die E-Mail-Adresse wurde nicht geändert. Sie gehört vielleicht schon zu einem anderen Konto.",
-  "DELETE_ACCOUNT_FAILED": "Fehler: Die E-Mail-Adresse oder das Passwort ist falsch. Dein Konto wurde nicht gelöscht.",
+  "DELETE_ACCOUNT_FAILED": "Fehler: Das Passwort ist falsch. Dein Konto wurde nicht gelöscht.",
   "PHOTO": "Foto",
   "SAVE": "Speichern",
   "REQUIRED": "Pflichtfeld",

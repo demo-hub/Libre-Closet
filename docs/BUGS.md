@@ -17,10 +17,6 @@ Bugs found while working on this fork and left out of the change that found them
   - `resetPassword` checks the code but not its age, and does not delete it after use.
   - Where: `src/auth/auth.service.ts`, `sendPasswordResetEmail` and `resetPassword`.
   - Found in #27.
-- **Delete account accepts anyone's credentials** (high).
-  - The confirmation signs in with whatever email and password are typed, then deletes the signed-in user. The credentials of any other account therefore pass the check.
-  - Where: `src/auth/auth.controller.ts`, `postDeleteAccount`.
-  - Found in #27.
 - **The reset form tells whether an address has an account** (medium).
   - A known address goes on to the code page, while an unknown one gets `RESET_FAILED`.
   - Where: `src/auth/auth.controller.ts`, `postReset`.
@@ -243,7 +239,8 @@ Bugs found while working on this fork and left out of the change that found them
   - `CHOOSE_PHOTO`, `REMOVE_COLOR`, `CREATE_COLOR`, `COLORS_SELECTED`, `MASK_CANVAS` and the re-worded `MASK_BRUSH_SIZE` (#30);
   - the twelve outfit keys: `NO_GARMENTS_IN_OUTFIT`, `NO_GARMENT`, `VIEW_GARMENT`, `PREVIOUS`, `NEXT`, `MOVE_UP`, `MOVE_DOWN`, `ROW_MOVED`, `REMOVE_ROW`, `DELETE_OUTFIT`, `PLACEHOLDER_OUTFIT_NAME`, `PLACEHOLDER_OUTFIT_NOTES` (#31);
   - the four calendar keys: `TODAY`, `PREVIOUS_MONTH`, `NEXT_MONTH`, `REMOVE_FROM_CALENDAR`, the re-worded `CALENDAR_DELETE_CONFIRM` in es, fr and ru, and fr `CALENDAR_WORN` (#32);
-  - the ten landing and About keys: `SOURCE_ON_GITHUB`, `COPY_COMMAND`, `WHY_SELF_HOST_DESC_2` (with `WHY_SELF_HOST_DESC` cut to its first sentence), `PRIVACY`, `TERMS`, `ABOUT`, `ABOUT_FORK`, `ABOUT_INSTANCE`, `ABOUT_RUN_BY`, `ABOUT_CONTACT` (#33).
+  - the ten landing and About keys: `SOURCE_ON_GITHUB`, `COPY_COMMAND`, `WHY_SELF_HOST_DESC_2` (with `WHY_SELF_HOST_DESC` cut to its first sentence), `PRIVACY`, `TERMS`, `ABOUT`, `ABOUT_FORK`, `ABOUT_INSTANCE`, `ABOUT_RUN_BY`, `ABOUT_CONTACT` (#33);
+  - the re-worded `DELETE_ACCOUNT_FAILED` (#45).
 
 ## Tests and tooling
 

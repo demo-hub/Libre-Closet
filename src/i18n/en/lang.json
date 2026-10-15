@@ -128,7 +128,7 @@
   "RESET_FAILED": "Error: the reset code could not be sent. Check the email address. If it is correct, this instance may not be set up to send email.",
   "RESET_CODE_FAILED": "Error: the email address or reset code is incorrect. Your password has not been changed.",
   "UPDATE_EMAIL_FAILED": "Error: the email address was not changed. It may already belong to another account.",
-  "DELETE_ACCOUNT_FAILED": "Error: the email or password is incorrect. Your account has not been deleted.",
+  "DELETE_ACCOUNT_FAILED": "Error: the password is incorrect. Your account has not been deleted.",
   "PHOTO": "Photo",
   "SAVE": "Save",
   "REQUIRED": "required",
