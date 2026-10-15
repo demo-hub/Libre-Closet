@@ -30,6 +30,7 @@ describe('WardrobeShareController', () => {
   const req = (htmx = false) =>
     ({
       protocol: 'https',
+      host: 'closet.example',
       headers: {
         host: 'closet.example',
         ...(htmx && { 'hx-request': 'true' }),
