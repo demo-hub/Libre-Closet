@@ -142,18 +142,30 @@ export default defineConfig({
         gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 },
         stderr: 'pipe',
       }
-    : {
-        command: 'npm run build && npm run start:prod',
-        url: 'http://localhost:3000',
-        reuseExistingServer: !process.env.CI,
-        stderr: 'pipe',
-        env: {
-          // url-import.spec.ts serves a fixture shop on 127.0.0.1, which the
-          // importer refuses to fetch unless this is set. Never set in production.
-          IMPORT_ALLOW_PRIVATE_NETWORKS: 'true',
-          // Every project runs the import spec from the same address, so the
-          // per-minute ceiling has to sit above the whole suite.
-          IMPORT_URL_RATE_LIMIT: '500',
+    : [
+        {
+          command: 'npm run build && npm run start:prod',
+          url: 'http://localhost:3000',
+          reuseExistingServer: !process.env.CI,
+          stderr: 'pipe',
+          env: {
+            // url-import.spec.ts serves a fixture shop on 127.0.0.1, which the
+            // importer refuses to fetch unless this is set. Never set in production.
+            IMPORT_ALLOW_PRIVATE_NETWORKS: 'true',
+            // Every project runs the import spec from the same address, so the
+            // per-minute ceiling has to sit above the whole suite.
+            IMPORT_URL_RATE_LIMIT: '500',
+          },
         },
-      },
+        {
+          // Accounts and the PWA on, for push (push.spec.ts). Starts from the
+          // dist/ the server above builds, with its own throwaway database.
+          command: 'node scripts/e2e/accounts-server.mjs',
+          url: 'http://localhost:3300',
+          reuseExistingServer: false,
+          timeout: 300_000,
+          gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 },
+          stderr: 'pipe',
+        },
+      ],
 });
