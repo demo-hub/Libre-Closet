@@ -113,14 +113,8 @@
       data-copy="{{siteUrl}}/share?shareableId={{garment.shareableId}}&type=garment"
       data-done="{{t 'lang.COPIED'}}"
       data-label="{{t 'lang.SHARE'}}"
-      _="on click
-           call navigator.clipboard.writeText(my @data-copy)
-           put my @data-done into the first <span/> in me
-           add .hidden to <#garment-saved-toast, #photo-saved-toast/>
-           remove .hidden from <#copied-toast/>
-           wait 2s
-           put my @data-label into the first <span/> in me
-           add .hidden to <#copied-toast/>"
+      data-toast="copied-toast"
+      data-hide="#garment-saved-toast, #photo-saved-toast"
     >{{icon "share" class="size-5"}}<span>{{t 'lang.SHARE'}}</span></button>
   </div>
   {{/if}}

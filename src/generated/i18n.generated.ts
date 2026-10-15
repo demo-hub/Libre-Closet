@@ -103,6 +103,8 @@ export type I18nTranslations = {
         "NO_FILES": string;
         "FILE_PREVIEW_ALT": string;
         "COPIED": string;
+        "COPY_BY_HAND": string;
+        "COPY_BY_HAND_TOUCH": string;
         "NAME": string;
         "CATEGORY": string;
         "BRAND": string;

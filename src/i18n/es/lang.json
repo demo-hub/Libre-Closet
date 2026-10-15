@@ -96,6 +96,8 @@
   "NO_FILES": "Aún no hay archivos.",
   "FILE_PREVIEW_ALT": "Imagen subida",
   "COPIED": "Copiado",
+  "COPY_BY_HAND": "Pulsa {keys} para copiar.",
+  "COPY_BY_HAND_TOUCH": "Selecciona el texto de arriba y cópialo.",
   "NAME": "Nombre",
   "CATEGORY": "Categoría",
   "BRAND": "Marca",

@@ -96,6 +96,8 @@
   "NO_FILES": "Aucun fichier pour l'instant.",
   "FILE_PREVIEW_ALT": "Image téléversée",
   "COPIED": "Copié",
+  "COPY_BY_HAND": "Appuyez sur {keys} pour copier.",
+  "COPY_BY_HAND_TOUCH": "Sélectionnez le texte ci-dessus et copiez-le.",
   "NAME": "Nom",
   "CATEGORY": "Catégorie",
   "BRAND": "Marque",
