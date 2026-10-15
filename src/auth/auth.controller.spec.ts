@@ -15,6 +15,7 @@ import { RegistrationGuard } from './registration.guard';
 describe('AuthController', () => {
   let controller: AuthController;
   let authService: AuthService;
+  let configService: ConfigService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -55,6 +56,7 @@ describe('AuthController', () => {
 
     controller = module.get<AuthController>(AuthController);
     authService = module.get<AuthService>(AuthService);
+    configService = module.get<ConfigService>(ConfigService);
   });
 
   const i18n = {
@@ -106,6 +108,72 @@ describe('AuthController', () => {
         302,
       );
       expect(reply.header).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('where a sign-in lands', () => {
+    const reply = () => ({
+      request: { headers: {} },
+      setCookie: jest.fn(),
+      header: jest.fn(),
+      send: jest.fn(),
+      redirect: jest.fn(),
+    });
+    const withAccounts = (on: boolean) =>
+      jest
+        .spyOn(configService, 'get')
+        .mockImplementation((key: string) =>
+          key === 'AUTH_ENABLED' ? on : undefined,
+        );
+    const register = async () => {
+      jest.spyOn(authService, 'register').mockResolvedValue('jwt');
+      const r = reply();
+      await controller.postRegister(
+        i18n,
+        {
+          email: 'a@example.com',
+          password: 'Password123!',
+          confirmPassword: 'Password123!',
+        },
+        r as unknown as FastifyReply,
+      );
+      return r;
+    };
+    const login = async (returnTo?: string) => {
+      jest.spyOn(authService, 'signIn').mockResolvedValue('jwt');
+      const r = reply();
+      await controller.postLogin(
+        i18n,
+        { email: 'a@example.com', password: 'Password123!', returnTo },
+        r as unknown as FastifyReply,
+      );
+      return r;
+    };
+
+    const landings: [boolean, string][] = [
+      [true, '/auth/profile'],
+      [false, '/wardrobe'],
+    ];
+    for (const [on, target] of landings) {
+      it(`with AUTH_ENABLED=${on}, registering goes to ${target}`, async () => {
+        withAccounts(on);
+        const r = await register();
+        expect(r.setCookie).toHaveBeenCalled();
+        expect(r.redirect).toHaveBeenCalledWith(target, 302);
+      });
+
+      it(`with AUTH_ENABLED=${on}, logging in goes to ${target}`, async () => {
+        withAccounts(on);
+        expect((await login()).redirect).toHaveBeenCalledWith(target, 302);
+      });
+    }
+
+    it('still honours returnTo without accounts', async () => {
+      withAccounts(false);
+      expect((await login('/outfits')).redirect).toHaveBeenCalledWith(
+        '/outfits',
+        302,
+      );
     });
   });
 
