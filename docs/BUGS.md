@@ -227,7 +227,7 @@ Bugs found while working on this fork and left out of the change that found them
   - the ten landing and About keys: `SOURCE_ON_GITHUB`, `COPY_COMMAND`, `WHY_SELF_HOST_DESC_2` (with `WHY_SELF_HOST_DESC` cut to its first sentence), `PRIVACY`, `TERMS`, `ABOUT`, `ABOUT_FORK`, `ABOUT_INSTANCE`, `ABOUT_RUN_BY`, `ABOUT_CONTACT` (#33);
   - `RESET_CODE_SENT` and the re-worded `RESET_FAILED` and `RESET_CODE_FAILED` (#44);
   - the re-worded `DELETE_ACCOUNT_FAILED` (#46);
-  - `COPY_BY_HAND` and `COPY_BY_HAND_TOUCH` (#55).
+  - `COPY_BY_HAND` and `COPY_BY_HAND_TOUCH` (#56).
 
 ## Tests and tooling
 
