@@ -156,6 +156,10 @@ Bugs found while working on this fork and left out of the change that found them
   - Resolving at send time, as the importer's `SafeFetchService` does, would close it; web-push takes an `agent`, which could carry that lookup.
   - Where: `src/notification/push-subscription.ts`, `src/notification/notification.service.ts` (`sendWebPushNotification`).
   - Found in #54.
+- **After an upgrade, the first page view can show the previous release's icons and manifest** (low).
+  - The stylesheet and the app's scripts are asked for with a content hash, so an older service worker's precache cannot answer them. `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `manifest.json` and `assets/icons/` keep their bare URLs and come from the old precache until the new worker takes over.
+  - Where: `views/layout.hbs`, `workbox-config.js` (`manifestTransforms`), `src/asset-url.ts`.
+  - Found in #55.
 - **Chrome logs "Transition was skipped" when Back follows a boosted navigation** (low).
   - This comes from htmx's global view transitions.
   - Found in #23.
