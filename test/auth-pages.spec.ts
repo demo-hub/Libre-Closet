@@ -38,6 +38,19 @@ test('the first press on Register submits, even while the last field is being va
   await posted;
 });
 
+for (const [path, title] of [
+  ['/auth/login', 'Log in'],
+  ['/auth/register', 'Register'],
+  ['/auth/reset', 'Reset password'],
+  ['/auth/reset-code?email=a%40example.com', 'Change password'],
+]) {
+  test(`${path} is titled after its heading`, async ({ page }) => {
+    await page.goto(path);
+    await expect(page).toHaveTitle(title);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(title);
+  });
+}
+
 test('a field error is tied to its field', async ({ page }) => {
   await page.goto('/auth/register');
   await page.locator('#email').fill('not-an-email');

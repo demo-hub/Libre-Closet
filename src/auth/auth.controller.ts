@@ -61,6 +61,21 @@ async function validateTyped<T extends object>(
   };
 }
 
+/** Each page's tab title: its heading, so the tab and the history entry say where you are. */
+const PAGE_TITLES = {
+  'auth/register': 'lang.REGISTER_OG_TITLE',
+  'auth/login': 'lang.LOGIN_OG_TITLE',
+  'auth/reset': 'lang.RESET_PASSWORD',
+  'auth/reset-code': 'lang.CHANGE_PASSWORD',
+  'auth/profile': 'lang.PROFILE',
+  'auth/delete-account': 'lang.DELETE_ACCOUNT',
+  'auth/update-email': 'lang.UPDATE_EMAIL',
+} as const;
+type AuthView = keyof typeof PAGE_TITLES;
+
+const pageTitle = (i18n: I18nContext | undefined, view: AuthView) =>
+  i18n?.t(PAGE_TITLES[view]);
+
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
@@ -84,10 +99,14 @@ export class AuthController {
   /** @fastify/view merges the request's locals underneath, so ogTitle and friends given here win over the defaults. */
   private rerender(
     reply: FastifyReply,
-    view: string,
+    view: AuthView,
     data: Record<string, unknown>,
   ) {
-    return reply.view(view, { layout: 'layout', ...data });
+    return reply.view(view, {
+      layout: 'layout',
+      pageTitle: pageTitle(I18nContext.current(), view),
+      ...data,
+    });
   }
 
   @UseGuards(RegistrationGuard)
@@ -193,6 +212,7 @@ export class AuthController {
     @Query('returnTo') returnTo: string | undefined,
   ): any {
     return {
+      pageTitle: pageTitle(i18n, 'auth/login'),
       ogTitle: i18n.t('lang.LOGIN_OG_TITLE'),
       ogDescription: i18n.t('lang.LOGIN_OG_DESC'),
       // Validated on the way in as well as on the way out: it is rendered into
@@ -203,8 +223,12 @@ export class AuthController {
 
   @Get('reset')
   @Render('auth/reset')
-  getReset(@Query('email') emailQueryParam: string): any {
+  getReset(
+    @I18n() i18n: I18nContext,
+    @Query('email') emailQueryParam: string,
+  ): any {
     return {
+      pageTitle: pageTitle(i18n, 'auth/reset'),
       input: {
         email: emailQueryParam,
       },
@@ -239,6 +263,7 @@ export class AuthController {
     @Query('email') emailQueryParam: string,
   ): any {
     return {
+      pageTitle: pageTitle(i18n, 'auth/reset-code'),
       // Worded for an address with no account too: the reset form answers
       // both the same way.
       notice: i18n.t('lang.RESET_CODE_SENT', {
@@ -293,6 +318,7 @@ export class AuthController {
   @Render('auth/register')
   getRegister(@I18n() i18n: I18nContext): any {
     return {
+      pageTitle: pageTitle(i18n, 'auth/register'),
       ogTitle: i18n.t('lang.REGISTER_OG_TITLE'),
       ogDescription: i18n.t('lang.REGISTER_OG_DESC'),
     };
@@ -301,13 +327,21 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Get('profile')
   @Render('auth/profile')
-  getProfile(): any {}
+  getProfile(@I18n() i18n: I18nContext): any {
+    return { pageTitle: pageTitle(i18n, 'auth/profile') };
+  }
 
   @UseGuards(AuthGuard)
   @Get('delete-account')
   @Render('auth/delete-account')
-  async getDeleteAccount(@User() payload: Payload): Promise<any> {
-    return { username: await this.authService.findEmail(payload.userId) };
+  async getDeleteAccount(
+    @User() payload: Payload,
+    @I18n() i18n: I18nContext,
+  ): Promise<any> {
+    return {
+      pageTitle: pageTitle(i18n, 'auth/delete-account'),
+      username: await this.authService.findEmail(payload.userId),
+    };
   }
 
   @UseGuards(AuthGuard)
@@ -334,7 +368,9 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Get('update-email')
   @Render('auth/update-email')
-  getUpdateEmail() {}
+  getUpdateEmail(@I18n() i18n: I18nContext) {
+    return { pageTitle: pageTitle(i18n, 'auth/update-email') };
+  }
 
   @Render('auth/update-email')
   @Post('validate/update-email')
