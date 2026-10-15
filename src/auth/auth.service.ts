@@ -1,4 +1,4 @@
-import { EntityManager, EntityRepository } from '@mikro-orm/core';
+import { EntityManager, EntityRepository, ref } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import {
   HttpException,
@@ -20,6 +20,17 @@ import { ResetPasswordDto } from './dto/resetPassword.dto';
 import Handlebars from 'handlebars';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+
+export const RESET_CODE_LIFETIME_MINUTES = 15;
+
+export function isResetCodeCurrent(
+  passwordReset: Pick<PasswordReset, 'createdAt'>,
+  now = new Date(),
+): boolean {
+  if (!passwordReset.createdAt) return false;
+  const age = now.getTime() - passwordReset.createdAt.getTime();
+  return age >= 0 && age <= RESET_CODE_LIFETIME_MINUTES * 60 * 1000;
+}
 
 @Injectable()
 export class AuthService {
@@ -131,28 +142,68 @@ export class AuthService {
     });
 
     const passwordReset = await user.passwordReset?.load();
-    if (!passwordReset || passwordReset.pin !== details.resetCode) {
-      throw new UnauthorizedException('Reset code does not match');
+    if (
+      !passwordReset ||
+      !isResetCodeCurrent(passwordReset) ||
+      passwordReset.pin !== details.resetCode
+    ) {
+      throw new UnauthorizedException('Reset code does not match or expired');
     }
 
     const hashedPassword = await bcrypt.hash(details.password, 12);
     user.password = hashedPassword;
+    // Unlinked and flushed before the code is deleted:
+    // user.password_reset_id is "on delete cascade", so deleting a code still
+    // linked to its user deletes the user too.
+    user.passwordReset = null;
     await this.em.persistAndFlush(user);
+    await this.em.removeAndFlush(passwordReset);
   }
 
+  /**
+   * Answers the same way whether or not the address has an account, so the
+   * reset form cannot be used to find out which addresses do. Throws only
+   * when this instance cannot send email at all.
+   */
   async sendPasswordResetEmail(email: string) {
     this.logger.debug(this.sendPasswordResetEmail.name);
-    const user = await this.userRepository.findOneOrFail({ email });
-    const pin = randomInt(100000, 999999).toString();
-    const appName = this.configService.get<string>('APP_NAME');
-    await this.emailService.sendEmailFromPrimaryAddress({
-      to: user.email!,
-      subject: `${appName}: password reset code`,
-      text: `Hello. Use this code to reset your ${appName} password: ${pin}. If you did not ask for a reset, ignore this email.`,
-      html: this.passwordResetTemplate({ appName, pin }),
-    });
+    if (!this.emailService.isConfigured) {
+      throw new Error('Email is not set up on this instance');
+    }
 
+    const user = await this.userRepository.findOne({ email });
+    if (!user) {
+      this.logger.debug('Password reset asked for an address with no account');
+      return;
+    }
+
+    const previous = await user.passwordReset?.load();
+    const pin = randomInt(100000, 999999).toString();
     const passwordReset = this.passwordResetRepository.create({ pin, user });
-    await this.em.persistAndFlush(passwordReset);
+    user.passwordReset = ref(passwordReset);
+    await this.em.persistAndFlush([passwordReset, user]);
+    // Only the newest code works. Deleted after the user points at the new
+    // one, for the cascade described in resetPassword.
+    if (previous) {
+      await this.em.removeAndFlush(previous);
+    }
+
+    // Not awaited: an address with an account would otherwise answer slower
+    // than one without.
+    const appName = this.configService.get<string>('APP_NAME');
+    this.emailService
+      .sendEmailFromPrimaryAddress({
+        to: user.email!,
+        subject: `${appName}: password reset code`,
+        text: `Hello. Use this code to reset your ${appName} password: ${pin}. It works for ${RESET_CODE_LIFETIME_MINUTES} minutes. If you did not ask for a reset, ignore this email.`,
+        html: this.passwordResetTemplate({
+          appName,
+          pin,
+          minutes: RESET_CODE_LIFETIME_MINUTES,
+        }),
+      })
+      .catch((error) =>
+        this.logger.error('The password reset email was not sent', error),
+      );
   }
 }

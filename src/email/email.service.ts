@@ -39,6 +39,11 @@ export class EmailService {
     }
   }
 
+  /** False when no transport is set up, so nothing can be sent. */
+  public get isConfigured(): boolean {
+    return !!this.transporter && !!this.primaryEmailAddress;
+  }
+
   public async sendEmailFromPrimaryAddress(options: EmailOptions) {
     this.logger.debug(this.sendEmailFromPrimaryAddress.name);
 
