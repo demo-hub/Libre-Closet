@@ -15,6 +15,11 @@ export class PasswordReset {
   @Property()
   public pin!: string;
 
+  // Nullable so SQLite can add the column in place; a code without one has
+  // expired.
+  @Property({ nullable: true })
+  public createdAt?: Date = new Date();
+
   @OneToOne({
     entity: () => User,
     nullable: false,

@@ -1,7 +1,7 @@
 {{>navbar}}
 <main id="main" tabindex="-1" class="page page--center grid-cols-[minmax(0,24rem)] gap-4">
   <h1>{{t 'lang.CHANGE_PASSWORD'}}</h1>
-  {{#if error}}{{> alert kind="error" text=error focus=true}}{{/if}}
+  {{#if error}}{{> alert kind="error" text=error focus=true}}{{else if notice}}{{> alert kind="neutral" text=notice}}{{/if}}
   <form method="post" action="/auth/reset-code" hx-post="/auth/reset-code" hx-target="main" hx-select="main" hx-swap="outerHTML show:window:top" hx-indicator="#loading">
     <fieldset class="fieldset w-full border border-base-300 rounded-box p-4">
       <div class="contents" data-live-validation hx-post="/auth/validate/reset-code" hx-target="this" hx-select="[data-live-validation]" hx-swap="outerHTML transition:false" hx-sync="this:replace" hx-trigger="change" hx-include="input" hx-indicator="#loading">
