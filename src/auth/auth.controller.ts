@@ -16,7 +16,7 @@ import { I18n, I18nContext } from 'nestjs-i18n';
 import { AuthGuard } from './auth.guard';
 import { RegistrationGuard } from './registration.guard';
 import { ConfigService } from '@nestjs/config';
-import { AuthService } from './auth.service';
+import { AuthService, RESET_CODE_LIFETIME_MINUTES } from './auth.service';
 import { EmailDto } from './dto/email.dto';
 import { LoginDto } from './dto/login.dto';
 import { Payload } from './dto/payload.dto';
@@ -216,8 +216,16 @@ export class AuthController {
 
   @Get('reset-code')
   @Render('auth/reset-code')
-  getResetCode(@Query('email') emailQueryParam: string): any {
+  getResetCode(
+    @I18n() i18n: I18nContext,
+    @Query('email') emailQueryParam: string,
+  ): any {
     return {
+      // Worded for an address with no account too: the reset form answers
+      // both the same way.
+      notice: i18n.t('lang.RESET_CODE_SENT', {
+        args: { minutes: RESET_CODE_LIFETIME_MINUTES },
+      }),
       input: {
         email: emailQueryParam,
       },
