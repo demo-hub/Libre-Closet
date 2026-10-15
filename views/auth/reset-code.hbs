@@ -7,8 +7,8 @@
       <div class="contents" data-live-validation hx-post="/auth/validate/reset-code" hx-target="this" hx-select="[data-live-validation]" hx-swap="outerHTML transition:false" hx-sync="this:replace" hx-trigger="change" hx-include="input" hx-indicator="#loading">
         {{> authField fieldId="email" type="email" label=(t 'lang.EMAIL') autocomplete="email" value=input.email errors=(filterErrors validationErrors 'email')}}
         {{> authField fieldId="resetCode" type="text" label=(t 'lang.RESET_CODE') autocomplete="one-time-code" inputmode="numeric" value=input.resetCode}}
-        {{> authField fieldId="password" type="password" label=(t 'lang.PASSWORD') autocomplete="new-password" value=input.password errors=(filterErrors validationErrors 'password')}}
-        {{> authField fieldId="confirmPassword" type="password" label=(t 'lang.CONFIRM_PASSWORD') autocomplete="new-password" value=input.confirmPassword errors=(filterErrors validationErrors 'confirmPassword')}}
+        {{> authField fieldId="password" type="password" label=(t 'lang.PASSWORD') autocomplete="new-password" errors=(filterErrors validationErrors 'password')}}
+        {{> authField fieldId="confirmPassword" type="password" label=(t 'lang.CONFIRM_PASSWORD') autocomplete="new-password" errors=(filterErrors validationErrors 'confirmPassword')}}
       </div>
       <button type="submit" class="btn btn-primary mt-4">{{t 'lang.RESET_PASSWORD'}}</button>
     </fieldset>
