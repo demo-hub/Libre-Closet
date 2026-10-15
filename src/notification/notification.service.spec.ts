@@ -74,6 +74,29 @@ describe('NotificationService', () => {
     expect(service).toBeDefined();
   });
 
+  it.each([undefined, '', 'http://192.168.1.10:3000'])(
+    'starts with SITE_URL %p, which web-push would refuse as a subject',
+    (siteUrl) => {
+      const config = {
+        get: (key: string) =>
+          ({
+            SITE_URL: siteUrl,
+            PUBLIC_VAPID_KEY: DUMMY_VAPID_KEYS.publicKey,
+            PRIVATE_VAPID_KEY: DUMMY_VAPID_KEYS.privateKey,
+          })[key],
+      } as unknown as ConfigService;
+      expect(
+        () =>
+          new NotificationService(
+            config,
+            {} as never,
+            {} as never,
+            {} as never,
+          ),
+      ).not.toThrow();
+    },
+  );
+
   it('puts the body, icon, badge and click target where the service worker reads them', async () => {
     const subscription = { endpoint: 'https://push.example/1', keys: {} };
     users.findOneOrFail.mockResolvedValue({

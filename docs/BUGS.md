@@ -151,13 +151,6 @@ Bugs found while working on this fork and left out of the change that found them
   - The layout subscribes only when `document.cookie` contains `access_token`, but that cookie is `httpOnly`, so the check never passes.
   - Where: `views/layout.hbs:222-226`.
   - Found in #25.
-- **Share links point at the upstream instance unless `SITE_URL` is set** (high).
-  - `SITE_URL` defaults to `https://librecloset.lazz.tech`, and the view context only falls back to the request's host when it is unset, which with that default never happens.
-  - Every copied share link (garment, outfit, file) therefore points at someone else's server on an instance started without `SITE_URL`, as the README's quick start is. The same value feeds `twitter:domain` and the JSON-LD `@id`s.
-  - A fallback to the request's host has to keep the port (`req.host`, not `req.hostname`), the same issue as the default share images below.
-  - Where: `src/app.module.ts:105`, `src/view-context/view-context.service.ts:48`.
-  - About's breadcrumb links are built from it too, so on such an instance they name upstream's host (#33).
-  - Found in #29.
 - **Most pages are titled with the bare app name** (medium).
   - The layout prints `pageTitle` when a route sets one. The wardrobe and outfit routes set it (PRs 8b and 9a), but the files, sharing, auth, shared-item and chat pages do not, so their tabs and history entries all read "Libre Closet" (WCAG 2.4.2).
   - Where: `views/layout.hbs:52`; `file.controller.ts`, `wardrobe-share.controller.ts`, `auth.controller.ts`, `open-graph.controller.ts`, `app.controller.ts` (`/chat`).
@@ -166,11 +159,6 @@ Bugs found while working on this fork and left out of the change that found them
   - The head script turns a boosted GET into a full load of `requestConfig.path`, which for a GET form is the bare `action`. Reading `detail.pathInfo.finalRequestPath` would keep the query.
   - Where: `views/layout.hbs:207-215`.
   - Found in #28.
-- **Default share images drop the port** (low).
-  - `og:image` and the JSON-LD image use `req.hostname`, which has no port. They break on an instance reached on a non-default port without a proxy.
-  - Where: `src/view-context/view-context.service.ts:37` (`req.hostname`) and `:54`.
-  - Every page's canonical URL, `og:url` and `twitter:url`, and the landing page's JSON-LD `@id`, `url` and search target, lose the port the same way (#33).
-  - Found in #25.
 - **After an upgrade, the first page view can show the previous release's icons and manifest** (low).
   - The stylesheet and the app's scripts are asked for with a content hash, so an older service worker's precache cannot answer them. `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `manifest.json` and `assets/icons/` keep their bare URLs and come from the old precache until the new worker takes over.
   - Where: `views/layout.hbs`, `workbox-config.js` (`manifestTransforms`), `src/asset-url.ts`.
@@ -178,10 +166,6 @@ Bugs found while working on this fork and left out of the change that found them
 - **Chrome logs "Transition was skipped" when Back follows a boosted navigation** (low).
   - This comes from htmx's global view transitions.
   - Found in #23.
-- **A blank OPERATOR_NAME shows an empty "Run by"** (low).
-  - A value of spaces is a non-empty string, so About shows "This instance" with nothing after "Run by". Trimming in the Joi schema would fix it, without leaving the contract PR 11b relies on (strings, '' when unset).
-  - Where: `src/app.module.ts:112`.
-  - Found in #33.
 
 ## Accessibility and theme
 

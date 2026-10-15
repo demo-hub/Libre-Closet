@@ -7,9 +7,10 @@ import { User } from '../dal/entity/user.entity';
 import { ViewContextService } from './view-context.service';
 
 const request = {
-  url: '/about',
+  url: '/about?from=footer',
   headers: {},
   protocol: 'http',
+  host: 'localhost:3000',
   hostname: 'localhost',
   cookies: {},
 } as unknown as FastifyRequest;
@@ -48,6 +49,25 @@ describe('ViewContextService operator values', () => {
     });
     expect(context.operatorName).toBe('Jane Doe');
     expect(context.operatorContact).toBe('closet@example.com');
+  });
+});
+
+describe('ViewContextService links to this instance', () => {
+  for (const SITE_URL of [undefined, '']) {
+    it(`use the request's own address, port included, when SITE_URL is ${JSON.stringify(SITE_URL)}`, async () => {
+      const context = await contextWith({ SITE_URL });
+      expect(context.siteUrl).toBe('http://localhost:3000');
+      expect(context.canonicalUrl).toBe('http://localhost:3000/about');
+      expect(context.ogUrl).toBe('http://localhost:3000/about');
+      expect(context.ogImage).toBe('http://localhost:3000/assets/og-image.png');
+    });
+  }
+
+  it('use SITE_URL when it is set', async () => {
+    const context = await contextWith({ SITE_URL: 'https://closet.example/' });
+    expect(context.siteUrl).toBe('https://closet.example');
+    expect(context.canonicalUrl).toBe('https://closet.example/about');
+    expect(context.ogImage).toBe('https://closet.example/assets/og-image.png');
   });
 });
 

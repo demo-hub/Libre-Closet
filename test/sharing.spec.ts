@@ -125,6 +125,40 @@ function stubClipboard(page: Page) {
 const copied = (page: Page) =>
   page.evaluate(() => (window as unknown as { copied?: string }).copied);
 
+test.describe('links to this instance', () => {
+  test('a share link, the canonical URL and the preview image name the address the page came from, port included', async ({
+    page,
+  }, info) => {
+    await register(page.request, 'origin');
+    const id = await createGarment(
+      page.request,
+      'tops',
+      `Origin shirt ${info.project.name} ${Date.now()}`,
+    );
+    await page.goto(`/wardrobe/${id}`);
+    const origin = new URL(page.url()).origin;
+
+    const link = await page
+      .locator('main button[data-copy*="/share?"]')
+      .getAttribute('data-copy');
+    expect(new URL(link!).origin).toBe(origin);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      `${origin}/wardrobe/${id}`,
+    );
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+      'content',
+      `${origin}/assets/og-image.png`,
+    );
+
+    await page.goto(link!);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      link!,
+    );
+  });
+});
+
 test.describe('a shared item', () => {
   test('shows a garment by name and where it came from, never its owner', async ({
     page,
