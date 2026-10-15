@@ -55,8 +55,11 @@ module.exports = {
     assert: {
       assertMatrix: [
         // The landing page's four phone screenshots are 4.4 times the size they
-        // are shown at (docs/BUGS.md); PR 13 regenerates them and restores this.
-        recommended(`^${origin}/(about)?$`, { 'uses-responsive-images': 'warn' }),
+        // are shown at (docs/BUGS.md); PR 13 regenerates them and restores both this and the default LCP ceiling.
+        recommended(`^${origin}/(about)?$`, {
+          'uses-responsive-images': 'warn',
+          'largest-contentful-paint': ['error', { maxNumericValue: 3500 }],
+        }),
         recommended(`^${origin}/auth/login$`),
         // robots.txt keeps the app's own pages out of search engines.
         recommended(`^${origin}/wardrobe/new$`, { 'is-crawlable': 'off' }),
