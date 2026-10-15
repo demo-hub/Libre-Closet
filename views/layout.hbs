@@ -217,32 +217,30 @@ https://nestjs-i18n.com/quick-start --}}
             event.detail.requestConfig.verb === 'get'
           ) {
             event.preventDefault();
-            window.location.href = event.detail.requestConfig.path;
+            // finalRequestPath, not requestConfig.path: a GET form's fields are only in the former.
+            window.location.href = event.detail.pathInfo.finalRequestPath;
           }
         });
 
-        // Register the service worker
-        wb.register().then(() => {
-          console.log('Service Worker registered');
+        // Push is turned on from the profile page, on a press: Firefox and Safari refuse a prompt nobody asked for.
+        wb.register().catch((err) => console.warn('Service worker:', err));
 
-          // Check for access_token cookie first
-          if (
-            document.cookie
-              .split('; ')
-              .find((row) => row.startsWith('access_token='))
-          ) {
-            // If authenticated set up web push notifications
-            import('/js/webPush.js').then((module) => {
-              module.default
-                .subscribe()
-                .catch((err) =>
-                  console.warn('Web push subscription failed:', err),
-                );
-            });
-          } else {
-            console.log('Not authenticated - skipping web push subscription');
-          }
-        });
+        // Signing out forgets this browser's subscription first, while the session can still say whose it is.
+        // Capture phase, so this runs before htmx follows the boosted link. Sign-out goes ahead whatever push does.
+        if (!window.__lcLogoutBound) {
+          window.__lcLogoutBound = true;
+          document.addEventListener('click', (event) => {
+            const link = event.target.closest && event.target.closest('a[href="/auth/logout"]');
+            if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey) return;
+            event.preventDefault();
+            event.stopPropagation();
+            const leave = () => window.location.assign('/auth/logout');
+            const timeout = new Promise((resolve) => setTimeout(resolve, 3000));
+            Promise.race([import('/js/webPush.js').then((m) => m.default.unsubscribe()), timeout])
+              .catch((err) => console.warn('Web push:', err))
+              .finally(leave);
+          }, true);
+        }
       }
 
       // https://stackoverflow.com/questions/75972895/ios-pwa-how-to-re-enable-pull-to-refresh

@@ -86,6 +86,13 @@ export type I18nTranslations = {
         "ERROR_429": string;
         "ERROR_500": string;
         "TEST_WEB_PUSH": string;
+        "NOTIFICATIONS": string;
+        "NOTIFICATIONS_TURN_ON": string;
+        "NOTIFICATIONS_TURN_OFF": string;
+        "NOTIFICATIONS_ON": string;
+        "NOTIFICATIONS_OFF": string;
+        "NOTIFICATIONS_BLOCKED": string;
+        "NOTIFICATIONS_FAILED": string;
         "YOUR_MESSAGE": string;
         "CHAT": string;
         "MESSAGE_LABEL": string;

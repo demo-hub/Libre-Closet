@@ -142,18 +142,15 @@ Bugs found while working on this fork and left out of the change that found them
 
 ## Shell and PWA
 
-- **Push notifications cannot be subscribed from the UI** (high).
-  - The layout subscribes only when `document.cookie` contains `access_token`, but that cookie is `httpOnly`, so the check never passes.
-  - Where: `views/layout.hbs:222-226`.
-  - Found in #25.
 - **Most pages are titled with the bare app name** (medium).
   - The layout prints `pageTitle` when a route sets one. The wardrobe and outfit routes set it (PRs 8b and 9a), but the files, sharing, auth, shared-item and chat pages do not, so their tabs and history entries all read "Libre Closet" (WCAG 2.4.2).
   - Where: `views/layout.hbs:52`; `file.controller.ts`, `wardrobe-share.controller.ts`, `auth.controller.ts`, `open-graph.controller.ts`, `app.controller.ts` (`/chat`).
   - Found in #29.
-- **After a service-worker update, a search loses its terms** (low).
-  - The head script turns a boosted GET into a full load of `requestConfig.path`, which for a GET form is the bare `action`. Reading `detail.pathInfo.finalRequestPath` would keep the query.
-  - Where: `views/layout.hbs:207-215`.
-  - Found in #28.
+- **A push endpoint whose name resolves to a private address is still posted to** (low).
+  - `/notification/subscribe` refuses http, loopback, private and link-local literals and odd ports, but does not resolve a host name, so a signed-in user can store `https://name-that-resolves-internally/` and make `/notification/test` POST an encrypted body there. Nothing of the answer comes back.
+  - Resolving at send time, as the importer's `SafeFetchService` does, would close it; web-push takes an `agent`, which could carry that lookup.
+  - Where: `src/notification/push-subscription.ts`, `src/notification/notification.service.ts` (`sendWebPushNotification`).
+  - Found in #54.
 - **After an upgrade, the first page view can show the previous release's icons and manifest** (low).
   - The stylesheet and the app's scripts are asked for with a content hash, so an older service worker's precache cannot answer them. `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `manifest.json` and `assets/icons/` keep their bare URLs and come from the old precache until the new worker takes over.
   - Where: `views/layout.hbs`, `workbox-config.js` (`manifestTransforms`), `src/asset-url.ts`.
@@ -215,6 +212,7 @@ Bugs found while working on this fork and left out of the change that found them
   - the ten landing and About keys: `SOURCE_ON_GITHUB`, `COPY_COMMAND`, `WHY_SELF_HOST_DESC_2` (with `WHY_SELF_HOST_DESC` cut to its first sentence), `PRIVACY`, `TERMS`, `ABOUT`, `ABOUT_FORK`, `ABOUT_INSTANCE`, `ABOUT_RUN_BY`, `ABOUT_CONTACT` (#33);
   - `RESET_CODE_SENT` and the re-worded `RESET_FAILED` and `RESET_CODE_FAILED` (#44);
   - the re-worded `DELETE_ACCOUNT_FAILED` (#46);
+  - the seven notification keys: `NOTIFICATIONS`, `NOTIFICATIONS_TURN_ON`, `NOTIFICATIONS_TURN_OFF`, `NOTIFICATIONS_ON`, `NOTIFICATIONS_OFF`, `NOTIFICATIONS_BLOCKED`, `NOTIFICATIONS_FAILED` (#54);
   - `COPY_BY_HAND` and `COPY_BY_HAND_TOUCH` (#56).
 
 ## Tests and tooling
