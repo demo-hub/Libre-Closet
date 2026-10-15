@@ -117,9 +117,22 @@ export class AuthService {
     await this.em.persistAndFlush(user);
   }
 
-  async deleteUser(userId: any) {
+  /**
+   * Deletes the signed-in user's own account, once its own password is given.
+   * Never takes an email: any account's credentials would otherwise pass.
+   */
+  async deleteOwnAccount(userId: any, password: string) {
     const user = await this.userRepository.findOneOrFail({ id: userId });
+    if (!password || !(await bcrypt.compare(password, user.password))) {
+      throw new UnauthorizedException();
+    }
     await this.em.removeAndFlush(user);
+  }
+
+  /** The address as stored now; the one in a session's token can be stale. */
+  async findEmail(userId: any): Promise<string | undefined> {
+    const user = await this.userRepository.findOne({ id: userId });
+    return user?.email ?? undefined;
   }
 
   public async resetPassword(details: ResetPasswordDto) {

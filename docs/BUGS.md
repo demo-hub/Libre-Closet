@@ -12,10 +12,6 @@ Bugs found while working on this fork and left out of the change that found them
 
 ## Accounts and security
 
-- **Delete account accepts anyone's credentials** (high).
-  - The confirmation signs in with whatever email and password are typed, then deletes the signed-in user. The credentials of any other account therefore pass the check.
-  - Where: `src/auth/auth.controller.ts`, `postDeleteAccount`.
-  - Found in #27.
 - **Deleting a `password_reset` row deletes its user** (medium).
   - `user.password_reset_id` references `password_reset` with `on delete cascade`, so removing a code that a user still points at removes the user. The reset flow unlinks a code before deleting it; any other code that deletes one must do the same.
   - `on delete set null` would be safe, but changing the key means rebuilding the `user` table in SQLite, which cascades in turn (the rule in the README's migrations section).
@@ -234,7 +230,8 @@ Bugs found while working on this fork and left out of the change that found them
   - the twelve outfit keys: `NO_GARMENTS_IN_OUTFIT`, `NO_GARMENT`, `VIEW_GARMENT`, `PREVIOUS`, `NEXT`, `MOVE_UP`, `MOVE_DOWN`, `ROW_MOVED`, `REMOVE_ROW`, `DELETE_OUTFIT`, `PLACEHOLDER_OUTFIT_NAME`, `PLACEHOLDER_OUTFIT_NOTES` (#31);
   - the four calendar keys: `TODAY`, `PREVIOUS_MONTH`, `NEXT_MONTH`, `REMOVE_FROM_CALENDAR`, the re-worded `CALENDAR_DELETE_CONFIRM` in es, fr and ru, and fr `CALENDAR_WORN` (#32);
   - the ten landing and About keys: `SOURCE_ON_GITHUB`, `COPY_COMMAND`, `WHY_SELF_HOST_DESC_2` (with `WHY_SELF_HOST_DESC` cut to its first sentence), `PRIVACY`, `TERMS`, `ABOUT`, `ABOUT_FORK`, `ABOUT_INSTANCE`, `ABOUT_RUN_BY`, `ABOUT_CONTACT` (#33);
-  - `RESET_CODE_SENT` and the re-worded `RESET_FAILED` and `RESET_CODE_FAILED` (#44).
+  - `RESET_CODE_SENT` and the re-worded `RESET_FAILED` and `RESET_CODE_FAILED` (#44);
+  - the re-worded `DELETE_ACCOUNT_FAILED` (#46).
 
 ## Tests and tooling
 

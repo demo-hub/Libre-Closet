@@ -129,7 +129,7 @@
   "RESET_CODE_FAILED": "Fehler: Die E-Mail-Adresse oder der Zurücksetzungscode ist falsch, oder der Code ist abgelaufen. Dein Passwort wurde nicht geändert.",
   "RESET_CODE_SENT": "Wenn ein Konto diese Adresse nutzt, ist ein Zurücksetzungscode dorthin unterwegs. Der Code gilt {minutes} Minuten.",
   "UPDATE_EMAIL_FAILED": "Fehler: Die E-Mail-Adresse wurde nicht geändert. Sie gehört vielleicht schon zu einem anderen Konto.",
-  "DELETE_ACCOUNT_FAILED": "Fehler: Die E-Mail-Adresse oder das Passwort ist falsch. Dein Konto wurde nicht gelöscht.",
+  "DELETE_ACCOUNT_FAILED": "Fehler: Das Passwort ist falsch. Dein Konto wurde nicht gelöscht.",
   "PHOTO": "Foto",
   "SAVE": "Speichern",
   "REQUIRED": "Pflichtfeld",

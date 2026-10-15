@@ -18,6 +18,7 @@ import { RegistrationGuard } from './registration.guard';
 import { ConfigService } from '@nestjs/config';
 import { AuthService, RESET_CODE_LIFETIME_MINUTES } from './auth.service';
 import { EmailDto } from './dto/email.dto';
+import { DeleteAccountDto } from './dto/deleteAccount.dto';
 import { LoginDto } from './dto/login.dto';
 import { Payload } from './dto/payload.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -305,26 +306,27 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Get('delete-account')
   @Render('auth/delete-account')
-  getDeleteAccount(): any {}
+  async getDeleteAccount(@User() payload: Payload): Promise<any> {
+    return { username: await this.authService.findEmail(payload.userId) };
+  }
 
   @UseGuards(AuthGuard)
   @Post('delete-account')
   async postDeleteAccount(
     @User() payload: Payload,
     @I18n() i18n: I18nContext,
-    @Body() loginDto: LoginDto,
+    @Body() body: DeleteAccountDto,
     @Res() reply: FastifyReply,
   ) {
     try {
-      await this.authService.signIn(loginDto.email, loginDto.password);
-      await this.authService.deleteUser(payload.userId);
+      await this.authService.deleteOwnAccount(payload.userId, body.password);
       reply.clearCookie('access_token', { path: '/' });
       return navigate(reply, '/');
     } catch (error) {
       this.logger.warn(error);
       return this.rerender(reply, 'auth/delete-account', {
         error: i18n.t('lang.DELETE_ACCOUNT_FAILED'),
-        input: { email: loginDto.email },
+        username: await this.authService.findEmail(payload.userId),
       });
     }
   }

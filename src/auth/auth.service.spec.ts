@@ -95,6 +95,37 @@ describe('AuthService', () => {
     });
   });
 
+  describe('deleteOwnAccount', () => {
+    const user = { id: 1, password: '' };
+    beforeAll(async () => {
+      user.password = await bcrypt.hash('Password123!', 4);
+    });
+
+    beforeEach(() => {
+      module
+        .get(getRepositoryToken(User))
+        .findOneOrFail.mockResolvedValue(user);
+    });
+
+    it('looks up the signed-in user, not an address', async () => {
+      await service.deleteOwnAccount(1, 'Password123!');
+      expect(
+        module.get(getRepositoryToken(User)).findOneOrFail,
+      ).toHaveBeenCalledWith({ id: 1 });
+      expect(em().removeAndFlush).toHaveBeenCalledWith(user);
+    });
+
+    it.each<[string, string]>([
+      ['a wrong password', 'Wrong123!'],
+      ['no password', ''],
+    ])('keeps the account given %s', async (_, password) => {
+      await expect(
+        service.deleteOwnAccount(1, password),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+      expect(em().removeAndFlush).not.toHaveBeenCalled();
+    });
+  });
+
   describe('resetPassword', () => {
     const request = {
       email: 'a@example.com',

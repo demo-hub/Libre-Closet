@@ -10,6 +10,7 @@ import { User } from '../dal/entity/user.entity';
 import { EmailService } from '../email/email.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { DeleteAccountDto } from './dto/deleteAccount.dto';
 import { RegistrationGuard } from './registration.guard';
 
 describe('AuthController', () => {
@@ -298,20 +299,48 @@ describe('AuthController', () => {
     });
 
     it('keeps the account when the confirmation fails', async () => {
-      jest.spyOn(authService, 'signIn').mockRejectedValue(new Error('nope'));
-      const remove = jest.spyOn(authService, 'deleteUser');
+      jest
+        .spyOn(authService, 'deleteOwnAccount')
+        .mockRejectedValue(new Error('nope'));
+      jest.spyOn(authService, 'findEmail').mockResolvedValue('a@example.com');
       const reply = failing();
       await controller.postDeleteAccount(
         { userId: 1, email: 'a@example.com' },
         i18n,
-        { email: 'a@example.com', password: 'bad' },
+        { password: 'bad' },
         reply as unknown as FastifyReply,
       );
       expect(rendered(reply)[1]).toMatchObject({
         error: 'lang.DELETE_ACCOUNT_FAILED',
+        username: 'a@example.com',
       });
-      expect(remove).not.toHaveBeenCalled();
       expect(reply.clearCookie).not.toHaveBeenCalled();
+    });
+
+    it('checks the password against the signed-in account, whatever email is sent', async () => {
+      const remove = jest
+        .spyOn(authService, 'deleteOwnAccount')
+        .mockResolvedValue(undefined);
+      const reply = {
+        request: { headers: {} },
+        clearCookie: jest.fn(),
+        header: jest.fn(),
+        send: jest.fn(),
+        redirect: jest.fn(),
+      };
+      await controller.postDeleteAccount(
+        { userId: 1, email: 'a@example.com' },
+        i18n,
+        {
+          email: 'someone-else@example.com',
+          password: 'their-password',
+        } as DeleteAccountDto,
+        reply as unknown as FastifyReply,
+      );
+      expect(remove).toHaveBeenCalledWith(1, 'their-password');
+      expect(reply.clearCookie).toHaveBeenCalledWith('access_token', {
+        path: '/',
+      });
     });
 
     it('throttles the route that checks a reset code, not its live validation', () => {
