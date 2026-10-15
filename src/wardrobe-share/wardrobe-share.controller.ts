@@ -15,6 +15,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { I18n, I18nContext } from 'nestjs-i18n';
 import { AuthGuard } from '../auth/auth.guard';
 import { ConditionalAuthGuard } from '../auth/conditional-auth.guard';
@@ -23,6 +24,7 @@ import { User } from '../auth/user.decorator';
 import { OWN_INVITE, WardrobeShareService } from './wardrobe-share.service';
 import { SharePermission } from '../dal/entity/wardrobe-share.entity';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { publicBaseUrl } from '../public-url';
 
 /** What ?error= may name: a link can put no other text on the page. */
 const INVITE_ERRORS = new Map([
@@ -35,7 +37,10 @@ const INVITE_ERRORS = new Map([
 export class WardrobeShareController {
   private readonly logger = new Logger(WardrobeShareController.name);
 
-  constructor(private readonly shareService: WardrobeShareService) {}
+  constructor(
+    private readonly shareService: WardrobeShareService,
+    private readonly configService: ConfigService,
+  ) {}
 
   private async managePage(
     payload: Payload,
@@ -61,7 +66,7 @@ export class WardrobeShareController {
       outbound: outbound.map(mapShare),
       inbound: inbound.map(mapShare),
       pending: pending.map(mapShare),
-      baseUrl: `${req.protocol}://${req.headers.host}`,
+      baseUrl: publicBaseUrl(this.configService.get<string>('SITE_URL'), req),
       pageTitle: i18n.t('lang.WARDROBE_SHARING'),
     };
   }

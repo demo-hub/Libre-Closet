@@ -11,7 +11,8 @@ export class FileUrlService {
     }
   }
 
-  getWatermarkedFileUrl(shareableId: string, req: FastifyRequest): string {
-    return `${req.protocol}://${req.host}/file/watermark/${shareableId}`;
+  /** `baseUrl` is where links to this instance point (see public-url.ts). */
+  getWatermarkedFileUrl(shareableId: string, baseUrl: string): string {
+    return `${baseUrl}/file/watermark/${shareableId}`;
   }
 }

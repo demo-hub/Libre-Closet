@@ -6,6 +6,7 @@ import webpush from 'web-push';
 import { UserDevice } from '../dal/entity/userDevice.entity';
 import { PushNotificationDto } from './dto/pushNotification.dto';
 import { buildPushPayload } from './push-payload';
+import { vapidSubject } from './vapid-subject';
 
 @Injectable()
 export class NotificationService {
@@ -18,7 +19,11 @@ export class NotificationService {
     private readonly em: EntityManager,
   ) {
     webpush.setVapidDetails(
-      this.configService.get('SITE_URL') || '',
+      vapidSubject({
+        SITE_URL: this.configService.get<string>('SITE_URL'),
+        OPERATOR_CONTACT: this.configService.get<string>('OPERATOR_CONTACT'),
+        SOURCE_URL: this.configService.get<string>('SOURCE_URL'),
+      }),
       this.configService.get<string>('PUBLIC_VAPID_KEY') || '',
       this.configService.get<string>('PRIVATE_VAPID_KEY') || '',
     );

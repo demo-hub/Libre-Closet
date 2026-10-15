@@ -50,7 +50,7 @@ services:
       - librecloset_data:/app/data
     environment:
       AUTH_ENABLED: 'false'
-      # https:// only; an http:// value stops the app at boot.
+      # Where share links point. Unset, they use the address each visit came in on.
       SITE_URL: 'https://closet.example.com'
     restart: unless-stopped
 
@@ -60,7 +60,7 @@ volumes:
 
 - **Upgrade:** `docker compose pull && docker compose up -d`. Migrations run on boot, so back up first.
 - **HTTPS and the PWA:** service workers need a secure context. Once you have HTTPS, set `PWA_ENABLED: 'true'`. Each person then turns on push notifications for a browser on their profile page; that needs accounts on, and on iOS the app installed to the home screen. The easiest route is `sudo tailscale serve --bg 3000`, which gives you a real certificate on your tailnet. First enable MagicDNS and HTTPS Certificates on the [DNS page of the admin console](https://console.tailscale.com/admin/dns), or `serve` waits on that switch and looks hung. It listens on 443 only, so type the `https://` address that `tailscale serve status` prints.
-- **Reverse proxy:** the app trusts forwarded headers from loopback only. Behind a containerized proxy, rate limiting shares one bucket and `/share` previews say `http://`. Set nginx `client_max_body_size 25m` (uploads can be large) and a `proxy_read_timeout` above `AI_TIMEOUT_MS`.
+- **Reverse proxy:** the app trusts forwarded headers from loopback only (`trustProxy` in `src/main.ts`), so a client cannot change the address links name with `X-Forwarded-Host` or `X-Forwarded-Proto`. Behind a containerized proxy, rate limiting shares one bucket, and links name the address the proxy used, over `http://`, unless `SITE_URL` is set. Set nginx `client_max_body_size 25m` (uploads can be large) and a `proxy_read_timeout` above `AI_TIMEOUT_MS`.
 - **Access control:** with `AUTH_ENABLED=false` everyone who reaches the port shares one wardrobe with full write access. If you expose it publicly, enable auth *before* adding garments (existing ones are left unowned), and register your account *before* setting `DISABLE_REGISTRATION=true`.
 - **Backups:** everything lives in `DATA_PATH`. Stop the app and archive the whole directory; copying `sqlite3.db` alone can restore as an empty database. The archive holds `instance-secrets.json` too, so keep it private.
 
@@ -105,7 +105,7 @@ Defaults live in `.env` (baked into the image). Override them with real environm
 | --- | --- | --- |
 | `APP_NAME` | Display name | `Libre Closet` |
 | `DATA_PATH` | Directory for the SQLite DB and uploads | `./data` |
-| `SITE_URL` | Public address for share links. Must be `https://` | upstream's instance |
+| `SITE_URL` | Public address for share, canonical and preview links, such as `https://closet.example.com` | the address each visit came in on |
 | `AUTH_ENABLED` | Enable JWT accounts and login | `false` |
 | `DISABLE_REGISTRATION` | Disallow sign ups | `false` |
 | `ACCESS_TOKEN_SECRET` | Signs sessions. Generated on first boot when unset (see below) | generated |

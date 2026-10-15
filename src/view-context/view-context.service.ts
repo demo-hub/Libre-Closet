@@ -8,6 +8,7 @@ import { I18nContext } from 'nestjs-i18n';
 import { GarmentEnricher } from '../ai/garment-enricher';
 import { Payload } from '../auth/dto/payload.dto';
 import { User } from '../dal/entity/user.entity';
+import { publicBaseUrl } from '../public-url';
 import { sectionOf } from './section';
 
 @Injectable()
@@ -33,10 +34,11 @@ export class ViewContextService {
   async buildContext(req: FastifyRequest) {
     const locale = I18nContext.current()?.lang ?? 'en';
     const path = req.url.split('?')[0];
-    const protocol =
-      (req.headers['x-forwarded-proto'] as string) ?? req.protocol;
-    const host = (req.headers['x-forwarded-host'] as string) ?? req.hostname;
-    const canonicalUrl = `${protocol}://${host}${path}`;
+    const siteUrl = publicBaseUrl(
+      this.configService.get<string>('SITE_URL'),
+      req,
+    );
+    const canonicalUrl = `${siteUrl}${path}`;
     const ogLocaleMap: Record<string, string> = {
       en: 'en_US',
       ru: 'ru_RU',
@@ -46,13 +48,11 @@ export class ViewContextService {
       de: 'de_DE',
     };
 
-    const siteUrl = this.configService.get<string>('SITE_URL') ?? host;
-    const baseUrl = `${protocol}://${host}`;
     const appName = this.configService.get<string>('APP_NAME');
     const appDescription =
       I18nContext.current()?.t('lang.APP_DESCRIPTION') ??
       'Self-hosted wardrobe organiser. Catalogue clothes with photos, build outfits and install it as a progressive web app. Free and open source, with no subscription and no ads.';
-    const ogImage = `${baseUrl}/assets/og-image.png`;
+    const ogImage = `${siteUrl}/assets/og-image.png`;
 
     const context: Record<string, any> = {
       appName,
