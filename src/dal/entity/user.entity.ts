@@ -41,7 +41,7 @@ export class User extends ShareableId {
     ref: true,
     inversedBy: 'user',
   })
-  public passwordReset!: Ref<PasswordReset>;
+  public passwordReset?: Ref<PasswordReset> | null;
 
   @OneToMany(() => UserDevice, (userDevice) => userDevice.user)
   public userDevices = new Collection<UserDevice>(this);
