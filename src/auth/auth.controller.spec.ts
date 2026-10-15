@@ -110,6 +110,49 @@ describe('AuthController', () => {
     });
   });
 
+  describe('live validation', () => {
+    const errorsFor = (...properties: string[]) =>
+      properties.map((property) => ({ property, constraints: {} }));
+
+    it('never sends a typed password back', async () => {
+      const result = await controller.postRegisterValidate(i18n, {
+        email: 'a@example.com',
+        password: 'Secret123!',
+        confirmPassword: 'Secret123!',
+      });
+      expect(result.input).toEqual({ email: 'a@example.com' });
+      expect(JSON.stringify(result)).not.toContain('Secret123!');
+    });
+
+    it('reports only the fields that hold something', async () => {
+      (i18n.validate as jest.Mock).mockResolvedValueOnce(
+        errorsFor('email', 'password', 'confirmPassword'),
+      );
+      const result = await controller.postRegisterValidate(i18n, {
+        email: 'not-an-email',
+        password: '',
+        confirmPassword: '',
+      });
+      expect(result.validationErrors?.map((error) => error.property)).toEqual([
+        'email',
+      ]);
+    });
+
+    it('reports nothing for an untouched form', async () => {
+      (i18n.validate as jest.Mock).mockResolvedValueOnce(
+        errorsFor('email', 'resetCode', 'password', 'confirmPassword'),
+      );
+      const result = await controller.postResetCodeValidate(i18n, {
+        email: '',
+        resetCode: '',
+        password: '',
+        confirmPassword: '',
+      });
+      expect(result).not.toHaveProperty('validationErrors');
+      expect(result.input).not.toHaveProperty('password');
+    });
+  });
+
   describe('after a failed submit', () => {
     const failing = () => ({
       request: { headers: { 'hx-request': 'true' } },

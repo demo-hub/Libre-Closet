@@ -6,6 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { FastifyRequest } from 'fastify';
 import { I18nContext } from 'nestjs-i18n';
 import { GarmentEnricher } from '../ai/garment-enricher';
+import { Payload } from '../auth/dto/payload.dto';
 import { User } from '../dal/entity/user.entity';
 import { sectionOf } from './section';
 
@@ -81,19 +82,28 @@ export class ViewContextService {
       operatorContact: this.configService.get<string>('OPERATOR_CONTACT', ''),
     };
 
-    try {
-      const token = (req.cookies as Record<string, string>)?.['access_token'];
-      if (token) {
-        const payload = await this.jwtService.verifyAsync(token, {
-          secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
-        });
-        const user = await this.userRepository.findOne({ id: payload.userId });
-        context.user = user;
-      }
-    } catch {
-      this.logger.debug('User payload not available');
+    const token = (req.cookies as Record<string, string>)?.['access_token'];
+    if (token) {
+      context.user = await this.signedInUser(token);
     }
 
     return context;
+  }
+
+  /**
+   * Checks the password fingerprint as the auth guards do: a signature alone
+   * would let a token naming any user id show that user's address.
+   */
+  private async signedInUser(token: string): Promise<User | undefined> {
+    try {
+      const payload: Payload = await this.jwtService.verifyAsync(token, {
+        secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
+      });
+      const user = await this.userRepository.findOne({ id: payload.userId });
+      if (user && user.password.slice(-8) === payload.pwf) return user;
+    } catch {
+      this.logger.debug('User payload not available');
+    }
+    return undefined;
   }
 }
