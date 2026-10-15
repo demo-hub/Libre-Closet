@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { FastifyRequest } from 'fastify';
 import { FileUrlService } from '../file/file-url/file-url.service';
 import { InjectRepository } from '@mikro-orm/nestjs';
@@ -7,6 +8,7 @@ import { Garment } from '../dal/entity/garment.entity';
 import { Outfit } from '../dal/entity/outfit.entity';
 import { EntityRepository } from '@mikro-orm/core';
 import { garmentsInSlotOrder } from '../wardrobe/outfit-order';
+import { publicBaseUrl } from '../public-url';
 
 export interface SharedItem {
   ogUrl: string;
@@ -26,10 +28,6 @@ function previewImage(url: string | undefined) {
     : {};
 }
 
-function shareUrl(req: FastifyRequest, shareableId: string, type: string) {
-  return `${req.protocol}://${req.host}/share?shareableId=${shareableId}&type=${type}`;
-}
-
 @Injectable()
 export class OpenGraphService {
   constructor(
@@ -40,6 +38,7 @@ export class OpenGraphService {
     private readonly garmentRepository: EntityRepository<Garment>,
     @InjectRepository(Outfit)
     private readonly outfitRepository: EntityRepository<Outfit>,
+    private readonly configService: ConfigService,
   ) {}
 
   /** The shared item with its Open Graph values, or null when there is nothing to show. Never names the owner. */
@@ -49,14 +48,17 @@ export class OpenGraphService {
     req: FastifyRequest,
   ): Promise<SharedItem | null> {
     if (typeof shareableId !== 'string' || !shareableId) return null;
+    // Where every other link to this instance points, preview images included.
+    const base = publicBaseUrl(this.configService.get<string>('SITE_URL'), req);
+    const ogUrl = `${base}/share?shareableId=${shareableId}&type=${type}`;
 
     if (type === 'file') {
       const file = await this.fileRepository.findOne({ shareableId });
       if (!file) return null;
       return {
-        ogUrl: shareUrl(req, shareableId, type),
+        ogUrl,
         ...previewImage(
-          this.fileUrlService.getWatermarkedFileUrl(shareableId, req),
+          this.fileUrlService.getWatermarkedFileUrl(shareableId, base),
         ),
         file,
       };
@@ -69,12 +71,12 @@ export class OpenGraphService {
       );
       if (!garment) return null;
       return {
-        ogUrl: shareUrl(req, shareableId, type),
+        ogUrl,
         ...previewImage(
           garment.photo?.shareableId
             ? this.fileUrlService.getWatermarkedFileUrl(
                 garment.photo.shareableId,
-                req,
+                base,
               )
             : undefined,
         ),
@@ -91,10 +93,10 @@ export class OpenGraphService {
       const garments = garmentsInSlotOrder(outfit);
       const photo = garments.find((g) => g.photo?.shareableId)?.photo;
       return {
-        ogUrl: shareUrl(req, shareableId, type),
+        ogUrl,
         ...previewImage(
           photo?.shareableId
-            ? this.fileUrlService.getWatermarkedFileUrl(photo.shareableId, req)
+            ? this.fileUrlService.getWatermarkedFileUrl(photo.shareableId, base)
             : undefined,
         ),
         outfit,

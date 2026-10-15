@@ -1,4 +1,5 @@
 import { getRepositoryToken } from '@mikro-orm/nestjs';
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import type { FastifyRequest } from 'fastify';
 import { File } from '../dal/entity/file.entity';
@@ -17,8 +18,10 @@ describe('OpenGraphService', () => {
     host: 'closet.example:8443',
   } as unknown as FastifyRequest;
   const base = 'https://closet.example:8443';
+  let siteUrl: string | undefined;
 
   beforeEach(async () => {
+    siteUrl = undefined;
     files = { findOne: jest.fn() };
     garments = { findOne: jest.fn() };
     outfits = { findOne: jest.fn() };
@@ -29,6 +32,7 @@ describe('OpenGraphService', () => {
         { provide: getRepositoryToken(File), useValue: files },
         { provide: getRepositoryToken(Garment), useValue: garments },
         { provide: getRepositoryToken(Outfit), useValue: outfits },
+        { provide: ConfigService, useValue: { get: () => siteUrl } },
       ],
     }).compile();
 
@@ -93,6 +97,18 @@ describe('OpenGraphService', () => {
     expect(item?.ogUrl).toBe(`${base}/share?shareableId=f-1&type=file`);
     expect(item?.ogImage).toBe(`${base}/file/watermark/f-1`);
     expect(item).not.toHaveProperty('createdBy');
+  });
+
+  it('links to SITE_URL when it is set', async () => {
+    siteUrl = 'https://closet.example/';
+    files.findOne.mockResolvedValue({ fileName: 'a.webp' });
+
+    const item = await service.getShareableTagValues('f-1', 'file', req);
+
+    expect(item?.ogUrl).toBe(
+      'https://closet.example/share?shareableId=f-1&type=file',
+    );
+    expect(item?.ogImage).toBe('https://closet.example/file/watermark/f-1');
   });
 
   it.each([

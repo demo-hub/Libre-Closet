@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+#### Fixed
+
+- With `PWA_ENABLED`, the first page after an upgrade no longer loads the previous version's stylesheet and scripts from the service worker, so it is no longer nearly unstyled until a reload
+
 ## [1.1.0] - 2026-10-15
 
 #### Security
