@@ -144,13 +144,16 @@
     <p>{{t 'lang.WHY_SELF_HOST_DESC_2'}}</p>
   </section>
 
-  <section class="below-fold grid max-w-3xl gap-4">
-    <h2>{{t 'lang.SELF_HOST_TITLE'}}</h2>
-    <p>{{t 'lang.SELF_HOST_DESC'}}</p>
-    <pre class="code-block"><code>docker run -d \
+  <section class="grid max-w-3xl gap-4">
+    {{!-- Deferred for the code block's font. The button stays outside: WebKit does not hit-test into a content-visibility: auto subtree until it next updates it, so the first click on the button fell through to <main>. --}}
+    <div class="below-fold grid gap-4">
+      <h2>{{t 'lang.SELF_HOST_TITLE'}}</h2>
+      <p>{{t 'lang.SELF_HOST_DESC'}}</p>
+      <pre class="code-block"><code>docker run -d \
   -p 3000:3000 \
   -v librecloset_data:/app/data \
   {{imageName}}</code></pre>
+    </div>
     <button
       type="button"
       class="btn btn-outline hidden justify-self-start"
