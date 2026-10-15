@@ -1,6 +1,11 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { test, expect, type APIRequestContext } from '@playwright/test';
+import {
+  test,
+  expect,
+  type Page,
+  type APIRequestContext,
+} from '@playwright/test';
 
 const coat = readFileSync(
   join(__dirname, '../scripts/screenshots/fixtures/camel-coat.png'),
@@ -112,6 +117,78 @@ test.describe('the garment page', () => {
       ),
     ).toMatch(/\/share\?shareableId=.+&type=garment$/);
     await expect(share).toHaveText('Share');
+  });
+
+  test.describe('over plain http, where the browser has no clipboard', () => {
+    const insecure = (page: Page, execCommandCopies: boolean) =>
+      page.addInitScript((copies) => {
+        Object.defineProperty(window, 'isSecureContext', { value: false });
+        Object.defineProperty(navigator, 'clipboard', { value: undefined });
+        document.execCommand = (command: string) => {
+          const field = document.activeElement as HTMLInputElement;
+          (window as unknown as { copied: string }).copied =
+            command === 'copy' && copies
+              ? field.value.slice(field.selectionStart!, field.selectionEnd!)
+              : '';
+          return copies;
+        };
+      }, execCommandCopies);
+
+    test('copies the link from a field, and says so', async ({
+      page,
+    }, info) => {
+      await insecure(page, true);
+      await page.goto(
+        await createGarment(page.request, {
+          name: `Http ${info.project.name}`,
+        }),
+      );
+      const share = page.locator('main button[data-copy]');
+      await share.click();
+      await expect(share).toHaveText('Copied');
+      await expect(page.locator('#copied-toast')).toBeVisible();
+      expect(
+        await page.evaluate(
+          () => (window as unknown as { copied: string }).copied,
+        ),
+      ).toMatch(/\/share\?shareableId=.+&type=garment$/);
+      await expect(page.locator('main .copy-fallback')).toHaveCount(0);
+      await expect(share).toBeFocused();
+    });
+
+    test('leaves the link selected in a field, and says how to copy it', async ({
+      page,
+      isMobile,
+    }, info) => {
+      await insecure(page, false);
+      await page.goto(
+        await createGarment(page.request, {
+          name: `Hand ${info.project.name}`,
+        }),
+      );
+      const share = page.locator('main button[data-copy]');
+      const link = await share.getAttribute('data-copy');
+      await share.click();
+      const field = page.getByRole('textbox', { name: 'Share' });
+      await expect(field).toBeFocused();
+      await expect(field).toHaveValue(link!);
+      await expect(field).toHaveAttribute('readonly', '');
+      expect(
+        await field.evaluate(
+          (el: HTMLInputElement) => el.selectionEnd! - el.selectionStart!,
+        ),
+      ).toBe(link!.length);
+      await expect(field).toHaveAccessibleDescription(
+        isMobile
+          ? 'Select the text above and copy it.'
+          : /^Press (Ctrl\+C|⌘C) to copy\.$/,
+      );
+      await expect(share).toHaveText('Share');
+
+      // A second press reuses the field.
+      await share.click();
+      await expect(page.locator('main .copy-fallback')).toHaveCount(1);
+    });
   });
 
   test('leaves neither "Copied" nor its toast in a page restored by Back', async ({

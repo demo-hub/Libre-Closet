@@ -171,17 +171,31 @@ test.describe('the landing page', () => {
     );
   });
 
-  test('offers no copy button where the browser has no clipboard', async ({
+  test('copies the command over plain http, where the browser has no clipboard', async ({
     page,
   }) => {
     await page.addInitScript(() => {
+      Object.defineProperty(window, 'isSecureContext', { value: false });
       Object.defineProperty(navigator, 'clipboard', { value: undefined });
+      document.execCommand = (command: string) => {
+        const field = document.activeElement as HTMLInputElement;
+        (window as unknown as { copied: string }).copied =
+          command === 'copy' ? field.value : '';
+        return true;
+      };
     });
     await page.goto('/');
-    await expect(page.locator('main pre code')).toBeVisible();
     const copy = page.locator('main button[data-copy]');
-    await expect(copy).toHaveCount(1);
-    await expect(copy).toBeHidden();
+    await scrollIntoViewSettled(page, copy);
+    await copy.click();
+    await expect(copy).toHaveText('Copied');
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { copied: string }).copied,
+      ),
+    ).toBe(
+      `docker run -d -p 3000:3000 -v librecloset_data:/app/data ${IMAGE_NAME}`,
+    );
   });
 
   test('ends with the credit and a navigation of source, About, privacy and terms', async ({

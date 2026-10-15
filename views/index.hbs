@@ -158,15 +158,10 @@
       type="button"
       class="btn btn-outline hidden justify-self-start"
       aria-live="polite"
+      _="init remove .hidden from me"
       data-copy="docker run -d -p 3000:3000 -v librecloset_data:/app/data {{imageName}}"
       data-done="{{t 'lang.COPIED'}}"
       data-label="{{t 'lang.COPY_COMMAND'}}"
-      _="init if navigator.clipboard then remove .hidden from me end
-         on click
-           call navigator.clipboard.writeText(my @data-copy)
-           put my @data-done into the first <span/> in me
-           wait 2s
-           put my @data-label into the first <span/> in me"
     ><span>{{t 'lang.COPY_COMMAND'}}</span></button>
     <p class="text-sm text-graphite">{{t 'lang.SELF_HOST_NOTE'}}</p>
   </section>
