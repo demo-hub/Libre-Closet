@@ -10,7 +10,7 @@ BUGS.md held 55 entries on 2026-10-15. The high and medium entries were checked 
 
 - **One PR per row below.** It removes the BUGS.md entries it fixes, as BUGS.md asks, and adds a test that fails before the fix where one can.
 - **Fixes that touch the same file share a PR.** That keeps two PRs from editing the same lines in one release.
-- **Each release ends with a `chore/release-x.y.z` PR.** It bumps `package.json` and `package-lock.json` and adds a Keep a Changelog entry in plain British English, as 1.0.0 did. The branch is `chore/`, not `release/`, because merging a `release/` branch runs `tag-release.yml`. The tag is pushed once the PR is merged.
+- **Each release ends with a `chore/release-x.y.z` PR.** It bumps `package.json` and `package-lock.json` and adds a Keep a Changelog entry in plain British English, as 1.0.0 did. The branch is `chore/`, not `release/`, because merging a `release/` branch runs `tag-release.yml`. The `vX.Y.Z` tag is pushed on the merge commit once the PR is merged. That runs Docker Publish, which pushes the image and then creates the GitHub Release from that version's CHANGELOG.md section (`scripts/release-notes.mjs`), marked latest only when it is the highest version. With no section for the version, it fails before pushing anything.
 - **New strings go into all six locales.** Machine-written values join the native-speaker list in BUGS.md (section 9).
 - **Order:** releases ship in the order below. PRs within a release are independent unless a row says otherwise.
 

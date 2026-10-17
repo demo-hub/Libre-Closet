@@ -27,6 +27,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Fails before any image is pushed when CHANGELOG.md has no section for the tag.
+      - name: Check release notes
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "Release $TAG exists already."
+          else
+            node scripts/release-notes.mjs "$TAG" > /dev/null
+          fi
+
       - name: Set up QEMU (multi-platform builds)
         uses: docker/setup-qemu-action@v3
 
@@ -65,3 +78,46 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  release:
+    name: Create GitHub Release
+    needs: build-and-push
+    # A tag push, or a dispatch on a tag (tag-release.yml). A dispatch on a branch has no tag to release.
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    # A second run for the same tag waits, then finds the release and skips.
+    concurrency:
+      group: release-${{ github.ref_name }}
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "Release $TAG exists already; leaving it as it is."
+            exit 0
+          fi
+
+          VERSION="${TAG#v}"
+          # Prereleases are left out: sort -V puts 1.2.0-rc.1 after 1.2.0.
+          HIGHEST=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+          LATEST=false
+          [ "$TAG" = "$HIGHEST" ] && LATEST=true
+          PRERELEASE=false
+          case "$VERSION" in *-*) PRERELEASE=true ;; esac
+
+          NOTES_ARGS=("$VERSION")
+          [ "$LATEST" = true ] && NOTES_ARGS+=(--latest)
+          node scripts/release-notes.mjs "${NOTES_ARGS[@]}" > release-notes.md
+
+          gh release create "$TAG" --verify-tag --title "$VERSION" --notes-file release-notes.md \
+            --latest="$LATEST" --prerelease="$PRERELEASE"
