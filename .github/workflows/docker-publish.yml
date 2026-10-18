@@ -22,10 +22,44 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      latest: ${{ steps.floating.outputs.latest }}
+      tags: ${{ steps.floating.outputs.tags }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # The floating tags X.Y, X and latest move only when this tag is the highest stable
+      # version in its minor, in its major, or overall. So v1.1.1 pushed after v1.2.0 gets
+      # 1.1.1 and 1.1, and leaves 1 and latest on 1.2.0. A prerelease, or a dispatch on a
+      # branch, gets none. There is no bare 0 tag. A tag runs the workflow file at its own
+      # commit, so a backport branch cut from 1.2.0 or earlier needs this step cherry-picked.
+      - name: Work out floating tags
+        id: floating
+        env:
+          TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: |
+          # The highest stable tag starting with $1. TAG is added in case the fetch missed it.
+          highest() {
+            { git tag -l "$1*"; echo "$TAG"; } | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1
+          }
+          MINOR=false MAJOR=false LATEST=false FLOATING=()
+          if [[ "$TAG" =~ ^v([0-9]+)\.([0-9]+)\.[0-9]+$ ]]; then
+            X="${BASH_REMATCH[1]}" Y="${BASH_REMATCH[2]}"
+            if [ "$(highest "v$X.$Y.")" = "$TAG" ]; then MINOR=true; FLOATING+=("$X.$Y"); fi
+            if [ "$X" != 0 ] && [ "$(highest "v$X.")" = "$TAG" ]; then MAJOR=true; FLOATING+=("$X"); fi
+            if [ "$(highest v)" = "$TAG" ]; then LATEST=true; FLOATING+=(latest); fi
+          fi
+          echo "Floating tags for ${TAG:-this ref}: ${FLOATING[*]:-none}"
+          {
+            echo "minor=$MINOR"
+            echo "major=$MAJOR"
+            echo "latest=$LATEST"
+            echo "tags=$(IFS=,; echo "${FLOATING[*]}")"
+          } >> "$GITHUB_OUTPUT"
 
       # Fails before any image is pushed when CHANGELOG.md has no section for the tag.
       - name: Check release notes
@@ -59,11 +93,14 @@ jobs:
         with:
           images: |
             ${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAME }}
+          # Off, or every stable semver tag would also get latest.
+          flavor: |
+            latest=false
           tags: |
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') || inputs.version != '' }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ steps.floating.outputs.minor == 'true' }}
+            type=semver,pattern={{major}},enable=${{ steps.floating.outputs.major == 'true' }}
+            type=raw,value=latest,enable=${{ steps.floating.outputs.latest == 'true' }}
             type=raw,value=${{ inputs.version }},enable=${{ inputs.version != '' }}
             type=sha,prefix=sha-
 
@@ -94,13 +131,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
+          # Worked out once, in build-and-push, so the release says what the image got.
+          LATEST: ${{ needs.build-and-push.outputs.latest }}
+          FLOATING_TAGS: ${{ needs.build-and-push.outputs.tags }}
         run: |
           if gh release view "$TAG" > /dev/null 2>&1; then
             echo "Release $TAG exists already; leaving it as it is."
@@ -108,16 +146,10 @@ jobs:
           fi
 
           VERSION="${TAG#v}"
-          # Prereleases are left out: sort -V puts 1.2.0-rc.1 after 1.2.0.
-          HIGHEST=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
-          LATEST=false
-          [ "$TAG" = "$HIGHEST" ] && LATEST=true
           PRERELEASE=false
           case "$VERSION" in *-*) PRERELEASE=true ;; esac
 
-          NOTES_ARGS=("$VERSION")
-          [ "$LATEST" = true ] && NOTES_ARGS+=(--latest)
-          node scripts/release-notes.mjs "${NOTES_ARGS[@]}" > release-notes.md
+          node scripts/release-notes.mjs "$VERSION" --tags="$FLOATING_TAGS" > release-notes.md
 
           gh release create "$TAG" --verify-tag --title "$VERSION" --notes-file release-notes.md \
             --latest="$LATEST" --prerelease="$PRERELEASE"
