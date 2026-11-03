@@ -57,8 +57,9 @@
           _="on keydown[key is 'Enter'] halt the event then send click to #add-row-button"
         />
         <datalist id="add-row-suggestions">
+          {{!-- The translated name: the server maps it back to the stored category. --}}
           {{#each allCategoryRows}}
-          <option value="{{this.value}}"></option>
+          <option value="{{this.label}}"></option>
           {{/each}}
         </datalist>
         <button

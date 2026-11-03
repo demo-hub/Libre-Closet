@@ -242,6 +242,7 @@ export class OutfitService {
             color: sel.color ?? null,
             size: sel.size ?? null,
             notes: sel.notes ?? null,
+            archived: !!sel.archived,
           }
         : null,
       garmentId: sel?.id ?? null,
