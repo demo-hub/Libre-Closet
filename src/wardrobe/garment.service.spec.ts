@@ -7,7 +7,7 @@ import { Garment } from '../dal/entity/garment.entity';
 import { User } from '../dal/entity/user.entity';
 import { FileService } from '../file/file-service.abstract';
 import { WardrobeShareService } from '../wardrobe-share/wardrobe-share.service';
-import { GarmentService } from './garment.service';
+import { escapeLike, GarmentService } from './garment.service';
 
 const filePart = (fieldname: string, filename: string) => ({
   fieldname,
@@ -131,5 +131,19 @@ describe('GarmentService', () => {
 
       expect(fileService.storeImageFromFileUpload).not.toHaveBeenCalled();
     });
+  });
+
+  describe('escapeLike', () => {
+    const cases: [string, string][] = [
+      ['50%', '50\\%'],
+      ['r_s', 'r\\_s'],
+      ['a\\b', 'a\\\\b'],
+      ['plain', 'plain'],
+    ];
+    for (const [text, escaped] of cases) {
+      it(`escapes ${JSON.stringify(text)} as ${JSON.stringify(escaped)}`, () => {
+        expect(escapeLike(text)).toBe(escaped);
+      });
+    }
   });
 });
