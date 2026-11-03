@@ -1,8 +1,8 @@
 # Bug-fix releases after 1.0.0
 
-Status: accepted 2026-10-15. 1.1.0 and 1.2.0 shipped on 2026-10-15; 1.3.0 is being released (2026-11-03). Plans the minor releases that clear [BUGS.md](BUGS.md).
+Status: accepted 2026-10-15. 1.1.0 and 1.2.0 shipped on 2026-10-15, 1.3.0 on 2026-11-03. Plans the minor releases that clear [BUGS.md](BUGS.md).
 
-BUGS.md held 55 entries on 2026-10-15. The high and medium entries were checked against `main` at `e6dae60`. The low entries are as BUGS.md records them. No open PR or unmerged branch fixes any of them. This plan puts 51 of them into seven minor releases, 1.1.0 to 1.7.0, in order of severity. It leaves four out (section 9). Two security defaults found while planning were never in BUGS.md; 1.1-e fixes them. Each PR re-checks its entries before starting.
+BUGS.md held 55 entries on 2026-10-15. The high and medium entries were checked against `main` at `e6dae60`. The low entries are as BUGS.md records them. No open PR or unmerged branch fixes any of them. This plan puts 51 of them into seven minor releases, 1.1.0 to 1.7.0, in order of severity. It leaves four out (section 9). Two security defaults found while planning were never in BUGS.md; 1.1-e fixes them. Five more bugs found while building 1.1.0 to 1.2.0 were added on 2026-11-03: 1.4-d, 1.4-e, 1.6-d and 1.6-e, with the 1.6-f chore that 1.6-e needs. Each PR re-checks its entries before starting.
 
 ---
 
@@ -58,15 +58,17 @@ These bugs lose or corrupt data, or answer 500.
 
 ---
 
-## 5. 1.4.0: garment page and photo editor
+## 5. 1.4.0: garment page, photo editor and two found bugs
 
-Mostly `public/js/background-removal.js` and `views/partials/photoPicker.hbs`.
+Mostly `public/js/background-removal.js` and `views/partials/photoPicker.hbs`. 1.4-d and 1.4-e were found while building 1.1.0 and 1.2.0; they come here because 1.4.0 is the next release and 1.4-d is medium.
 
 | PR | Fixes | Change |
 | --- | --- | --- |
 | 1.4-a `fix/mask-editor-save` | A failed save of an edited cut-out looks saved (medium). The restore brush paints the wrong pixels on a non-square photo with no stored cut-out (medium). Background removal logs to the console in production (low). | Check `response.ok`. On failure, keep the old image and show a translated in-page error. `#requestErrorToast` answers htmx requests only, so the page needs a small error region for scripts. Pad the restore source the way `/file/nobg/` pads its fallback, or have the editor pad both the same way. Set `debug: false` and remove the `console.log` calls. |
 | 1.4-b `fix/photo-picker-storage` | With site data blocked, a garment's photo cannot be replaced (low). After Back, the new-garment form shows a photo it no longer has (low). | Wrap `localStorage` reads in try/catch, in `photoPicker.hbs` and in `isBgRemovalEnabled`. Clear `#photoPreview` in the `htmx:beforeHistorySave` handler in `layout.hbs`. |
 | 1.4-c `fix/garment-card-title` | A garment without a name has an empty card title on the wardrobe grid (low). | Fall back to the translated category, as the garment page does. |
+| 1.4-d `fix/password-reset-fk` | Deleting a `password_reset` row deletes its user (medium; found in #44). | Change `user.password_reset_id` to `on delete set null`. Postgres: drop and re-add the constraint. SQLite has to rebuild `user`, and other tables reference `user` with `on delete cascade`, so the migration must not run in a transaction (`isTransactional()` returns false), must turn `pragma foreign_keys` off around the rebuild, and must check `pragma foreign_key_check` before turning it back on. Test it on a copy of a real database with garments, outfits, shares and calendar entries, and check that every row survives. The unlink-first code in `AuthService` stays as a second guard. |
+| 1.4-e `fix/push-endpoint-lookup` | A push endpoint whose name resolves to a private address is still posted to (low; found in #54). | Resolve the endpoint's host at send time and refuse private, loopback and link-local answers, as the importer's `SafeFetchService` does. Pass that lookup to web-push through its `agent` option. A refused endpoint is dropped like an expired one. |
 
 ---
 
@@ -83,15 +85,18 @@ Every calendar entry. `calendar.service.ts` changes a lot here.
 
 ---
 
-## 7. 1.6.0: wardrobe and outfit UI
+## 7. 1.6.0: wardrobe and outfit UI, and the shell
 
-Low-severity behaviour on the wardrobe and outfit pages.
+Low-severity behaviour on the wardrobe and outfit pages. 1.6-d to 1.6-f were found while building 1.1.0 to 1.2.0, or come from section 9.
 
 | PR | Fixes | Change |
 | --- | --- | --- |
 | 1.6-a `fix/wardrobe-filters-ui` | One facet cannot be cleared inside the filter sheet (low). Apply and Clear produce URLs full of empty parameters (low). A wardrobe whose garments are all archived says "No garments yet" (low). The result count has no plural (low). | Make a chosen chip clearable a second time, or add an "Any" chip to each facet. Disable empty inputs on `submit` so they are not sent. The all-archived empty state names the archived count and links to Show archived. Pluralise the count with nestjs-i18n's plural support. The app uses none yet, so confirm its key format first. ru needs one, few, many and other. |
 | 1.6-b `fix/garment-categories` | Four category names are translated but never used (low). | Add `ACTIVEWEAR`, `SWIMWEAR`, `UNDERWEAR` and `LINGERIE` to `GarmentCategory` (**D4**). `category` is a string column, so this needs no migration. |
 | 1.6-c `fix/outfit-builder-a11y` | Cycling a garment or adding a row in the outfit builder is silent to screen readers (low). Fast presses on an outfit row's Next are partly lost (low). | Announce the new garment or row in `#outfit-rows-status`. Name Previous and Next with the category ("Next top"). Queue presses (`hx-sync="this:queue last"`), or send a step count, so every press counts. |
+| 1.6-d `fix/layout-after-upgrade` | After an upgrade, the first page view can show the previous release's icons and manifest (low; found in #55). A field typed while a live validation is in flight is not validated when left (low; found in #49). | Both are in `views/layout.hbs`. Give the icons and `manifest.json` the same content-hash `?v=` that #55 gave the stylesheet and scripts (`src/asset-url.ts`, `workbox-config.js` `manifestTransforms`). After a live-validation swap restores a typed value, mark the field so leaving it still sends a validation (dispatch `change` on blur when the restored value differs from the one the server saw). |
+| 1.6-e `fix/register-without-accounts-404` | With AUTH_ENABLED=false, anyone can still create an account (low; found in #47). | Answer 404 on `/auth/register` (GET, POST and live validation) when accounts are off. Needs the chore below first, so the register page's specs keep running. |
+| 1.6-f `test/accounts-on-server` (chore, before 1.6-e) | A local Playwright run writes into whatever app answers on :3000 (medium, tooling; from section 9). | Run the suite's own servers on their own ports with `reuseExistingServer: false`: the current one without accounts, and a second one with `AUTH_ENABLED=true` for the auth specs (register, reset, delete account, sharing's accounts-on tests). Move the register page's tests to the second one. |
 
 ---
 
@@ -113,7 +118,7 @@ CSS and locale files. No server logic.
 | --- | --- | --- |
 | Machine-written values await a native speaker | Needs a person, not a PR. | Recruit reviewers per language. Each review is a PR that removes that language from the list. 1.7-c should go first, so the reviewers see the final copy. |
 | Chrome logs "Transition was skipped" when Back follows a boosted navigation | htmx behaviour, and only a console message. | Check whether the htmx version in use still logs it. If it does, close the entry as won't-fix. |
-| A local Playwright run writes into whatever app answers on :3000 | Tooling, not user-facing. | A `chore/` PR at any time. Run the e2e server on its own port (for example 3100) with `reuseExistingServer: false`. |
+| A local Playwright run writes into whatever app answers on :3000 | Scheduled as 1.6-f, since 1.6-e needs a second test server anyway. | — |
 | Bare `npx tsc` reports about 96 errors | Tooling, not user-facing. | A `chore/` PR at any time. Fix `tsconfig.json` so bare `tsc` matches the Nest build, or add a `typecheck` script and say to use it. |
 
 ---
