@@ -199,6 +199,7 @@
   "MASK_BRUSH_RESTORE": "Restore",
   "MASK_BRUSH_SIZE": "Brush size",
   "MASK_CANVAS": "Garment cut-out: paint on it to erase or restore the background",
+  "MASK_SAVE_FAILED": "Error: the cleaned-up photo could not be saved. The garment keeps its previous one.",
   "ARCHIVE": "Archive",
   "UNARCHIVE": "Unarchive",
   "ARCHIVED": "Archived",

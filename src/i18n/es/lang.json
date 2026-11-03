@@ -283,6 +283,7 @@
   "MASK_BRUSH_RESTORE": "Restaurar",
   "MASK_BRUSH_SIZE": "Tamaño del pincel",
   "MASK_CANVAS": "Prenda recortada: pinta encima para borrar o restaurar el fondo",
+  "MASK_SAVE_FAILED": "Error: no se ha podido guardar la foto limpia. La prenda conserva la anterior.",
   "WARDROBE_SHARING": "Compartir armario",
   "SHARE_WARDROBE": "Comparte tu armario",
   "SHARE_WARDROBE_DESC": "Invita a alguien a ver o editar tu armario.",

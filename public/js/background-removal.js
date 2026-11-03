@@ -16,7 +16,7 @@ export const isBgRemovalEnabled = () => localStorage.getItem('bgRemovalEnabled')
 
 const config = {
   publicPath: location.origin + '/bg-removal-models/',
-  debug: true,
+  debug: false,
   // @imgly/background-removal handles graceful degradation to WASM if navigator.gpu WebGPU is unavailable
   // when set to 'gpu'.
   device: 'gpu',
@@ -94,7 +94,6 @@ export const initBackgroundRemoval = async () => {
   try {
     const mod = await loadRemover();
     await mod.preload(config);
-    console.log('Asset preloading succeeded');
   } catch (err) {
     // Package failed to load (old browser, no ES module support, etc.)
     // Leave the form as-is; the original photo is uploaded without a cut-out.
@@ -176,7 +175,6 @@ export const wireUpPhotoInput = async ({
     };
 
     try {
-      console.log(config);
       const { removeBackground } = await loadRemover();
       const rawBlob = await removeBackground(squareFile, config);
       const blob = await openMaskEditor(squareFile, rawBlob);
@@ -199,7 +197,15 @@ export const wireUpPhotoInput = async ({
   });
 
   preloadOnFirstTouch();
-  console.log('wired up photo input for background removal');
+};
+
+/** Reveals the garment page's error toast; hidden first so a repeated failure is announced again. */
+const showMaskSaveError = () => {
+  const toast = document.getElementById('mask-save-error-toast');
+  if (!toast) return;
+  if (toast.classList.contains('hidden')) return toast.classList.remove('hidden');
+  toast.classList.add('hidden');
+  setTimeout(() => toast.classList.remove('hidden'), 100);
 };
 
 /**
@@ -228,23 +234,35 @@ export const wireUpEditMaskBtn = async (fileName, garmentId, ownerId) => {
       const origBlob = await origResp.blob();
       const nobgBlob = await nobgResp.blob();
 
-      // Square-pad the original to match the layout used during initial upload,
-      // so the restore brush samples from the correct pixel positions.
-      const squaredBlob = await squarePadBlob(origBlob);
+      // Square-pad both the same way, so the restore brush samples the pixel under it.
+      // A stored cut-out is square already; without one, /file/nobg/ serves the original as it is.
+      const [squaredBlob, squaredNobg] = await Promise.all([
+        squarePadBlob(origBlob),
+        squarePadBlob(nobgBlob),
+      ]);
       const squaredFile = new File([squaredBlob], fileName, { type: 'image/png' });
 
-      const editing = openMaskEditor(squaredFile, nobgBlob);
+      const editing = openMaskEditor(squaredFile, squaredNobg);
       // Now, not after the await: Accept hands focus back to this button before the promise settles.
       btn.removeAttribute('aria-disabled');
       const editedBlob = await editing;
 
       // openMaskEditor resolves with the exact nobgBlob reference on Skip.
-      if (editedBlob === nobgBlob) return;
+      if (editedBlob === squaredNobg) return;
 
       const formData = new FormData();
       formData.append('nobgPhoto', new File([editedBlob], 'nobg.webp', { type: 'image/webp' }));
       const query = ownerId ? `?ownerId=${ownerId}` : '';
-      await fetch(`/wardrobe/${garmentId}/nobg${query}`, { method: 'POST', body: formData });
+      const saved = await fetch(`/wardrobe/${garmentId}/nobg${query}`, {
+        method: 'POST',
+        body: formData,
+      }).catch(() => null);
+      // A signed-out session is redirected to the login page, which answers 200.
+      if (!saved?.ok || saved.redirected) {
+        showMaskSaveError();
+        return;
+      }
+      document.getElementById('mask-save-error-toast')?.classList.add('hidden');
 
       // Display the edited result directly from the in-memory blob — avoids
       // any browser cache serving the old nobg image after the POST.
