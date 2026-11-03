@@ -1,4 +1,4 @@
-import { EntityRepository, FilterQuery } from '@mikro-orm/core';
+import { EntityRepository, FilterQuery, raw } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { randomUUID } from 'node:crypto';
 import {
@@ -34,6 +34,45 @@ const CANONICAL_SIZES = [
   '5X-Large',
 ];
 
+/** Escapes LIKE's wildcards, so a search for "50%" finds "50%" and not "50 cm". */
+export function escapeLike(text: string): string {
+  return text.replace(/[\\%_]/g, (c) => `\\${c}`);
+}
+
+/** A raw SQL condition as a filter key; the empty array is MikroORM's "no value". */
+type RawCondition = Record<string, never[]>;
+
+/**
+ * A garment whose colours include this one as a whole item: "red" matches
+ * "red,blue" and "blue,red" but not "darkred". Colours are stored
+ * comma-joined in one clean form (normalizeColorInput), so wrapping the value
+ * in commas makes every item end on one. Plain SQL that SQLite and Postgres
+ * both run, with the escape stated (SQLite has none by default) and both sides
+ * lower-cased, as SQLite's LIKE ignores case and Postgres's does not.
+ */
+function colorCondition(color: string): RawCondition {
+  return {
+    [raw(
+      (alias) =>
+        `lower(',' || ${alias}.color || ',') like lower(?) escape '\\'`,
+      [`%,${escapeLike(color)},%`],
+    )]: [],
+  };
+}
+
+/** A garment whose column holds the text anywhere, in any case, wildcards taken literally. */
+function containsCondition(
+  column: 'name' | 'notes' | 'brand',
+  text: string,
+): RawCondition {
+  return {
+    [raw(
+      (alias) => `lower(${alias}.${column}) like lower(?) escape '\\'`,
+      [`%${escapeLike(text)}%`],
+    )]: [],
+  };
+}
+
 @Injectable()
 export class GarmentService {
   private readonly logger = new Logger(GarmentService.name);
@@ -57,18 +96,18 @@ export class GarmentService {
     viewOwner?: number,
   ): Promise<Garment[]> {
     const normalizedSize = this.normalizeSize(dto.size);
+    // Single strings by now: normalizeSearch drops a parameter sent twice.
+    const { color, keyword } = dto;
     const searchConditions: FilterQuery<Garment> = {
       ...(dto.category ? { category: dto.category } : {}),
-      ...(dto.color ? { color: dto.color } : {}),
+      ...(color ? colorCondition(color) : {}),
       ...(normalizedSize ? { size: normalizedSize } : {}),
       ...(dto.archived !== 'true' ? { archived: false } : {}),
-      ...(dto.keyword
+      ...(keyword
         ? {
-            $or: [
-              { name: { $like: `%${dto.keyword}%` } },
-              { notes: { $like: `%${dto.keyword}%` } },
-              { brand: { $like: `%${dto.keyword}%` } },
-            ],
+            $or: (['name', 'notes', 'brand'] as const).map((column) =>
+              containsCondition(column, keyword),
+            ),
           }
         : {}),
     };

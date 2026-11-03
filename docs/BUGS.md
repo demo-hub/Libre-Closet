@@ -29,14 +29,6 @@ Bugs found while working on this fork and left out of the change that found them
 
 ## Wardrobe
 
-- **The colour filter misses garments with several colours** (medium).
-  - Colours are stored comma-joined, and the filter compares by equality, so a red-and-blue garment is not listed under red.
-  - Where: `src/wardrobe/garment.service.ts:65`.
-  - Found in #28.
-- **`%` and `_` in a search act as wildcards** (low).
-  - The keyword goes into SQL `LIKE` unescaped.
-  - Where: `src/wardrobe/garment.service.ts`, `findAll`.
-  - Found in #28.
 - **The result count has no plural** (low).
   - It reads "1 results", and Russian uses one form for every count.
   - Where: `views/wardrobe/index.hbs:46`.
