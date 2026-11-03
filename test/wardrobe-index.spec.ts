@@ -229,3 +229,23 @@ test.describe('in Russian at 320 px', () => {
     }
   });
 });
+
+test('a garment without a name is titled with its category', async ({
+  page,
+}, info) => {
+  const brand = `Nameless ${info.project.name} ${Date.now()}`;
+  const response = await page.request.post('/wardrobe', {
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    data: new URLSearchParams([
+      ['category', 'tops'],
+      ['brand', brand],
+    ]).toString(),
+  });
+  expect(response.ok()).toBeTruthy();
+
+  await page.goto(`/wardrobe?keyword=${encodeURIComponent(brand)}`);
+  const card = page.locator('main ul[role="list"] > li');
+  await expect(card).toHaveCount(1);
+  await expect(card.locator('.card-title')).toHaveText('Tops');
+  await expect(card.getByRole('link')).toHaveAccessibleName('Tops');
+});
