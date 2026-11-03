@@ -73,6 +73,7 @@
   "PATH": "Ruta",
   "TIME": "Hora",
   "RETURN_TO_HOME": "Volver al inicio",
+  "ERROR_400": "El formulario envió un valor que la aplicación no pudo leer. Vuelve atrás, revísalo e inténtalo de nuevo.",
   "ERROR_401": "Inicia sesión para ver esta página.",
   "ERROR_403": "No tienes permiso para hacer esto.",
   "ERROR_404": "Página no encontrada.",

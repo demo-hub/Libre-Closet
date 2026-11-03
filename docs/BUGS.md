@@ -44,11 +44,6 @@ Bugs found while working on this fork and left out of the change that found them
   - Found in #28.
 - **A wardrobe whose garments are all archived says "No garments yet"** (low).
   - Found in #28.
-- **An unreadable date answers 500** (low).
-  - Nothing validates the garment's `dateAquired`, an outfit's `scheduleDate` or a calendar entry's `date`, so a POST with `garbage` in any of them reaches `new Date(...)` and fails in the database layer instead of reporting a field error.
-  - An outfit is saved before its date fails, so trying again creates it twice, and an edit keeps its changes behind the error.
-  - Where: `src/wardrobe/garment.service.ts` (`create`, `update`), `src/wardrobe/outfit.controller.ts` (`create`, `update`), `src/wardrobe/calendar.controller.ts` (`create`).
-  - Found in #29 and #31.
 - **A garment without a name has an empty card title on the wardrobe grid** (low).
   - The name is optional. The garment page falls back to the category for its heading; the grid card does not.
   - Where: `views/wardrobe/index.hbs`, the card's `card-title`.
@@ -197,7 +192,8 @@ Bugs found while working on this fork and left out of the change that found them
   - `RESET_CODE_SENT` and the re-worded `RESET_FAILED` and `RESET_CODE_FAILED` (#44);
   - the re-worded `DELETE_ACCOUNT_FAILED` (#46);
   - the seven notification keys: `NOTIFICATIONS`, `NOTIFICATIONS_TURN_ON`, `NOTIFICATIONS_TURN_OFF`, `NOTIFICATIONS_ON`, `NOTIFICATIONS_OFF`, `NOTIFICATIONS_BLOCKED`, `NOTIFICATIONS_FAILED` (#54);
-  - `COPY_BY_HAND` and `COPY_BY_HAND_TOUCH` (#56).
+  - `COPY_BY_HAND` and `COPY_BY_HAND_TOUCH` (#56);
+  - `ERROR_400` (#64).
 
 ## Tests and tooling
 

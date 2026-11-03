@@ -73,6 +73,7 @@
   "PATH": "Percorso",
   "TIME": "Ora",
   "RETURN_TO_HOME": "Torna alla pagina iniziale",
+  "ERROR_400": "Il modulo ha inviato un valore che l'app non è riuscita a leggere. Torna indietro, controllalo e riprova.",
   "ERROR_401": "Accedi per vedere questa pagina.",
   "ERROR_403": "Non hai il permesso di farlo.",
   "ERROR_404": "Pagina non trovata.",

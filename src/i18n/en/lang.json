@@ -73,6 +73,7 @@
   "PATH": "Path",
   "TIME": "Time",
   "RETURN_TO_HOME": "Return to home",
+  "ERROR_400": "The form sent a value the app could not read. Go back, check it and try again.",
   "ERROR_401": "Log in to see this page.",
   "ERROR_403": "You do not have permission for this.",
   "ERROR_404": "Page not found.",

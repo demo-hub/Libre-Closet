@@ -18,6 +18,7 @@ import { I18n, I18nContext } from 'nestjs-i18n';
 import { ConditionalAuthGuard } from '../auth/conditional-auth.guard';
 import { Payload } from '../auth/dto/payload.dto';
 import { CalendarService } from './calendar.service';
+import { parseDateInput } from './date-input';
 
 /** The YYYY-MM-DD week a form came from, or undefined for anything else. */
 function validWeek(week: unknown): string | undefined {
@@ -84,9 +85,11 @@ export class CalendarController {
     @Req() req: FastifyRequest,
     @Res() reply: FastifyReply,
   ) {
+    const date = parseDateInput(body.date, 'date');
+    if (!date) throw new BadRequestException('date is required');
     await this.calendarService.create(
       {
-        date: new Date(body.date),
+        date,
         outfitId: Number(body.outfitId),
         notes: body.notes,
       },

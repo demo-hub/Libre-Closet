@@ -73,6 +73,7 @@
   "PATH": "Pfad",
   "TIME": "Zeit",
   "RETURN_TO_HOME": "Zurück zur Startseite",
+  "ERROR_400": "Das Formular hat einen Wert gesendet, den die App nicht lesen konnte. Geh zurück, prüfe ihn und versuch es noch einmal.",
   "ERROR_401": "Melde dich an, um diese Seite zu sehen.",
   "ERROR_403": "Dafür hast du keine Berechtigung.",
   "ERROR_404": "Seite nicht gefunden.",

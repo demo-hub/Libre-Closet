@@ -1,6 +1,7 @@
 import {
   ArgumentsHost,
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   HttpException,
   NotFoundException,
@@ -50,6 +51,7 @@ describe('the error page', () => {
   });
 
   it.each([
+    [new BadRequestException('Validation failed'), 400, 'lang.ERROR_400@de'],
     [new UnauthorizedException(), 401, 'lang.ERROR_401@de'],
     [new ForbiddenException(), 403, 'lang.ERROR_403@de'],
     [new NotFoundException('Garment not found'), 404, 'lang.ERROR_404@de'],
@@ -67,8 +69,8 @@ describe('the error page', () => {
   );
 
   it('falls back to the exception message for a status it has no words for', async () => {
-    const { data } = await render(new BadRequestException('Validation failed'));
-    expect(data.message).toBe('Validation failed');
+    const { data } = await render(new ConflictException('Already taken'));
+    expect(data.message).toBe('Already taken');
   });
 
   it.each(['en', 'de', 'es', 'fr', 'it', 'ru'])(

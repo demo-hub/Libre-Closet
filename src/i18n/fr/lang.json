@@ -73,6 +73,7 @@
   "PATH": "Chemin",
   "TIME": "Heure",
   "RETURN_TO_HOME": "Retour à l'accueil",
+  "ERROR_400": "Le formulaire a envoyé une valeur que l'application n'a pas pu lire. Revenez en arrière, vérifiez-la et réessayez.",
   "ERROR_401": "Connectez-vous pour voir cette page.",
   "ERROR_403": "Vous n'avez pas l'autorisation de faire cela.",
   "ERROR_404": "Page introuvable.",
