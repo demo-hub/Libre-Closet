@@ -115,6 +115,7 @@
       <span class="flex size-16 items-center justify-center rounded-box bg-base-200 text-graphite">{{icon "hanger" class="size-6"}}</span>
       {{/if}}
       <span class="max-w-full text-sm hyphens-auto wrap-anywhere">{{#if row.currentGarment.name}}{{row.currentGarment.name}}{{else}}{{row.label}}{{/if}}</span>
+      {{#if row.currentGarment.archived}}<span class="badge badge-sm badge-outline">{{t 'lang.ARCHIVED'}}</span>{{/if}}
     </button>
     {{else}}
     <div class="flex min-w-0 flex-1 flex-col items-center gap-1 p-1">

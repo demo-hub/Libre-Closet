@@ -355,4 +355,34 @@ describe('CalendarService', () => {
       expect(flush).toHaveBeenCalled();
     });
   });
+
+  describe('planOnce', () => {
+    const plan = { date: new Date('2026-11-05T00:00:00Z'), outfitId: 7 };
+
+    it('keeps the entry an outfit already has on that day', async () => {
+      const existing = { id: 1 };
+      calendarRepository.findOne.mockResolvedValue(existing);
+      const create = jest.spyOn(service, 'create');
+
+      await expect(service.planOnce(plan, 3)).resolves.toBe(existing);
+      expect(calendarRepository.findOne).toHaveBeenCalledWith({
+        outfit: { id: 7 },
+        date: plan.date,
+        owner: { id: 3 },
+      });
+      expect(create).not.toHaveBeenCalled();
+    });
+
+    it('adds one when the outfit is not on that day yet', async () => {
+      calendarRepository.findOne.mockResolvedValue(null);
+      const added = { id: 2 };
+      const create = jest.spyOn(service, 'create').mockResolvedValue(added);
+
+      await expect(service.planOnce(plan)).resolves.toBe(added);
+      expect(calendarRepository.findOne).toHaveBeenCalledWith(
+        expect.objectContaining({ owner: null }),
+      );
+      expect(create).toHaveBeenCalledWith(plan, undefined);
+    });
+  });
 });

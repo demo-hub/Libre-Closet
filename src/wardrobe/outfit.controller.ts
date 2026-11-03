@@ -24,6 +24,8 @@ import { OutfitService } from './outfit.service';
 import { GarmentService } from './garment.service';
 import { CalendarService } from './calendar.service';
 import { parseDateInput } from './date-input';
+import { GarmentCategory } from './garment-category.enum';
+import { Garment } from '../dal/entity/garment.entity';
 
 /** Where the form goes back to; the calendar takes the week the save will land on too. */
 function returnLinks(returnTo: string, week?: string) {
@@ -127,7 +129,7 @@ export class OutfitController {
       this.userId(req),
     );
     if (scheduleDate) {
-      await this.calendarService.create(
+      await this.calendarService.planOnce(
         { date: scheduleDate, outfitId: outfit.id },
         this.userId(req),
       );
@@ -137,6 +139,36 @@ export class OutfitController {
       return reply.redirect(week ? `/calendar?week=${week}` : '/calendar', 302);
     }
     return reply.redirect(`/outfits/${outfit.id}`, 302);
+  }
+
+  /**
+   * The stored category a typed one names: garments keep theirs as saved
+   * ("tops", or a custom "Knitwear"), while people type "Tops" or the
+   * translated name the suggestions show. Matched without case against the
+   * stored values and their labels; anything else is a new category as typed.
+   */
+  private resolveCategory(
+    typed: string,
+    garments: Garment[],
+    i18n: I18nContext,
+  ): string {
+    const wanted = typed.trim().toLocaleLowerCase();
+    const known = [
+      ...new Set([
+        ...(Object.values(GarmentCategory) as string[]),
+        ...garments.map((g) => g.category),
+      ]),
+    ];
+    return (
+      known.find((c) => c.toLocaleLowerCase() === wanted) ??
+      known.find(
+        (c) =>
+          this.garmentService
+            .resolveCategoryLabel(c, i18n)
+            .toLocaleLowerCase() === wanted,
+      ) ??
+      typed.trim()
+    );
   }
 
   @Get('row-fragment')
@@ -150,13 +182,14 @@ export class OutfitController {
   ) {
     if (!category?.trim()) return reply.status(400).send();
     const garments = await this.garmentService.findAll(this.userId(req));
-    const items = garments.filter((g) => g.category === category);
+    const stored = this.resolveCategory(category, garments, i18n);
+    const items = garments.filter((g) => g.category === stored);
     const count = items.length;
     const rawIdx =
       indexStr !== undefined && indexStr !== '' ? parseInt(indexStr) : 1;
     const idx = Math.min(Math.max(isNaN(rawIdx) ? 1 : rawIdx, 0), count);
     const row = this.outfitService.buildRow(
-      category,
+      stored,
       items,
       idx,
       i18n,
@@ -202,14 +235,21 @@ export class OutfitController {
       this.outfitService.findOne(id, this.userId(req)),
       this.garmentService.findAll(this.userId(req)),
     ]);
-    const selectedGarmentIds = outfit.garments.getItems().map((g) => g.id);
+    const own = outfit.garments.getItems();
+    const selectedGarmentIds = own.map((g) => g.id);
+    // The wardrobe lists only current garments, so an archived one in this
+    // outfit is added back, or its row would open on "No garment" and saving
+    // would drop it. Added after the others: Previous and Next cycle the
+    // current garments only, and their positions must not move.
+    const current = new Set(garments.map((g) => g.id));
+    const pool = [...garments, ...own.filter((g) => !current.has(g.id))];
     return {
       outfit,
       pageTitle: i18n.t('lang.EDIT_OUTFIT'),
       ...returnLinks(safeReturnTo(returnTo) ?? `/outfits/${id}`, returnToWeek),
       returnToWeek: returnToWeek || null,
       categoryRows: this.outfitService.buildCategoryRows(
-        garments,
+        pool,
         selectedGarmentIds,
         i18n,
         outfit.slots,
@@ -247,7 +287,7 @@ export class OutfitController {
       this.userId(req),
     );
     if (scheduleDate) {
-      await this.calendarService.create(
+      await this.calendarService.planOnce(
         { date: scheduleDate, outfitId: id },
         this.userId(req),
       );

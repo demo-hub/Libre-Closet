@@ -86,6 +86,22 @@ export class CalendarService {
     return { weekStart, days };
   }
 
+  /**
+   * Puts an outfit on a day unless it is already there. The outfit form
+   * carries its date on every save, and used to add an entry each time.
+   */
+  async planOnce(
+    dto: CreateCalendarEntryDto,
+    userId?: number,
+  ): Promise<OutfitCalendar> {
+    const existing = await this.calendarRepository.findOne({
+      outfit: { id: dto.outfitId },
+      date: dto.date,
+      owner: userId != null ? { id: userId } : null,
+    });
+    return existing ?? this.create(dto, userId);
+  }
+
   async create(
     dto: CreateCalendarEntryDto,
     userId?: number,
