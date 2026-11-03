@@ -326,7 +326,7 @@ test.describe('the colour multiselect', () => {
     await expect(colourBox(page).locator('summary')).toBeFocused();
   });
 
-  test('shows a colour as text, whatever it contains', async ({
+  test('stores a colour without its markup, once, and shows it as text', async ({
     page,
   }, info) => {
     const planted = '<img src=x onerror="window.planted=1">';
@@ -334,20 +334,21 @@ test.describe('the colour multiselect', () => {
       `${await createGarment(page.request, [
         ['name', `Escaped ${info.project.name}`],
         ['color', planted],
-        ['color', 'navy "deep"'],
-        ['color', 'navy "deep"'],
+        ['color', 'navy "deep" & <b>dark</b>'],
+        ['color', 'Navy "deep" & dark'],
       ])}/edit`,
     );
     const pills = page.locator('.ms-pills');
-    await expect(pills).toContainText(planted);
+    // The tag is stripped on save, and the same colour in another case is a repeat.
+    await expect(pills.locator('.ms-pill')).toHaveCount(1);
+    await expect(pills).toContainText('navy "deep" & dark');
+    await expect(pills).not.toContainText('onerror');
     await expect(page.locator('[data-color-field] img')).toHaveCount(0);
     expect(await page.evaluate(() => 'planted' in window)).toBe(false);
 
-    // Saved twice, so it takes two presses; each one has to remove a pill.
-    const remove = page.getByRole('button', { name: 'Remove navy "deep"' });
-    await remove.first().click();
-    await expect(remove).toHaveCount(1);
-    await remove.click();
+    await page
+      .getByRole('button', { name: 'Remove navy "deep" & dark' })
+      .click();
     await expect(pills).not.toContainText('navy');
   });
 

@@ -70,6 +70,22 @@ describe('GarmentService', () => {
     service = module.get(GarmentService);
   });
 
+  describe('colours', () => {
+    it('stores the colours an edit posts in their one clean form', async () => {
+      const garment = garmentOwnedBy(null);
+      garmentRepository.findOne.mockResolvedValue(garment);
+      await service.update(1, { color: ' Red, <b>navy</b> ,red,BLUE' });
+      expect(garment.color).toBe('red,navy,blue');
+    });
+
+    it('leaves the colours alone when an edit sends none', async () => {
+      const garment = { ...garmentOwnedBy(null), color: 'red' } as Garment;
+      garmentRepository.findOne.mockResolvedValue(garment);
+      await service.update(1, { name: 'Coat' });
+      expect(garment.color).toBe('red');
+    });
+  });
+
   describe('update', () => {
     it('ignores an unselected photo input instead of storing an empty file', async () => {
       const empty = filePart('photo', '');

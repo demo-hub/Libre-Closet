@@ -4,7 +4,8 @@ export interface UpdateGarmentDto {
   name?: string;
   category?: string;
   brand?: string;
-  color?: string;
+  /** One string or one per checkbox; the service normalises either. */
+  color?: string | string[];
   size?: string;
   notes?: string;
   washingDetails?: string;

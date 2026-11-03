@@ -19,6 +19,7 @@ import { SearchGarmentDto } from './dto/search-garment.dto';
 import { sanitizeSourceUrl } from './source-url';
 import { resolveCategoryLabel } from './category-label';
 import { WardrobeShareService } from '../wardrobe-share/wardrobe-share.service';
+import { normalizeColorInput } from './color-input';
 
 const CANONICAL_SIZES = [
   'XX-Small',
@@ -144,7 +145,7 @@ export class GarmentService {
       name: dto.name,
       category: dto.category,
       brand: dto.brand,
-      color: dto.color,
+      color: normalizeColorInput(dto.color),
       size: this.normalizeSize(dto.size),
       notes: dto.notes,
       washingDetails: dto.washingDetails,
@@ -167,7 +168,7 @@ export class GarmentService {
       name?: string;
       category: string;
       brand?: string;
-      color?: string;
+      color?: string | string[];
       size?: string;
       notes?: string;
       sourceUrl?: string;
@@ -201,7 +202,7 @@ export class GarmentService {
       name: dto.name,
       category: dto.category,
       brand: dto.brand,
-      color: dto.color,
+      color: normalizeColorInput(dto.color),
       size: this.normalizeSize(dto.size),
       notes: dto.notes,
       sourceUrl: sanitizeSourceUrl(dto.sourceUrl) ?? source.sourceUrl,
@@ -312,7 +313,9 @@ export class GarmentService {
     garment.name = dto.name ?? garment.name;
     garment.category = dto.category ?? garment.category;
     if ('brand' in dto) garment.brand = dto.brand;
-    if ('color' in dto) garment.color = dto.color;
+    if ('color' in dto)
+      garment.color =
+        dto.color === undefined ? undefined : normalizeColorInput(dto.color);
     if ('size' in dto) garment.size = this.normalizeSize(dto.size);
     if ('notes' in dto) garment.notes = dto.notes;
     if ('washingDetails' in dto) garment.washingDetails = dto.washingDetails;

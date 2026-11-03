@@ -186,20 +186,12 @@ export class WardrobeController {
       if (!canManage) throw new ForbiddenException();
     }
 
-    // Fastify gives string if one checkbox, string[] if multiple — normalise both
-    const rawColors = Array.isArray(body.color)
-      ? body.color
-      : (body.color
-          ?.split(',')
-          .map((c) => c.trim())
-          .filter(Boolean) ?? []);
-
     const garment = await this.garmentService.create(
       {
         name: body.name,
         category: body.category,
         brand: body.brand,
-        color: rawColors.join(','),
+        color: body.color,
         size: body.size,
         notes: body.notes,
         washingDetails: body.washingDetails,
@@ -380,7 +372,7 @@ export class WardrobeController {
         name: body.name,
         category: body.category,
         brand: body.brand,
-        color: Array.isArray(body.color) ? body.color.join(',') : body.color,
+        color: body.color,
         size: body.size,
         notes: body.notes,
         sourceUrl: body.sourceUrl,
@@ -424,7 +416,7 @@ export class WardrobeController {
         name: body.name,
         category: body.category,
         brand: body.brand,
-        color: Array.isArray(body.color) ? body.color.join(',') : body.color,
+        color: body.color,
         size: body.size,
         notes: body.notes,
         washingDetails: body.washingDetails,
