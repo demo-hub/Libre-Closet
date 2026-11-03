@@ -143,6 +143,8 @@
 {{#if justCreated}}{{> toast id="garment-saved-toast" kind="success" text=(t 'lang.GARMENT_SAVED')}}{{/if}}
 {{#if justSavedPhoto}}{{> toast id="photo-saved-toast" kind="success" text=(t 'lang.PHOTO_SAVED')}}{{/if}}
 {{#if canEdit}}{{> toast id="copied-toast" kind="success" text=(t 'lang.COPIED') hidden=true silent=true}}{{/if}}
+{{!-- Shown by /js/background-removal.js: a script's fetch gets no #requestErrorToast. --}}
+{{#if garment.photo}}{{#if canEdit}}{{> toast id="mask-save-error-toast" kind="error" text=(t 'lang.MASK_SAVE_FAILED') hidden=true dismiss=true}}{{/if}}{{/if}}
 <script>
   {{! Strip the one-shot save flags so refreshing or sharing this URL doesn't replay the toast }}
   var savedFlagUrl = new URL(window.location.href);

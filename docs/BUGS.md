@@ -48,15 +48,6 @@ Bugs found while working on this fork and left out of the change that found them
   - The name is optional. The garment page falls back to the category for its heading; the grid card does not.
   - Where: `views/wardrobe/index.hbs`, the card's `card-title`.
   - Found in #29.
-- **A failed save of an edited cut-out looks saved** (medium).
-  - After Accept in the mask editor, the garment page posts the new cut-out and shows it whether or not the server took it: the response status is never checked.
-  - A fix needs an error message the page can show; `#requestErrorToast` answers htmx requests only.
-  - Where: `public/js/background-removal.js:247-255`, `wireUpEditMaskBtn`.
-  - Found in #30.
-- **The restore brush paints the wrong pixels on a non-square photo with no stored cut-out** (medium).
-  - Without a cut-out, `/file/nobg/` serves the original as it is, while the editor's restore source is the original padded to a square, so the two images do not line up.
-  - Where: `public/js/background-removal.js:233`, `public/js/mask-editor.js`, `onBothReady`.
-  - Found in #30.
 - **With site data blocked, a garment's photo cannot be replaced** (low).
   - The photo picker's script reads `localStorage` first, which throws when site data is blocked, so the rest of it never runs and `#photoBtn` stays disabled. `isBgRemovalEnabled` throws the same way.
   - Where: `views/partials/photoPicker.hbs:62`, `public/js/background-removal.js:15`.
@@ -64,10 +55,6 @@ Bugs found while working on this fork and left out of the change that found them
 - **After Back, the new-garment form shows a photo it no longer has** (low).
   - The history snapshot keeps the preview of a chosen photo, but a file input cannot be restored, so Save then posts the garment without it.
   - Where: `views/partials/photoPicker.hbs`, `#photoPreview`; the head script's `htmx:beforeHistorySave` handler in `views/layout.hbs` resets the garment page's file name but not this preview.
-  - Found in #30.
-- **Background removal logs to the console in production** (low).
-  - The library runs with `debug: true`, and three `console.log` calls remain.
-  - Where: `public/js/background-removal.js:19,97,179,202`.
   - Found in #30.
 - **Cycling a garment or adding a row in the outfit builder is silent to screen readers** (low).
   - Focus stays on a button still named "Next", and the new garment, or the new row, is not announced.
@@ -181,7 +168,8 @@ Bugs found while working on this fork and left out of the change that found them
   - the re-worded `DELETE_ACCOUNT_FAILED` (#46);
   - the seven notification keys: `NOTIFICATIONS`, `NOTIFICATIONS_TURN_ON`, `NOTIFICATIONS_TURN_OFF`, `NOTIFICATIONS_ON`, `NOTIFICATIONS_OFF`, `NOTIFICATIONS_BLOCKED`, `NOTIFICATIONS_FAILED` (#54);
   - `COPY_BY_HAND` and `COPY_BY_HAND_TOUCH` (#56);
-  - `ERROR_400` (#64).
+  - `ERROR_400` (#64);
+  - `MASK_SAVE_FAILED` (#68).
 
 ## Tests and tooling
 

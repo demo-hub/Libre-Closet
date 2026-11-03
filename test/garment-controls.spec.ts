@@ -6,6 +6,7 @@ import {
   type APIRequestContext,
   type Page,
 } from '@playwright/test';
+import sharp from 'sharp';
 
 const coat = readFileSync(
   join(__dirname, '../scripts/screenshots/fixtures/camel-coat.png'),
@@ -39,6 +40,40 @@ async function createGarmentWithPhoto(
   expect(response.ok()).toBeTruthy();
   return show;
 }
+
+/** Red, green and blue bands, wider than tall: a photo the editor has to pad to a square. */
+const bands = () =>
+  sharp({
+    create: { width: 300, height: 120, channels: 3, background: '#ff0000' },
+  })
+    .composite([
+      {
+        input: {
+          create: {
+            width: 300,
+            height: 40,
+            channels: 3,
+            background: '#00ff00',
+          },
+        },
+        top: 40,
+        left: 0,
+      },
+      {
+        input: {
+          create: {
+            width: 300,
+            height: 40,
+            channels: 3,
+            background: '#0000ff',
+          },
+        },
+        top: 80,
+        left: 0,
+      },
+    ])
+    .png()
+    .toBuffer();
 
 const finePointer = (page: Page) =>
   page.evaluate(() => matchMedia('(pointer: fine)').matches);
@@ -474,6 +509,77 @@ test.describe('the mask editor', () => {
     release();
   });
 
+  test('says a failed save and keeps the photo it had', async ({
+    page,
+  }, info) => {
+    const { dialog } = await openMaskEditor(
+      page,
+      `Unsaved ${info.project.name}`,
+    );
+    await page.route(/\/wardrobe\/\d+\/nobg/, (route) =>
+      route.fulfill({ status: 500 }),
+    );
+    await dialog.getByRole('button', { name: 'Accept' }).click();
+    await expect(page.getByRole('alert')).toHaveText(
+      'Error: the cleaned-up photo could not be saved. The garment keeps its previous one.',
+    );
+    await expect(page.locator('main figure img')).toHaveAttribute(
+      'src',
+      /^\/file\/nobg\//,
+    );
+  });
+
+  test('restores the pixels under the brush on a wide photo with no cut-out', async ({
+    page,
+  }, info) => {
+    const show = await createGarment(page.request, [
+      ['name', `Wide ${info.project.name}`],
+    ]);
+    const upload = await page.request.post(`${show}/photo`, {
+      multipart: {
+        photo: {
+          name: 'bands.png',
+          mimeType: 'image/png',
+          buffer: await bands(),
+        },
+      },
+    });
+    expect(upload.ok()).toBeTruthy();
+    await page.goto(show);
+    await page.getByRole('button', { name: 'Clean up background' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Clean up background' });
+    const canvas = dialog.locator('canvas');
+    await expect
+      .poll(() => canvas.evaluate((c: HTMLCanvasElement) => c.width))
+      .toBeGreaterThan(1);
+    const size = await canvas.evaluate((c: HTMLCanvasElement) => [
+      c.width,
+      c.height,
+    ]);
+    expect(size[0]).toBe(size[1]);
+
+    // 40 % down the padded square is the red band; unpadded, it was the green one.
+    const pixel = () =>
+      canvas.evaluate((c: HTMLCanvasElement) =>
+        Array.from(
+          c.getContext('2d')!.getImageData(c.width / 2, c.height * 0.4, 1, 1)
+            .data,
+        ),
+      );
+    const before = await pixel();
+    const box = (await canvas.boundingBox())!;
+    const at = { x: box.x + box.width / 2, y: box.y + box.height * 0.4 };
+    await page.mouse.click(at.x, at.y);
+    expect((await pixel())[3]).toBe(0);
+    await dialog.getByRole('button', { name: 'Restore' }).click();
+    await page.mouse.click(at.x, at.y);
+    const after = await pixel();
+    for (let i = 0; i < 4; i++) {
+      expect(Math.abs(after[i] - before[i])).toBeLessThan(16);
+    }
+    expect(before[0]).toBeGreaterThan(200);
+  });
+
   test('marks the pressed brush without colour in forced colours', async ({
     page,
     browserName,
@@ -491,6 +597,20 @@ test.describe('the mask editor', () => {
     expect(await decoration('Erase')).toBe('underline');
     expect(await decoration('Restore')).toBe('none');
   });
+});
+
+test('the garment page logs nothing to the console', async ({ page }, info) => {
+  const logs: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'log') logs.push(message.text());
+  });
+  await page.goto(
+    await createGarmentWithPhoto(page.request, `Quiet ${info.project.name}`),
+  );
+  // Focusing the picker would start the 40 MB model download, so the page is left as loaded.
+  await expect(page.locator('#photoInput')).toBeAttached();
+  await page.waitForLoadState('networkidle');
+  expect(logs).toEqual([]);
 });
 
 test.describe('with reduced motion', () => {
