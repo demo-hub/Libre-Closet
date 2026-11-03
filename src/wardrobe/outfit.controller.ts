@@ -23,6 +23,7 @@ import { garmentsInSlotOrder } from './outfit-order';
 import { OutfitService } from './outfit.service';
 import { GarmentService } from './garment.service';
 import { CalendarService } from './calendar.service';
+import { parseDateInput } from './date-input';
 
 /** Where the form goes back to; the calendar takes the week the save will land on too. */
 function returnLinks(returnTo: string, week?: string) {
@@ -113,6 +114,9 @@ export class OutfitController {
     @Req() req: FastifyRequest,
     @Res() reply: FastifyReply,
   ) {
+    // Read before anything is saved: a bad date used to fail after the outfit
+    // was stored, so trying again created it twice.
+    const scheduleDate = parseDateInput(body.scheduleDate, 'scheduleDate');
     const slots = this.outfitService.parseSlotsFromBody(
       body.category,
       body.garmentId,
@@ -122,9 +126,9 @@ export class OutfitController {
       { name: body.name, notes: body.notes, slots },
       this.userId(req),
     );
-    if (body.scheduleDate) {
+    if (scheduleDate) {
       await this.calendarService.create(
-        { date: new Date(body.scheduleDate), outfitId: outfit.id },
+        { date: scheduleDate, outfitId: outfit.id },
         this.userId(req),
       );
     }
@@ -231,6 +235,7 @@ export class OutfitController {
     @Req() req: FastifyRequest,
     @Res() reply: FastifyReply,
   ) {
+    const scheduleDate = parseDateInput(body.scheduleDate, 'scheduleDate');
     const slots = this.outfitService.parseSlotsFromBody(
       body.category,
       body.garmentId,
@@ -241,9 +246,9 @@ export class OutfitController {
       { name: body.name, notes: body.notes, slots },
       this.userId(req),
     );
-    if (body.scheduleDate) {
+    if (scheduleDate) {
       await this.calendarService.create(
-        { date: new Date(body.scheduleDate), outfitId: id },
+        { date: scheduleDate, outfitId: id },
         this.userId(req),
       );
     }

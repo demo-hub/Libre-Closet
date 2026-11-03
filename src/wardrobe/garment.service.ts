@@ -20,6 +20,7 @@ import { sanitizeSourceUrl } from './source-url';
 import { resolveCategoryLabel } from './category-label';
 import { WardrobeShareService } from '../wardrobe-share/wardrobe-share.service';
 import { normalizeColorInput } from './color-input';
+import { parseDateInput } from './date-input';
 
 const CANONICAL_SIZES = [
   'XX-Small',
@@ -164,6 +165,8 @@ export class GarmentService {
   }
 
   async create(dto: CreateGarmentDto, userId?: number): Promise<Garment> {
+    // Read first: a bad date must fail before a photo is stored.
+    const dateAquired = parseDateInput(dto.dateAquired, 'dateAquired');
     let photo: File | undefined = dto.photo;
     if (dto.files) {
       for await (const file of dto.files) {
@@ -188,7 +191,7 @@ export class GarmentService {
       size: this.normalizeSize(dto.size),
       notes: dto.notes,
       washingDetails: dto.washingDetails,
-      dateAquired: dto.dateAquired ? new Date(dto.dateAquired) : undefined,
+      dateAquired,
       sourceUrl: sanitizeSourceUrl(dto.sourceUrl),
       photo: photo ?? undefined,
     });
@@ -297,6 +300,11 @@ export class GarmentService {
     // garment cannot leave a stored blob behind. The iterator has not been
     // advanced yet, so this read does not backpressure the parser.
     const garment = await this.findOne(id, requestingUserId, userId);
+    // Read before any photo is stored, as in create.
+    const dateAquired =
+      'dateAquired' in dto
+        ? parseDateInput(dto.dateAquired, 'dateAquired')
+        : undefined;
 
     let photo: File | undefined;
     if (dto.files) {
@@ -358,10 +366,7 @@ export class GarmentService {
     if ('size' in dto) garment.size = this.normalizeSize(dto.size);
     if ('notes' in dto) garment.notes = dto.notes;
     if ('washingDetails' in dto) garment.washingDetails = dto.washingDetails;
-    if ('dateAquired' in dto)
-      garment.dateAquired = dto.dateAquired
-        ? new Date(dto.dateAquired)
-        : undefined;
+    if ('dateAquired' in dto) garment.dateAquired = dateAquired;
     if ('sourceUrl' in dto)
       garment.sourceUrl = sanitizeSourceUrl(dto.sourceUrl);
 

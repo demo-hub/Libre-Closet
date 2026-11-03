@@ -12,6 +12,7 @@ import { intlLocale } from './i18n/intl-locale';
 import { ViewContextService } from './view-context/view-context.service';
 
 const MESSAGE_KEYS: Partial<Record<number, string>> = {
+  400: 'lang.ERROR_400',
   401: 'lang.ERROR_401',
   403: 'lang.ERROR_403',
   404: 'lang.ERROR_404',
