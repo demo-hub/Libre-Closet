@@ -7,8 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.4.0] - 2026-11-03
 
+#### Security
+
+- Push notifications are no longer sent to a subscription whose address resolves to loopback or a private network, and such a subscription is forgotten. So is one saved before 1.2.0 that subscribing would now refuse
+
+#### Changed
+
+- On SQLite, upgrading rebuilds the accounts table, so back up `DATA_PATH` first, as before any upgrade. Every account and everything that belongs to it is kept. If the rebuild fails, nothing is changed and the app does not start, and the log says why
+- On SQLite, each upgrade step is now saved as it finishes, so a failed upgrade restarts from the step that failed
+
 #### Fixed
 
+- Deleting a password-reset code also deleted the account it belonged to, with all its garments and outfits. The app always unlinked a code before deleting it, so this did not happen through the app, but the database no longer allows it
 - Saving a cleaned-up photo from the mask editor looked saved even when the server refused it. The garment now keeps its previous photo and the page says the save failed, in your language
 - On a wide or tall photo with no cut-out yet, the mask editor's restore brush painted pixels from another part of the photo
 - Background removal no longer writes debug messages to the browser console
