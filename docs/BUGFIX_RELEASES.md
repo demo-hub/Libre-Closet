@@ -1,6 +1,6 @@
 # Bug-fix releases after 1.0.0
 
-Status: accepted 2026-10-15. 1.1.0 and 1.2.0 shipped on 2026-10-15; 1.3.0 is being released (2026-11-03). Plans the minor releases that clear [BUGS.md](BUGS.md).
+Status: accepted 2026-10-15. 1.1.0 and 1.2.0 shipped on 2026-10-15, and 1.3.0 on 2026-11-03; 1.4.0 is being released (2026-11-03). Plans the minor releases that clear [BUGS.md](BUGS.md).
 
 BUGS.md held 55 entries on 2026-10-15. The high and medium entries were checked against `main` at `e6dae60`. The low entries are as BUGS.md records them. No open PR or unmerged branch fixes any of them. This plan puts 51 of them into seven minor releases, 1.1.0 to 1.7.0, in order of severity. It leaves four out (section 9). Two security defaults found while planning were never in BUGS.md; 1.1-e fixes them. Each PR re-checks its entries before starting.
 

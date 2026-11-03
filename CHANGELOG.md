@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-11-03
+
+#### Fixed
+
+- Saving a cleaned-up photo from the mask editor looked saved even when the server refused it. The garment now keeps its previous photo and the page says the save failed, in your language
+- On a wide or tall photo with no cut-out yet, the mask editor's restore brush painted pixels from another part of the photo
+- Background removal no longer writes debug messages to the browser console
+- With site data blocked, a garment's photo could not be replaced
+- After Back, the new-garment form showed a photo it no longer held, so Save posted the garment without it
+- A garment without a name had an empty title on the wardrobe grid; it is now titled with its category, as on its own page
+
 ## [1.3.0] - 2026-11-03
 
 #### Changed
