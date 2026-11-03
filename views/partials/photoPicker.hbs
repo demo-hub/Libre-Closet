@@ -59,12 +59,21 @@
   import { suggestGarmentColors } from '/js/color-suggest.js';
 
   const toggle = document.getElementById('bgRemovalToggle');
-  const stored = localStorage.getItem('bgRemovalEnabled');
-  toggle.checked = stored === null ? true : stored !== 'false';
-  localStorage.setItem('bgRemovalEnabled', toggle.checked);
+  // With site data blocked localStorage throws, and the toggle alone holds the choice for this page.
+  let stored = null;
+  try {
+    stored = localStorage.getItem('bgRemovalEnabled');
+  } catch {}
+  toggle.checked = stored !== 'false';
+  const remember = () => {
+    try {
+      localStorage.setItem('bgRemovalEnabled', toggle.checked);
+    } catch {}
+  };
+  remember();
 
   toggle.addEventListener('change', () => {
-    localStorage.setItem('bgRemovalEnabled', toggle.checked);
+    remember();
     const editBtn = document.getElementById('editMaskBtn');
     if (editBtn) editBtn.style.display = toggle.checked ? '' : 'none';
 
@@ -109,6 +118,9 @@
   const preview = document.getElementById('photoPreview');
   const showPreview = (blob) => {
     if (!preview) return;
+    // Kept for Back, which puts an imported preview back (layout.hbs, htmx:beforeHistorySave).
+    const rendered = preview.getAttribute('src');
+    if (rendered && !rendered.startsWith('blob:')) preview.dataset.src = rendered;
     preview.src = URL.createObjectURL(blob);
     preview.classList.remove('hidden');
     document.getElementById('photoPreviewPlaceholder')?.classList.add('hidden');

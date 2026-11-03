@@ -12,7 +12,14 @@
 
 let activeProgressHandler = null;
 
-export const isBgRemovalEnabled = () => localStorage.getItem('bgRemovalEnabled') !== 'false';
+// With site data blocked even reading localStorage throws, and the photo picker's toggle is all there is.
+export const isBgRemovalEnabled = () => {
+  try {
+    return localStorage.getItem('bgRemovalEnabled') !== 'false';
+  } catch {
+    return document.getElementById('bgRemovalToggle')?.checked ?? true;
+  }
+};
 
 const config = {
   publicPath: location.origin + '/bg-removal-models/',

@@ -215,6 +215,55 @@ test.describe('the photo picker', () => {
     await expect(page.locator('#photoFileName')).toBeHidden();
     await expect(page.locator('#photoBtn')).toBeDisabled();
   });
+
+  test('shows no photo on the new-garment form brought back by Back', async ({
+    page,
+  }) => {
+    await page.goto('/wardrobe/new');
+    await page.locator('#bgRemovalToggle').uncheck();
+    await page
+      .locator('#photoInput')
+      .setInputFiles({ name: 'tee.png', mimeType: 'image/png', buffer: coat });
+    await expect(page.locator('#photoPreview')).toBeVisible();
+
+    // The restored file input is empty, so Save would post the garment without this photo.
+    await page.getByRole('link', { name: 'Back' }).click();
+    await expect(page).toHaveURL(/\/wardrobe$/);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/wardrobe\/new$/);
+    await expect(page.locator('#photoPreview')).toBeHidden();
+    await expect(page.locator('#photoPreviewPlaceholder')).toBeVisible();
+  });
+});
+
+test.describe('the photo picker with site data blocked', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(window, 'localStorage', {
+        get() {
+          throw new DOMException('Site data is blocked', 'SecurityError');
+        },
+      });
+    });
+  });
+
+  test("still replaces a garment's photo, and keeps removal off when turned off", async ({
+    page,
+  }, info) => {
+    await page.goto(
+      await createGarmentWithPhoto(
+        page.request,
+        `Blocked ${info.project.name}`,
+      ),
+    );
+    await page.locator('#bgRemovalToggle').uncheck();
+    await page
+      .locator('#photoInput')
+      .setInputFiles({ name: 'tee.png', mimeType: 'image/png', buffer: coat });
+    await expect(page.locator('#photoBtn')).toBeEnabled();
+    await expect(page.locator('#bgStatus')).toBeHidden();
+    await expect(page.locator('#maskEditorDialog')).toBeHidden();
+  });
 });
 
 test.describe('the colour multiselect', () => {

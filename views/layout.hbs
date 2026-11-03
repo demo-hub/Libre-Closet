@@ -105,6 +105,14 @@ https://nestjs-i18n.com/quick-start --}}
           document.querySelectorAll('input[data-initial]').forEach(function (i) { i.value = i.dataset.initial; });
           document.querySelectorAll('#photoFileName').forEach(function (p) { p.hidden = true; p.textContent = ''; });
           document.querySelectorAll('#photoBtn').forEach(function (b) { b.disabled = true; });
+          // A chosen photo's preview, which the restored file input will not hold; an imported one is put back.
+          document.querySelectorAll('#photoPreview[src^="blob:"]').forEach(function (img) {
+            if (img.dataset.src) return img.setAttribute('src', img.dataset.src);
+            img.removeAttribute('src');
+            img.classList.add('hidden');
+            var placeholder = document.getElementById('photoPreviewPlaceholder');
+            if (placeholder) placeholder.classList.remove('hidden');
+          });
         });
         // A <details> menu closes only when its own summary is pressed.
         function closeMenusOutside(e) {
