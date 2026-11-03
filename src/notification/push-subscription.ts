@@ -4,7 +4,7 @@ import { parseSafeUrl } from '../wardrobe/import/url-policy';
 const KEY = /^[A-Za-z0-9_-]{16,256}={0,2}$/;
 
 /** An https address the server may POST to: not loopback, a private network or an odd port. */
-function isPublicHttps(endpoint: unknown): endpoint is string {
+export function isPublicHttps(endpoint: unknown): endpoint is string {
   if (typeof endpoint !== 'string' || endpoint.length > 2048) return false;
   try {
     return parseSafeUrl(endpoint).protocol === 'https:';
