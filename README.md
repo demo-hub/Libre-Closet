@@ -161,7 +161,7 @@ npx mikro-orm migration:create --config mikro-orm.sqlite.cli-config.ts    # SQLi
 npx mikro-orm migration:create --config mikro-orm.postgres.cli-config.ts  # PostgreSQL
 ```
 
-Never write a SQLite migration that rebuilds the `garment` table: `outfit_garments` cascades on delete and the rebuild would empty every saved outfit.
+Never write a SQLite migration that rebuilds the `garment` table: `outfit_garments` cascades on delete and the rebuild would empty every saved outfit. Inside a transaction SQLite ignores `pragma foreign_keys`, so any rebuild of a table that others reference must run outside one, as `Migration20261103180000` rebuilds `user`.
 
 **Docker build:** `docker build -f docker/Dockerfile -t libre-closet .` (large image, several minutes; build from a fresh clone).
 

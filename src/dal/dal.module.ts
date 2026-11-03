@@ -6,6 +6,7 @@ import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { Logger, Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import path from 'path';
+import { sqliteMigrationRun } from './sqlite-migration-run';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import path from 'path';
                 pattern: /^.*\.(js|ts)$/, // ends with .js or .ts
                 path: path.join(__dirname, 'migrations/sqlite'),
                 pathTs: path.join(__dirname, 'migrations/sqlite'),
-                transactional: true,
+                ...sqliteMigrationRun,
               },
               logger: (message) => console.log(message),
               allowGlobalContext: true,

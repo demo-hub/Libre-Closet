@@ -1,6 +1,7 @@
 import { BetterSqliteDriver } from '@mikro-orm/better-sqlite';
 import { Options } from '@mikro-orm/core';
 import { Migrator } from '@mikro-orm/migrations';
+import { sqliteMigrationRun } from './src/dal/sqlite-migration-run';
 
 export default {
   name: 'sqlite',
@@ -12,7 +13,7 @@ export default {
   migrations: {
     path: './dist/dal/migrations/sqlite',
     pathTs: './src/dal/migrations/sqlite',
-    transactional: true,
+    ...sqliteMigrationRun,
   },
   debug: true,
 } as Options;

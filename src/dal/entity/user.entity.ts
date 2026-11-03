@@ -40,6 +40,8 @@ export class User extends ShareableId {
     nullable: true,
     ref: true,
     inversedBy: 'user',
+    // Not cascade: deleting a code must never delete its user.
+    deleteRule: 'set null',
   })
   public passwordReset?: Ref<PasswordReset> | null;
 

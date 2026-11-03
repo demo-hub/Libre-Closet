@@ -261,7 +261,7 @@
             "id"
           ],
           "referencedTableName": "password_reset",
-          "deleteRule": "cascade",
+          "deleteRule": "set null",
           "updateRule": "cascade"
         }
       },
