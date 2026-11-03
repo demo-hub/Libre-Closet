@@ -5,11 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.3.0] - 2026-11-03
+
+#### Changed
+
+- A garment's colours are saved in one form: known colours in lower case, custom ones as typed, without markup or repeats, at most 24 of up to 40 characters each. Upgrading tidies the colours already saved the same way
+- Wardrobe search and the colour filter ignore case on PostgreSQL too, as they already did on SQLite
+- The outfit builder's category suggestions are in your language, and a typed category matches whatever its case
 
 #### Fixed
 
-- With `PWA_ENABLED`, the first page after an upgrade no longer loads the previous version's stylesheet and scripts from the service worker, so it is no longer nearly unstyled until a reload
+- The colour filter missed garments with several colours: a red-and-blue garment is now listed under red, and dark red no longer is
+- `%` and `_` in a search were treated as wildcards
+- An unreadable date on a garment, an outfit or a calendar entry answered a server error, and an outfit was saved before its date failed, so trying again created it twice. It now answers that the form sent a value the app could not read, in your language, and saves nothing
+- An outfit lost a garment once that garment was archived: the editor now keeps it in its row, marked "Archived"
+- Saving an outfit with a date put it on the calendar again each time
 
 ## [1.2.0] - 2026-10-15
 
