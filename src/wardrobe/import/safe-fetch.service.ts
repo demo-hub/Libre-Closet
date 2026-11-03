@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as dns from 'node:dns';
 import * as net from 'node:net';
 import { Agent, buildConnector, fetch, type Dispatcher } from 'undici';
 import {
   BlockedAddressError,
+  guardedLookup,
   isBlockedAddress,
   parseSafeUrl,
 } from './url-policy';
@@ -187,38 +187,15 @@ export class SafeFetchService {
   }
 
   /**
-   * Validates the peer at connect time rather than before the request: the very
-   * addresses checked here are the ones dialled, so a name that resolves again
-   * to something internal (DNS rebinding) has no window. Node skips `lookup`
-   * for literal hosts, hence the wrapper checking those separately.
+   * Validates the peer at connect time rather than before the request
+   * (`guardedLookup`). Node skips `lookup` for literal hosts, hence the
+   * wrapper checking those separately.
    */
   private buildAgent(): Dispatcher {
     const allowPrivate = this.allowPrivate;
 
-    const guardedLookup: net.LookupFunction = (host, opts, cb) => {
-      dns.lookup(host, { ...opts, all: true }, (err, addresses) => {
-        if (err) return cb(err, '', 0);
-        const list = Array.isArray(addresses) ? addresses : [addresses];
-        const blocked = list.find((a) =>
-          isBlockedAddress(a.address, allowPrivate),
-        );
-        if (blocked) {
-          return cb(
-            new BlockedAddressError(`${host} resolves to ${blocked.address}`),
-            '',
-            0,
-          );
-        }
-        // net sets all:true under autoSelectFamily and then expects the array
-        // form of the callback.
-        return opts.all
-          ? cb(null, list)
-          : cb(null, list[0].address, list[0].family);
-      });
-    };
-
     const connect = buildConnector({
-      lookup: guardedLookup,
+      lookup: guardedLookup(allowPrivate),
       timeout: SOCKET_TIMEOUT_MS,
     });
 

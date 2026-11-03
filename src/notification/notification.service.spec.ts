@@ -3,7 +3,9 @@ import { getRepositoryToken } from '@mikro-orm/nestjs';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserDevice } from '../dal/entity/userDevice.entity';
+import * as https from 'node:https';
 import webpush from 'web-push';
+import { BlockedAddressError } from '../wardrobe/import/url-policy';
 import { NotificationService } from './notification.service';
 
 describe('NotificationService', () => {
@@ -188,7 +190,9 @@ describe('NotificationService', () => {
       );
 
       expect(devices.find).toHaveBeenCalledWith({ user: 1 });
-      expect(send).toHaveBeenCalledWith(subscription(), expect.any(String));
+      expect(send).toHaveBeenCalledWith(subscription(), expect.any(String), {
+        agent: expect.any(https.Agent),
+      });
       expect(JSON.parse(send.mock.calls[0][1] as string)).toEqual({
         title: 'Libre Closet',
         options: {
@@ -228,6 +232,40 @@ describe('NotificationService', () => {
       expect(em.remove).toHaveBeenCalledTimes(1);
       expect(em.remove).toHaveBeenCalledWith(ended);
       expect(em.flush).toHaveBeenCalled();
+    });
+
+    it.each([
+      'http://push.example/1',
+      'https://10.0.0.5/push',
+      'https://[::1]/push',
+      'https://localhost/push',
+      'https://push.example:8443/push',
+    ])(
+      'forgets %s, stored before subscribing checked it, without posting to it',
+      async (endpoint: string) => {
+        const device = { webPushSubscription: subscription(endpoint) };
+        devices.find.mockResolvedValue([device]);
+        const send = jest.spyOn(webpush, 'sendNotification');
+
+        await service.sendWebPushNotification({ title: 'T', body: 'B' }, 1);
+
+        expect(send).not.toHaveBeenCalled();
+        expect(em.remove).toHaveBeenCalledWith(device);
+      },
+    );
+
+    it('forgets an endpoint whose name resolves to a private address', async () => {
+      const device = { webPushSubscription: subscription() };
+      devices.find.mockResolvedValue([device]);
+      jest
+        .spyOn(webpush, 'sendNotification')
+        .mockRejectedValue(
+          new BlockedAddressError('push.example resolves to 10.0.0.5'),
+        );
+
+      await service.sendWebPushNotification({ title: 'T', body: 'B' }, 1);
+
+      expect(em.remove).toHaveBeenCalledWith(device);
     });
   });
 });

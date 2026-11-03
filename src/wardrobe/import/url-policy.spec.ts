@@ -1,5 +1,7 @@
+import type { LookupAddress } from 'node:dns';
 import {
   BlockedAddressError,
+  guardedLookup,
   isBlockedAddress,
   parseSafeUrl,
 } from './url-policy';
@@ -107,5 +109,36 @@ describe('parseSafeUrl', () => {
     expect(() => parseSafeUrl('https://shop.example:8080/p')).toThrow(
       BlockedAddressError,
     );
+  });
+});
+
+describe('guardedLookup', () => {
+  const resolvingTo =
+    (...addresses: LookupAddress[]) =>
+    (
+      _host: string,
+      _options: unknown,
+      callback: (err: null, addresses: LookupAddress[]) => void,
+    ) =>
+      callback(null, addresses);
+  const lookUp = (all: boolean, ...addresses: LookupAddress[]) =>
+    new Promise<unknown[]>((resolve) =>
+      guardedLookup(false, resolvingTo(...addresses) as never)(
+        'shop.example',
+        { all },
+        (...args: unknown[]) => resolve(args),
+      ),
+    );
+  const v4 = { address: '93.184.215.14', family: 4 };
+  const v6 = { address: '2606:2800:21f:cb07:6820:80da:af6b:8b2c', family: 6 };
+
+  it('hands back public addresses in the shape the caller asked for', async () => {
+    expect(await lookUp(true, v4, v6)).toEqual([null, [v4, v6]]);
+    expect(await lookUp(false, v4, v6)).toEqual([null, v4.address, 4]);
+  });
+
+  it('refuses the name when any address is blocked', async () => {
+    const [err] = await lookUp(true, v4, { address: '10.0.0.5', family: 4 });
+    expect(err).toBeInstanceOf(BlockedAddressError);
   });
 });

@@ -1,3 +1,4 @@
+import * as dns from 'node:dns';
 import * as net from 'node:net';
 
 /**
@@ -127,4 +128,38 @@ export function parseSafeUrl(input: string, allowPrivate = false): URL {
     throw new BlockedAddressError(`address ${host}`);
   }
   return url;
+}
+
+/**
+ * A `lookup` for a socket that refuses any name resolving to an address
+ * `isBlockedAddress` blocks. It checks the very addresses the socket then
+ * dials, so a name that resolves again to something internal (DNS rebinding)
+ * has no window. Node skips `lookup` for a literal host, which callers check
+ * themselves. `resolve` is for tests.
+ */
+export function guardedLookup(
+  allowPrivate = false,
+  resolve: typeof dns.lookup = dns.lookup,
+): net.LookupFunction {
+  return (host, opts, cb) => {
+    resolve(host, { ...opts, all: true }, (err, addresses) => {
+      if (err) return cb(err, '', 0);
+      const list = Array.isArray(addresses) ? addresses : [addresses];
+      const blocked = list.find((a) =>
+        isBlockedAddress(a.address, allowPrivate),
+      );
+      if (blocked) {
+        return cb(
+          new BlockedAddressError(`${host} resolves to ${blocked.address}`),
+          '',
+          0,
+        );
+      }
+      // net sets all:true under autoSelectFamily and then expects the array
+      // form of the callback.
+      return opts.all
+        ? cb(null, list)
+        : cb(null, list[0].address, list[0].family);
+    });
+  };
 }

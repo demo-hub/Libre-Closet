@@ -88,11 +88,6 @@ Bugs found while working on this fork and left out of the change that found them
 
 ## Shell and PWA
 
-- **A push endpoint whose name resolves to a private address is still posted to** (low).
-  - `/notification/subscribe` refuses http, loopback, private and link-local literals and odd ports, but does not resolve a host name, so a signed-in user can store `https://name-that-resolves-internally/` and make `/notification/test` POST an encrypted body there. Nothing of the answer comes back.
-  - Resolving at send time, as the importer's `SafeFetchService` does, would close it; web-push takes an `agent`, which could carry that lookup.
-  - Where: `src/notification/push-subscription.ts`, `src/notification/notification.service.ts` (`sendWebPushNotification`).
-  - Found in #54.
 - **After an upgrade, the first page view can show the previous release's icons and manifest** (low).
   - The stylesheet and the app's scripts are asked for with a content hash, so an older service worker's precache cannot answer them. `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `manifest.json` and `assets/icons/` keep their bare URLs and come from the old precache until the new worker takes over.
   - Where: `views/layout.hbs`, `workbox-config.js` (`manifestTransforms`), `src/asset-url.ts`.

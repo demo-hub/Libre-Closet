@@ -4,13 +4,17 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import webpush from 'web-push';
 import { UserDevice } from '../dal/entity/userDevice.entity';
+import { BlockedAddressError } from '../wardrobe/import/url-policy';
 import { PushNotificationDto } from './dto/pushNotification.dto';
+import { pushAgent } from './push-agent';
 import { buildPushPayload } from './push-payload';
+import { isPublicHttps } from './push-subscription';
 import { vapidSubject } from './vapid-subject';
 
 @Injectable()
 export class NotificationService {
   private logger = new Logger(NotificationService.name);
+  private readonly agent = pushAgent();
 
   constructor(
     private configService: ConfigService,
@@ -87,7 +91,9 @@ export class NotificationService {
   /**
    * Sends to each of the user's browsers and waits for every answer. A push
    * service answers 404 or 410 for a subscription that has ended, which is
-   * then forgotten.
+   * then forgotten. So is an endpoint the server must not POST to: one stored
+   * before subscribing checked its address, or a name that resolves to
+   * loopback or a private network.
    */
   async sendWebPushNotification(
     notification: PushNotificationDto,
@@ -98,12 +104,24 @@ export class NotificationService {
     await Promise.all(
       devices.map(async (device) => {
         if (!device.webPushSubscription) return;
+        if (!isPublicHttps(device.webPushSubscription.endpoint)) {
+          this.logger.warn(
+            'Forgot a push endpoint the server must not POST to.',
+          );
+          this.em.remove(device);
+          return;
+        }
         try {
-          await webpush.sendNotification(device.webPushSubscription, payload);
+          await webpush.sendNotification(device.webPushSubscription, payload, {
+            agent: this.agent,
+          });
           this.logger.debug('Push notification sent.');
         } catch (error) {
           const status = (error as { statusCode?: number }).statusCode;
-          if (status === 404 || status === 410) {
+          if (error instanceof BlockedAddressError) {
+            this.logger.warn(`Forgot a push endpoint: ${error.message}`);
+            this.em.remove(device);
+          } else if (status === 404 || status === 410) {
             this.em.remove(device);
           } else {
             this.logger.warn(error);
