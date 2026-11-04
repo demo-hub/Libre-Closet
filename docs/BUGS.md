@@ -53,9 +53,9 @@ Bugs found while working on this fork and left out of the change that found them
 - **Back can show an entry whose outfit was deleted** (low).
   - Deleting an outfit also removes its calendar entries, but htmx's snapshot of the calendar still holds them, so Back shows them and Remove answers 404 with the "request failed" toast. A removal on the calendar itself drops those snapshots (`public/js/calendar.js`); deleting an outfit does not.
   - Where: the outfit delete route in `src/wardrobe/outfit.controller.ts`.
-  - Found in 1.5-c.
+  - Found in #77.
 - **The worn toggle may move the VoiceOver cursor on iOS** (low, unconfirmed).
-  - Safari does not focus a button on a tap, and an `outerHTML` swap removed the node VoiceOver was on. Since 1.5-c the button stays in the page and only its `aria-pressed` changes, which should settle it, but Playwright's WebKit focuses the button, so only a device can tell.
+  - Safari does not focus a button on a tap, and an `outerHTML` swap removed the node VoiceOver was on. Since #77 the button stays in the page and only its `aria-pressed` changes, which should settle it, but Playwright's WebKit focuses the button, so only a device can tell.
   - Close this entry once someone checks it with VoiceOver on an iPhone.
   - Where: `views/partials/calendar_worn_button.hbs`.
   - Found in #32.
@@ -127,8 +127,8 @@ Bugs found while working on this fork and left out of the change that found them
   - `COPY_BY_HAND` and `COPY_BY_HAND_TOUCH` (#56);
   - `ERROR_400` (#64);
   - `MASK_SAVE_FAILED` (#68);
-  - the re-worded `PRIVACY_SELF_HOSTED_DATA_ITEMS` (1.5-a);
-  - `PREVIOUS_WEEK`, `NEXT_WEEK` and `WEEK_OF` (1.5-d).
+  - the re-worded `PRIVACY_SELF_HOSTED_DATA_ITEMS` (#75);
+  - `PREVIOUS_WEEK`, `NEXT_WEEK` and `WEEK_OF` (#78).
 
 ## Tests and tooling
 
