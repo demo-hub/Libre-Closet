@@ -17,6 +17,7 @@ import { WeekBounds } from './view-models/week-bounds';
 import { MiniMonthDay } from './view-models/mini-month-day.view-model';
 import { intlLocale } from '../i18n/intl-locale';
 import { garmentsInSlotOrder } from './outfit-order';
+import { todayIn } from '../time-zone';
 
 const CHIP_THUMBNAILS = 3;
 
@@ -160,10 +161,12 @@ export class CalendarService {
     calMonthParam: string | undefined,
     userId: number | undefined,
     i18n: I18nContext,
+    timeZone: string,
   ) {
-    const anchor = this.parseWeekParam(weekParam);
+    const today = todayIn(timeZone);
+    const anchor = this.parseWeekParam(weekParam, today);
     const weekSchedule = await this.findWeek(anchor, userId);
-    const weekBounds = this.findWeekBounds(weekSchedule);
+    const weekBounds = this.findWeekBounds(weekSchedule, today);
     const shownMonth = parseMonthParam(calMonthParam);
 
     return {
@@ -183,13 +186,12 @@ export class CalendarService {
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
-  /** Parses a YYYY-MM-DD query param into a UTC date, defaulting to today. */
-  private parseWeekParam(param: string | undefined): Date {
-    if (!param || !/^[12]\d{3}-\d{2}-\d{2}$/.test(param)) return new Date();
+  /** Parses a YYYY-MM-DD query param into a UTC date, defaulting to `today`. */
+  private parseWeekParam(param: string | undefined, today: string): Date {
+    const fallback = new Date(`${today}T00:00:00Z`);
+    if (!param || !/^[12]\d{3}-\d{2}-\d{2}$/.test(param)) return fallback;
     const d = new Date(`${param}T00:00:00Z`);
-    return !isNaN(d.getTime()) && this.toWeekParam(d) === param
-      ? d
-      : new Date();
+    return !isNaN(d.getTime()) && this.toWeekParam(d) === param ? d : fallback;
   }
 
   /** Formats a Date as YYYY-MM-DD for use in query params and hidden inputs. */
@@ -327,9 +329,12 @@ export class CalendarService {
     };
   }
 
-  private findWeekBounds(weekSchedule: WeekSchedule): WeekBounds {
+  private findWeekBounds(
+    weekSchedule: WeekSchedule,
+    today: string,
+  ): WeekBounds {
     return {
-      todayStr: this.toWeekParam(new Date()),
+      todayStr: today,
       weekStartStr: this.toWeekParam(weekSchedule.weekStart),
       weekEndStr: this.toWeekParam(addDays(weekSchedule.weekStart, 6)),
     };

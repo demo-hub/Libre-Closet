@@ -22,6 +22,29 @@ describe('configSchema', () => {
     rmSync(dataPath, { recursive: true, force: true });
   });
 
+  describe('TZ', () => {
+    it('takes a time zone and may be left out', () => {
+      expect(validate({}).value.TZ).toBeUndefined();
+      expect(validate({ TZ: '' }).value.TZ).toBe('');
+      expect(validate({ TZ: 'Europe/Lisbon' }).value.TZ).toBe('Europe/Lisbon');
+    });
+
+    it('counts a value it cannot use as unset rather than stopping the app', () => {
+      const warn = jest
+        .spyOn(Logger.prototype, 'warn')
+        .mockImplementation(() => undefined);
+
+      const { error, value } = validate({ TZ: ':/etc/localtime' });
+
+      expect(error).toBeUndefined();
+      expect(value.TZ).toBe('');
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining(':/etc/localtime'),
+      );
+      warn.mockRestore();
+    });
+  });
+
   describe('SITE_URL', () => {
     it('has no default, so links use the address a request came in on', () => {
       expect(validate({}).value.SITE_URL).toBeUndefined();

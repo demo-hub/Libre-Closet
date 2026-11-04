@@ -2,6 +2,16 @@ import { Logger } from '@nestjs/common';
 import Joi from 'joi';
 import * as path from 'path';
 import { resolveInstanceSecrets } from './instance-secrets';
+import { isTimeZone } from './time-zone';
+
+/** A zone the calendar can't use counts as unset, and the log says so. */
+function knownTimeZone(value: string): string {
+  if (value === '' || isTimeZone(value)) return value;
+  new Logger('Config').warn(
+    `TZ "${String(value)}" is not a time zone; using UTC`,
+  );
+  return '';
+}
 
 /** The environment the app accepts, with its defaults. */
 export const configSchema = Joi.object({
@@ -56,6 +66,8 @@ export const configSchema = Joi.object({
   OPERATOR_NAME: Joi.string().trim().allow('').default(''),
   OPERATOR_CONTACT: Joi.string().trim().allow('').default(''),
   THROTTLE_LIMIT: Joi.number().default(600),
+  // Node reads TZ too, and a value only Node understands must not stop an upgrade.
+  TZ: Joi.string().trim().allow('').optional().custom(knownTimeZone),
   DATA_PATH: Joi.string().default(path.join(process.cwd(), 'data')),
   DATABASE_TYPE: Joi.string().valid('sqlite', 'postgres').default('sqlite'),
   DATABASE_SCHEMA: Joi.string()

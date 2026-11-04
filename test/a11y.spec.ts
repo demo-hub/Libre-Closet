@@ -23,7 +23,7 @@ const test = base.extend<object, { made: Made }>({
           category: 'tops',
           garmentId: garmentPath.split('/').pop()!,
           // Today, so the current week on /calendar has an entry.
-          scheduleDate: new Date().toISOString().slice(0, 10),
+          scheduleDate: new Date().toLocaleDateString('en-CA'),
         },
       });
       expect(outfit.ok()).toBeTruthy();
