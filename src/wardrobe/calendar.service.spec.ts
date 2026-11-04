@@ -83,14 +83,14 @@ describe('CalendarService', () => {
       ];
 
       const vm = await service.buildIndexViewModel(
-        '2026-03-01',
+        '2026-03-02',
         undefined,
         undefined,
         i18n(),
         'UTC',
       );
 
-      expect(vm.days[1].entries).toEqual([
+      expect(vm.days[0].entries).toEqual([
         {
           id: 1,
           worn: true,
@@ -117,7 +117,7 @@ describe('CalendarService', () => {
       entries = [entry(1, '2026-03-02', outfit(4, 'Office', []))];
 
       const vm = await service.buildIndexViewModel(
-        '2026-03-01',
+        '2026-03-02',
         undefined,
         undefined,
         i18n(),
@@ -126,12 +126,12 @@ describe('CalendarService', () => {
 
       expect(vm).not.toHaveProperty('weekLabel');
       expect(vm).not.toHaveProperty('outfits');
-      expect(vm.days[1].entries[0].outfit).not.toHaveProperty('chipHue');
+      expect(vm.days[0].entries[0].outfit).not.toHaveProperty('chipHue');
     });
 
     it('marks today by date, not by colour alone', async () => {
       const vm = await service.buildIndexViewModel(
-        '2026-03-01',
+        '2026-03-02',
         undefined,
         undefined,
         i18n(),
@@ -141,13 +141,13 @@ describe('CalendarService', () => {
       expect(vm.days.map((day) => day.isToday)).toEqual([
         false,
         false,
-        false,
         true,
         false,
         false,
         false,
+        false,
       ]);
-      expect(vm.days[3]).toMatchObject({
+      expect(vm.days[2]).toMatchObject({
         dayName: 'CALENDAR_DAY_WED',
         dayNum: 4,
         dateParam: '2026-03-04',
@@ -171,7 +171,28 @@ describe('CalendarService', () => {
         'UTC',
       );
 
-      expect(vm.days[0].dateParam).toBe('2026-03-01');
+      expect(vm.days[0].dateParam).toBe('2026-03-02');
+    });
+
+    it('starts the week on Monday, from any day of it', async () => {
+      for (const day of ['2026-03-02', '2026-03-05', '2026-03-08']) {
+        const vm = await service.buildIndexViewModel(
+          day,
+          undefined,
+          undefined,
+          i18n(),
+          'UTC',
+        );
+
+        expect(vm.days[0]).toMatchObject({
+          dateParam: '2026-03-02',
+          dayName: 'CALENDAR_DAY_MON',
+        });
+        expect(vm.days[6]).toMatchObject({
+          dateParam: '2026-03-08',
+          dayName: 'CALENDAR_DAY_SUN',
+        });
+      }
     });
 
     it('lays out seven days in the week the clocks change', async () => {
@@ -179,7 +200,7 @@ describe('CalendarService', () => {
       expect(new Date('2026-03-29T12:00:00Z').getTimezoneOffset()).not.toBe(
         new Date('2026-03-28T12:00:00Z').getTimezoneOffset(),
       );
-      entries = [entry(1, '2026-04-04', outfit(4, 'Saturday', []))];
+      entries = [entry(1, '2026-03-29', outfit(4, 'Sunday', []))];
 
       const vm = await service.buildIndexViewModel(
         '2026-03-29',
@@ -190,20 +211,20 @@ describe('CalendarService', () => {
       );
 
       expect(vm.days.map((day) => day.dateParam)).toEqual([
+        '2026-03-23',
+        '2026-03-24',
+        '2026-03-25',
+        '2026-03-26',
+        '2026-03-27',
+        '2026-03-28',
         '2026-03-29',
-        '2026-03-30',
-        '2026-03-31',
-        '2026-04-01',
-        '2026-04-02',
-        '2026-04-03',
-        '2026-04-04',
       ]);
       expect(vm.days[6].entries.map((e) => e.id)).toEqual([1]);
       expect(calendarRepository.find).toHaveBeenCalledWith(
         expect.objectContaining({
           date: {
-            $gte: new Date('2026-03-29T00:00:00Z'),
-            $lt: new Date('2026-04-05T00:00:00Z'),
+            $gte: new Date('2026-03-23T00:00:00Z'),
+            $lt: new Date('2026-03-30T00:00:00Z'),
           },
         }),
         expect.anything(),
@@ -242,7 +263,7 @@ describe('CalendarService', () => {
 
       const vm = await week('Asia/Tokyo');
 
-      expect(vm.days[0].dateParam).toBe('2026-03-01');
+      expect(vm.days[6].dateParam).toBe('2026-03-01');
       expect(vm.monthLabel).toBe('March 2026');
     });
 
@@ -270,7 +291,7 @@ describe('CalendarService', () => {
   describe('the mini-month', () => {
     it('marks today, the shown week and the days outside the month', async () => {
       const vm = await service.buildIndexViewModel(
-        '2026-03-01',
+        '2026-03-02',
         undefined,
         undefined,
         i18n(),
@@ -281,32 +302,60 @@ describe('CalendarService', () => {
         cells.find((cell) => cell.dateParam === date)?.calCellClass;
 
       expect(classOf('2026-03-04')).toBe('cal-today');
-      expect(classOf('2026-03-01')).toBe('cal-in-week');
-      expect(classOf('2026-03-07')).toBe('cal-in-week');
-      expect(classOf('2026-03-08')).toBe('');
+      expect(classOf('2026-03-01')).toBe('');
+      expect(classOf('2026-03-02')).toBe('cal-in-week');
+      expect(classOf('2026-03-08')).toBe('cal-in-week');
+      expect(classOf('2026-03-09')).toBe('');
       expect(classOf('2026-04-04')).toBe('cal-out-month');
       expect(cells.filter((cell) => cell.isToday)).toHaveLength(1);
     });
 
     it('names each day in full and links it to its own week', async () => {
       const vm = await service.buildIndexViewModel(
-        '2026-03-01',
+        '2026-03-02',
         undefined,
         undefined,
         i18n(),
         'UTC',
       );
 
-      expect(vm.calendarWeeks[0].days[3]).toMatchObject({
+      expect(vm.calendarWeeks[1].days[2]).toMatchObject({
         dayNum: 4,
         dateParam: '2026-03-04',
         label: 'Wednesday 4 March',
       });
       expect(vm.weekdays[0]).toEqual({
+        name: 'CALENDAR_DAY_MON',
+        letter: 'CALENDAR_CAL_MON_LETTER',
+      });
+      expect(vm.weekdays[6]).toEqual({
         name: 'CALENDAR_DAY_SUN',
         letter: 'CALENDAR_CAL_SUN_LETTER',
       });
     });
+
+    it.each([
+      // Starts on a Monday: no row of the month before.
+      ['2026-06', '2026-06-01', 5],
+      // Starts on a Sunday, so a row of nearly all February days comes first.
+      ['2026-03', '2026-02-23', 6],
+      // February 2027 fills four rows exactly.
+      ['2027-02', '2027-02-01', 4],
+    ])(
+      'lays %s out in rows of Monday to Sunday',
+      async (month: string, firstCell: string, rows: number) => {
+        const vm = await service.buildIndexViewModel(
+          undefined,
+          month,
+          undefined,
+          i18n(),
+          'UTC',
+        );
+
+        expect(vm.calendarWeeks[0].days[0].dateParam).toBe(firstCell);
+        expect(vm.calendarWeeks).toHaveLength(rows);
+      },
+    );
 
     it.each([
       ['en', 'March 2026'],
@@ -317,7 +366,7 @@ describe('CalendarService', () => {
       ['ru', 'Март 2026 г.'],
     ])('reads the month in %s as %p', async (lang: string, label: string) => {
       const vm = await service.buildIndexViewModel(
-        '2026-03-01',
+        '2026-03-02',
         undefined,
         undefined,
         i18n(lang),
@@ -327,7 +376,7 @@ describe('CalendarService', () => {
       expect(vm.monthLabel).toBe(label);
     });
 
-    it('shows the month of the day asked for, not of the Sunday before it', async () => {
+    it('shows the month of the day asked for, not of the Monday before it', async () => {
       const vm = await service.buildIndexViewModel(
         '2026-04-02',
         undefined,
@@ -337,7 +386,7 @@ describe('CalendarService', () => {
       );
 
       expect(vm.monthLabel).toBe('April 2026');
-      expect(vm.days[0].dateParam).toBe('2026-03-29');
+      expect(vm.days[0].dateParam).toBe('2026-03-30');
       expect(vm.monthOpen).toBe(false);
     });
 

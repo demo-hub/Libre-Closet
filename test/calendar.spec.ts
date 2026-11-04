@@ -166,7 +166,7 @@ test.describe('Calendar', () => {
     await expect(page.locator('#cal-month-label')).toHaveText('April 2026');
     await expect(month).not.toHaveAttribute('open');
     await expect(
-      page.getByRole('heading', { level: 2, name: 'Sunday 29' }),
+      page.getByRole('heading', { level: 2, name: 'Monday 30' }),
     ).toBeAttached();
     const thursday = page.getByRole('heading', {
       level: 2,
@@ -174,6 +174,25 @@ test.describe('Calendar', () => {
     });
     await expect(thursday).toBeFocused();
     await expect(thursday).toBeInViewport();
+  });
+
+  test('runs the week and the month from Monday to Sunday', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/calendar?week=2026-03-04');
+
+    const days = page.locator('#week-grid h2');
+    await expect(days.first()).toHaveAttribute('id', 'day-2026-03-02');
+    await expect(days.last()).toHaveAttribute('id', 'day-2026-03-08');
+    await expect(days.first()).toContainText('Monday');
+    await expect(days.last()).toContainText('Sunday');
+    await expect(page.locator('#cal-month thead th').first()).toContainText(
+      'Monday',
+    );
+    await expect(page.locator('#cal-month thead th').last()).toContainText(
+      'Sunday',
+    );
   });
 
   test('keeps the month open beside the week on a wide screen', async ({
