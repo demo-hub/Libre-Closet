@@ -174,9 +174,21 @@ export class CalendarService {
     const weekSchedule = await this.findWeek(anchor, userId);
     const weekBounds = this.findWeekBounds(weekSchedule, today);
     const shownMonth = parseMonthParam(calMonthParam);
+    const weekTitle = i18n.t('lang.WEEK_OF', {
+      args: {
+        date: new Intl.DateTimeFormat(intlLocale(i18n.lang), {
+          day: 'numeric',
+          month: 'long',
+          timeZone: 'UTC',
+        }).format(weekSchedule.weekStart),
+      },
+    });
 
     return {
-      pageTitle: i18n.t('lang.CALENDAR_PAGE_TITLE'),
+      pageTitle: `${weekTitle} – ${i18n.t('lang.CALENDAR_PAGE_TITLE')}`,
+      weekTitle,
+      prevWeekParam: this.toWeekParam(addDays(weekSchedule.weekStart, -7)),
+      nextWeekParam: this.toWeekParam(addDays(weekSchedule.weekStart, 7)),
       days: this.calDays(weekSchedule, i18n, weekBounds),
       monthOpen: shownMonth != null,
       ...this.getMiniMonthCal(
@@ -249,8 +261,10 @@ export class CalendarService {
       timeZone: 'UTC',
     });
     const gridCursor = startOfWeek(new Date(Date.UTC(calYear, calMonth, 1)));
-    const weeks: { days: MiniMonthDay[] }[] = [];
+    const weeks: { days: MiniMonthDay[]; isShownWeek: boolean }[] = [];
     for (let w = 0; w < 6; w++) {
+      const isShownWeek =
+        this.toWeekParam(gridCursor) === weekBounds.weekStartStr;
       const days: MiniMonthDay[] = [];
       for (let d = 0; d < 7; d++) {
         const date = new Date(gridCursor);
@@ -270,7 +284,7 @@ export class CalendarService {
         });
         gridCursor.setUTCDate(gridCursor.getUTCDate() + 1);
       }
-      weeks.push({ days });
+      weeks.push({ days, isShownWeek });
       if (gridCursor.getUTCMonth() !== calMonth && gridCursor.getUTCDay() === 1)
         break;
     }
