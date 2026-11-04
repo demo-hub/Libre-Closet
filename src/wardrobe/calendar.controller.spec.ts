@@ -12,10 +12,12 @@ describe('CalendarController', () => {
     buildIndexViewModel: jest.Mock;
     toggleWorn: jest.Mock;
     remove: jest.Mock;
+    buildDayViewModel: jest.Mock;
   };
   let reply: {
     header: jest.Mock;
     send: jest.Mock;
+    status: jest.Mock;
     redirect: jest.Mock;
     viewPartial: jest.Mock;
   };
@@ -32,11 +34,16 @@ describe('CalendarController', () => {
         days: [{ dateParam: '2026-03-03' }, { dateParam: '2026-03-04' }],
       }),
       toggleWorn: jest.fn().mockResolvedValue({ wornAt: new Date() }),
-      remove: jest.fn().mockResolvedValue(undefined),
+      remove: jest.fn().mockResolvedValue(new Date('2026-03-04T00:00:00Z')),
+      buildDayViewModel: jest.fn().mockResolvedValue({
+        dateParam: '2026-03-04',
+        entries: [],
+      }),
     };
     reply = {
       header: jest.fn(),
       send: jest.fn(),
+      status: jest.fn().mockReturnThis(),
       redirect: jest.fn(),
       viewPartial: jest.fn(),
     };
@@ -62,6 +69,7 @@ describe('CalendarController', () => {
         undefined,
         request(true, 'cal-day-2026-03-04'),
         {} as never,
+        reply as unknown as FastifyReply,
       );
 
       expect(vm.days.map((day) => day.focus)).toEqual([false, true]);
@@ -78,11 +86,24 @@ describe('CalendarController', () => {
           undefined,
           req,
           {} as never,
+          reply as unknown as FastifyReply,
         );
 
         expect(vm.days.some((day) => day.focus)).toBe(false);
       },
     );
+  });
+
+  it('tells the browser to keep no copy of the page', async () => {
+    await controller.index(
+      undefined,
+      undefined,
+      request(false),
+      {} as never,
+      reply as unknown as FastifyReply,
+    );
+
+    expect(reply.header).toHaveBeenCalledWith('Cache-Control', 'no-store');
   });
 
   describe('the time zone', () => {
@@ -92,6 +113,7 @@ describe('CalendarController', () => {
         undefined,
         { ...request(false), cookies },
         {} as never,
+        reply as unknown as FastifyReply,
       );
       return calendarService.buildIndexViewModel.mock.lastCall?.[4] as string;
     };
@@ -107,7 +129,7 @@ describe('CalendarController', () => {
   });
 
   describe('the worn toggle', () => {
-    it('answers htmx with the toggle, rendered from the stored state', async () => {
+    it('tells htmx the stored state, and leaves the button in the page', async () => {
       await controller.toggleWorn(
         3,
         { week: '2026-03-02', worn: 'true' },
@@ -120,10 +142,12 @@ describe('CalendarController', () => {
         undefined,
         true,
       );
-      expect(reply.viewPartial).toHaveBeenCalledWith(
-        'partials/calendar_worn_button',
-        expect.objectContaining({ entryId: 3, week: '2026-03-02', worn: true }),
+      expect(reply.header).toHaveBeenCalledWith(
+        'HX-Trigger',
+        '{"calendarWorn":{"worn":true}}',
       );
+      expect(reply.status).toHaveBeenCalledWith(204);
+      expect(reply.viewPartial).not.toHaveBeenCalled();
     });
 
     it('passes on an unmark', async () => {
@@ -141,13 +165,13 @@ describe('CalendarController', () => {
         undefined,
         false,
       );
-      expect(reply.viewPartial).toHaveBeenCalledWith(
-        'partials/calendar_worn_button',
-        expect.objectContaining({ worn: false }),
+      expect(reply.header).toHaveBeenCalledWith(
+        'HX-Trigger',
+        '{"calendarWorn":{"worn":false}}',
       );
     });
 
-    it('renders the state the entry ended in, not the one asked for', async () => {
+    it('reports the state the entry ended in, not the one asked for', async () => {
       calendarService.toggleWorn.mockResolvedValue({ wornAt: undefined });
 
       await controller.toggleWorn(
@@ -157,9 +181,9 @@ describe('CalendarController', () => {
         reply as unknown as FastifyReply,
       );
 
-      expect(reply.viewPartial).toHaveBeenCalledWith(
-        'partials/calendar_worn_button',
-        expect.objectContaining({ worn: false }),
+      expect(reply.header).toHaveBeenCalledWith(
+        'HX-Trigger',
+        '{"calendarWorn":{"worn":false}}',
       );
     });
 
@@ -250,18 +274,31 @@ describe('CalendarController', () => {
   );
 
   describe('removing an entry', () => {
-    it('sends htmx back to the week', async () => {
+    it("answers htmx with that entry's day, focused", async () => {
       await controller.remove(
         3,
+        // The stored day counts, whatever week an old page sent.
         { week: '2026-03-02' },
         request(true),
         reply as unknown as FastifyReply,
+        {} as never,
       );
 
       expect(calendarService.remove).toHaveBeenCalledWith(3, undefined);
+      expect(calendarService.buildDayViewModel).toHaveBeenCalledWith(
+        new Date('2026-03-04T00:00:00Z'),
+        undefined,
+        {},
+        'Europe/Lisbon',
+      );
+      expect(reply.viewPartial).toHaveBeenCalledWith('partials/calendar_day', {
+        dateParam: '2026-03-04',
+        entries: [],
+        focus: true,
+      });
       expect(reply.header).toHaveBeenCalledWith(
-        'HX-Redirect',
-        '/calendar?week=2026-03-02',
+        'HX-Trigger',
+        'calendarEntryRemoved',
       );
       expect(reply.redirect).not.toHaveBeenCalled();
     });
@@ -272,6 +309,7 @@ describe('CalendarController', () => {
         { week: '2026-03-02' },
         request(false),
         reply as unknown as FastifyReply,
+        {} as never,
       );
 
       expect(reply.header).not.toHaveBeenCalled();

@@ -55,21 +55,17 @@ Bugs found while working on this fork and left out of the change that found them
   - One tab stop for the month with the arrow keys moving between days (the WAI-ARIA date picker grid) would fix it.
   - Where: `views/calendar/index.hbs`, `#cal-month`.
   - Found in #32.
-- **Back can bring a removed entry back** (medium).
-  - `/calendar` sends no `Cache-Control`, so Chromium and Firefox show the old page from their cache after Back: a removed entry is there again, and its Remove answers 404 with the "request failed" toast. The worn toggle now does what the page shows, even an old one.
-  - Where: `src/wardrobe/calendar.controller.ts`, `index`.
-  - Found in #32.
-- **Removing an entry reloads the whole page** (low).
-  - The route answers htmx with `HX-Redirect`, so focus and the scroll position are lost.
-  - Where: `src/wardrobe/calendar.controller.ts`, `remove`.
-  - Found in #32.
 - **There is no previous week, next week or today control, and nothing names the week shown** (low).
   - Weeks change only through the month's days, the page title is the same for every week, and a change of week is not announced.
   - The month marks the shown week with a ring alone, which a screen reader does not report.
   - Found in #32.
+- **Back can show an entry whose outfit was deleted** (low).
+  - Deleting an outfit also removes its calendar entries, but htmx's snapshot of the calendar still holds them, so Back shows them and Remove answers 404 with the "request failed" toast. A removal on the calendar itself drops those snapshots (`public/js/calendar.js`); deleting an outfit does not.
+  - Where: the outfit delete route in `src/wardrobe/outfit.controller.ts`.
+  - Found in 1.5-c.
 - **The worn toggle may move the VoiceOver cursor on iOS** (low, unconfirmed).
-  - Safari does not focus a button on a tap, so htmx has no focus to restore, and the `outerHTML` swap removes the node VoiceOver is on. Playwright's WebKit focuses the button, so this needs a device to check.
-  - A fix would keep the button and change only its `aria-pressed` and icon.
+  - Safari does not focus a button on a tap, and an `outerHTML` swap removed the node VoiceOver was on. Since 1.5-c the button stays in the page and only its `aria-pressed` changes, which should settle it, but Playwright's WebKit focuses the button, so only a device can tell.
+  - Close this entry once someone checks it with VoiceOver on an iPhone.
   - Where: `views/partials/calendar_worn_button.hbs`.
   - Found in #32.
 

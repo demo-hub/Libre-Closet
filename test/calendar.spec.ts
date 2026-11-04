@@ -2,6 +2,7 @@ import {
   test,
   expect,
   type APIRequestContext,
+  type Page,
   type TestInfo,
 } from '@playwright/test';
 
@@ -78,14 +79,15 @@ test.describe('Calendar', () => {
     const chip = page.getByRole('group', { name, exact: true });
     const worn = chip.getByRole('button', { name: 'Worn' });
     await expect(worn).toHaveAttribute('aria-pressed', 'false');
+    await expect(chip.locator('svg').last()).toBeVisible();
+    await worn.evaluate((b) => (b.dataset.sameNode = 'true'));
 
     await worn.focus();
     await page.keyboard.press('Enter');
     await expect(worn).toHaveAttribute('aria-pressed', 'true');
     await expect(worn).toBeFocused();
-    const toggle = chip.locator('form[action$="/worn"]');
-    await expect(toggle).toHaveAttribute('hx-target', 'this');
-    await expect(toggle).toHaveAttribute('hx-swap', /^outerHTML /);
+    // The same node, so a screen reader's cursor has nothing to lose its place on.
+    expect(await worn.evaluate((b) => b.dataset.sameNode)).toBe('true');
 
     await page.reload();
     await expect(worn).toHaveAttribute('aria-pressed', 'true');
@@ -94,6 +96,10 @@ test.describe('Calendar', () => {
     await page.keyboard.press('Space');
     await expect(worn).toHaveAttribute('aria-pressed', 'false');
     await expect(worn).toBeFocused();
+    await worn.press('Enter');
+    await expect(worn).toHaveAttribute('aria-pressed', 'true');
+    await worn.press('Enter');
+    await expect(worn).toHaveAttribute('aria-pressed', 'false');
     await page.reload();
     await expect(worn).toHaveAttribute('aria-pressed', 'false');
   });
@@ -137,9 +143,136 @@ test.describe('Calendar', () => {
       expect(dialog.message()).toBe('Remove this scheduled outfit?');
       void dialog.accept();
     });
+    await page.evaluate(() => (window.scrollTo(0, 40), (window['same'] = 1)));
     await remove.click();
     await expect(chip).toHaveCount(0);
     await expect(page).toHaveURL(`/calendar?week=${day}`);
+    await expect(page.locator(`#day-${day}`)).toBeFocused();
+    expect(await page.evaluate(() => window['same'] as number)).toBe(1);
+  });
+
+  test.describe('in French', () => {
+    test.use({ locale: 'fr-FR' });
+
+    test('removes one entry and keeps the rest of the day, in your language', async ({
+      page,
+    }, info) => {
+      const name = unique(info, 'Goes');
+      const kept = unique(info, 'Stays');
+      const day = today();
+      await schedule(page.request, name, day);
+      await schedule(page.request, kept, day);
+      await page.goto(`/calendar?week=${day}`);
+
+      page.once('dialog', (dialog) => void dialog.accept());
+      await page
+        .getByRole('group', { name, exact: true })
+        .getByRole('button', { name: 'Retirer du planning' })
+        .click();
+
+      await expect(page.getByRole('group', { name, exact: true })).toHaveCount(
+        0,
+      );
+      const stays = page.getByRole('group', { name: kept, exact: true });
+      await expect(stays.getByRole('button', { name: 'Portée' })).toBeVisible();
+      await expect(page.locator(`#day-${day} .badge`)).toHaveText(
+        "Aujourd'hui",
+      );
+    });
+  });
+
+  test('Back leaves the page a removal happened on, rather than undoing it', async ({
+    page,
+  }, info) => {
+    const name = unique(info, 'No entry');
+    const day = today();
+    await schedule(page.request, name, day);
+    await page.goto('/about');
+    await page.goto(`/calendar?week=${day}`);
+
+    page.once('dialog', (dialog) => void dialog.accept());
+    await page
+      .getByRole('group', { name, exact: true })
+      .getByRole('button', { name: 'Remove from calendar' })
+      .click();
+    await expect(page.getByRole('group', { name, exact: true })).toHaveCount(0);
+
+    await page.goBack();
+    await expect(page).toHaveURL('/about');
+  });
+
+  test.describe('after an entry is removed', () => {
+    const removeIt = async (page: Page, name: string) => {
+      page.once('dialog', (dialog) => void dialog.accept());
+      await page
+        .getByRole('group', { name, exact: true })
+        .getByRole('button', { name: 'Remove from calendar' })
+        .click();
+      await expect(page.getByRole('group', { name, exact: true })).toHaveCount(
+        0,
+      );
+    };
+
+    test('Back from another site page does not bring it back', async ({
+      page,
+    }, info) => {
+      const name = unique(info, 'Back full');
+      const day = today();
+      await schedule(page.request, name, day);
+      await page.goto(`/calendar?week=${day}`);
+      await removeIt(page, name);
+
+      await page.goto('/about');
+      await page.goBack();
+
+      await expect(page).toHaveURL(`/calendar?week=${day}`);
+      await expect(page.locator('#week-grid')).toBeVisible();
+      await expect(page.getByRole('group', { name, exact: true })).toHaveCount(
+        0,
+      );
+    });
+
+    test('Back from a link on the page does not bring it back', async ({
+      page,
+    }, info) => {
+      const name = unique(info, 'Back boosted');
+      const day = today();
+      await schedule(page.request, name, day);
+      await page.goto(`/calendar?week=${day}`);
+      await removeIt(page, name);
+
+      await page.getByRole('link', { name: 'Build outfit' }).first().click();
+      await expect(page).toHaveURL(/\/outfits\/new/);
+      await page.goBack();
+
+      await expect(page).toHaveURL(`/calendar?week=${day}`);
+      await expect(page.locator('#week-grid')).toBeVisible();
+      await expect(page.getByRole('group', { name, exact: true })).toHaveCount(
+        0,
+      );
+    });
+
+    test('Back to the same week at another address does not bring it back', async ({
+      page,
+    }, info) => {
+      await page.setViewportSize({ width: 1280, height: 800 });
+      const name = unique(info, 'Back same week');
+      const day = today();
+      await schedule(page.request, name, day);
+      await page.goto('/about');
+      await page.goto('/calendar');
+      await page.locator(`#cal-day-${day}`).click();
+      await expect(page).toHaveURL(new RegExp(`\\?week=${day}#day-${day}$`));
+      await removeIt(page, name);
+
+      await page.goBack();
+
+      await expect(page).toHaveURL('/calendar');
+      await expect(page.locator('#week-grid')).toBeVisible();
+      await expect(page.getByRole('group', { name, exact: true })).toHaveCount(
+        0,
+      );
+    });
   });
 
   test('moves by month and keeps the month open on a phone', async ({
