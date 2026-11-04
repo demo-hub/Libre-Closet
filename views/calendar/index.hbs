@@ -1,7 +1,17 @@
 {{>navbar}}
 
 <main id="main" tabindex="-1" class="page">
-  <h1 class="sr-only">{{t 'lang.CALENDAR_PAGE_TITLE'}}</h1>
+  {{!-- The links keep stable ids: htmx gives focus back by id after a boosted navigation. --}}
+  <div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+    <h1 id="cal-week-title" class="me-auto">{{weekTitle}}</h1>
+    <div class="flex items-center">
+      <a id="cal-prev-week" href="/calendar?week={{prevWeekParam}}" class="btn btn-ghost btn-circle" aria-label="{{t 'lang.PREVIOUS_WEEK'}}">{{icon "chevron-left" class="size-5"}}</a>
+      <a id="cal-today" href="/calendar" class="btn btn-ghost">{{t 'lang.TODAY'}}</a>
+      <a id="cal-next-week" href="/calendar?week={{nextWeekParam}}" class="btn btn-ghost btn-circle" aria-label="{{t 'lang.NEXT_WEEK'}}">{{icon "chevron-right" class="size-5"}}</a>
+    </div>
+  </div>
+  {{!-- Kept across a boosted navigation, or a screen reader would not announce what /js/calendar.js writes. --}}
+  <p id="cal-week-status" class="sr-only" role="status" hx-preserve></p>
 
   <div id="week-grid" class="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 lg:grid-cols-[20rem_repeat(3,minmax(0,1fr))]">
 
@@ -26,7 +36,7 @@
         </thead>
         <tbody>
           {{#each calendarWeeks}}
-          <tr>
+          <tr{{#if this.isShownWeek}} aria-current="true"{{/if}}>
             {{#each this.days}}
             <td class="p-0">
               <a id="cal-day-{{this.dateParam}}" href="/calendar?week={{this.dateParam}}#day-{{this.dateParam}}" aria-label="{{this.label}}"{{#if this.isToday}} aria-current="date"{{/if}} class="mx-auto flex aspect-square w-full max-w-11 items-center justify-center rounded-full text-sm {{this.calCellClass}}">{{this.dayNum}}</a>

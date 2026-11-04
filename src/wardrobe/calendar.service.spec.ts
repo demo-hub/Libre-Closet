@@ -1,4 +1,6 @@
+import { readFileSync } from 'fs';
 import type { I18nContext } from 'nestjs-i18n';
+import { join } from 'path';
 import { CalendarService } from './calendar.service';
 
 type Garment = { id: number; photo: { fileName: string } | null };
@@ -111,6 +113,49 @@ describe('CalendarService', () => {
         expect.anything(),
         expect.objectContaining({ orderBy: { id: 'ASC' } }),
       );
+    });
+
+    it.each([
+      ['en', 'Week of 2 March'],
+      ['de', 'Woche vom 2. März'],
+      ['fr', 'Semaine du 2 mars'],
+      ['ru', 'Неделя с 2 марта'],
+    ])('names the week in %s', async (lang: string, title: string) => {
+      const translations = JSON.parse(
+        readFileSync(join(__dirname, '..', 'i18n', lang, 'lang.json'), 'utf8'),
+      ) as Record<string, string>;
+      const vm = await service.buildIndexViewModel(
+        '2026-03-05',
+        undefined,
+        undefined,
+        {
+          lang,
+          t: (key: string, options?: { args: { date: string } }) =>
+            translations[key.replace('lang.', '')].replace(
+              '{date}',
+              options?.args.date ?? '',
+            ),
+        } as unknown as I18nContext,
+        'UTC',
+      );
+
+      expect(vm.weekTitle).toBe(title);
+      expect(vm.pageTitle).toBe(
+        `${title} – ${translations.CALENDAR_PAGE_TITLE}`,
+      );
+    });
+
+    it('links the weeks either side, across a month and a year', async () => {
+      const vm = await service.buildIndexViewModel(
+        '2026-12-30',
+        undefined,
+        undefined,
+        i18n(),
+        'UTC',
+      );
+
+      expect(vm.prevWeekParam).toBe('2026-12-21');
+      expect(vm.nextWeekParam).toBe('2027-01-04');
     });
 
     it('carries no hue, week label or outfit list', async () => {
@@ -308,6 +353,14 @@ describe('CalendarService', () => {
       expect(classOf('2026-03-09')).toBe('');
       expect(classOf('2026-04-04')).toBe('cal-out-month');
       expect(cells.filter((cell) => cell.isToday)).toHaveLength(1);
+      expect(vm.calendarWeeks.map((week) => week.isShownWeek)).toEqual([
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+      ]);
     });
 
     it('names each day in full and links it to its own week', async () => {
