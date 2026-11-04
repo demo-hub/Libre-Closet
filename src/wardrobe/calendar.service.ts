@@ -21,6 +21,9 @@ import { todayIn } from '../time-zone';
 
 const CHIP_THUMBNAILS = 3;
 
+/** Every language the app speaks starts its week on Monday: getUTCDay's numbers in that order. */
+const MONDAY_FIRST = [1, 2, 3, 4, 5, 6, 0];
+
 @Injectable()
 export class CalendarService {
   private readonly logger = new Logger(CalendarService.name);
@@ -56,7 +59,7 @@ export class CalendarService {
     private readonly userRepository: EntityRepository<User>,
   ) {}
 
-  /** The seven days from the Sunday on or before `anchorDate`, each with its entries in the order they were added. */
+  /** The seven days from the Monday on or before `anchorDate`, each with its entries in the order they were added. */
   async findWeek(anchorDate: Date, userId?: number): Promise<WeekSchedule> {
     const weekStart = startOfWeek(anchorDate);
     const weekEnd = addDays(weekStart, 7);
@@ -249,7 +252,7 @@ export class CalendarService {
         gridCursor.setUTCDate(gridCursor.getUTCDate() + 1);
       }
       weeks.push({ days });
-      if (gridCursor.getUTCMonth() !== calMonth && gridCursor.getUTCDay() === 0)
+      if (gridCursor.getUTCMonth() !== calMonth && gridCursor.getUTCDay() === 1)
         break;
     }
     return weeks;
@@ -312,9 +315,9 @@ export class CalendarService {
       // Intl writes month names in lower case in es, fr, it and ru; this one starts a line.
       monthLabel:
         monthLabel.charAt(0).toLocaleUpperCase(locale) + monthLabel.slice(1),
-      weekdays: this.DAY_I18N_KEYS.map((key, i) => ({
-        name: i18n.t(`lang.${key}`),
-        letter: i18n.t(`lang.${this.DAY_LETTER_I18N_KEYS[i]}`),
+      weekdays: MONDAY_FIRST.map((day) => ({
+        name: i18n.t(`lang.${this.DAY_I18N_KEYS[day]}`),
+        letter: i18n.t(`lang.${this.DAY_LETTER_I18N_KEYS[day]}`),
       })),
       calendarWeeks: this.buildCalendarWeeks(
         calYear,
@@ -362,12 +365,12 @@ export class CalendarService {
 // Pure date helpers (no external deps)
 // ---------------------------------------------------------------------------
 
-/** Returns the Sunday of the week containing `d` at midnight UTC. */
+/** Returns the Monday of the week containing `d` at midnight UTC. */
 function startOfWeek(d: Date): Date {
   const result = new Date(
     Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
   );
-  result.setUTCDate(result.getUTCDate() - result.getUTCDay());
+  result.setUTCDate(result.getUTCDate() - ((result.getUTCDay() + 6) % 7));
   return result;
 }
 
