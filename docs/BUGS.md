@@ -50,15 +50,6 @@ Bugs found while working on this fork and left out of the change that found them
 
 ## Calendar
 
-- **Up to 42 links stand between the keyboard and the week** (medium).
-  - On a wide screen the month is open beside the week and each of its days is a link, so Tab passes every day of the month before it reaches the first day of the week.
-  - One tab stop for the month with the arrow keys moving between days (the WAI-ARIA date picker grid) would fix it.
-  - Where: `views/calendar/index.hbs`, `#cal-month`.
-  - Found in #32.
-- **There is no previous week, next week or today control, and nothing names the week shown** (low).
-  - Weeks change only through the month's days, the page title is the same for every week, and a change of week is not announced.
-  - The month marks the shown week with a ring alone, which a screen reader does not report.
-  - Found in #32.
 - **Back can show an entry whose outfit was deleted** (low).
   - Deleting an outfit also removes its calendar entries, but htmx's snapshot of the calendar still holds them, so Back shows them and Remove answers 404 with the "request failed" toast. A removal on the calendar itself drops those snapshots (`public/js/calendar.js`); deleting an outfit does not.
   - Where: the outfit delete route in `src/wardrobe/outfit.controller.ts`.
@@ -136,7 +127,8 @@ Bugs found while working on this fork and left out of the change that found them
   - `COPY_BY_HAND` and `COPY_BY_HAND_TOUCH` (#56);
   - `ERROR_400` (#64);
   - `MASK_SAVE_FAILED` (#68);
-  - the re-worded `PRIVACY_SELF_HOSTED_DATA_ITEMS` (1.5-a).
+  - the re-worded `PRIVACY_SELF_HOSTED_DATA_ITEMS` (1.5-a);
+  - `PREVIOUS_WEEK`, `NEXT_WEEK` and `WEEK_OF` (1.5-d).
 
 ## Tests and tooling
 

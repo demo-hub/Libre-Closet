@@ -37,10 +37,10 @@ test.describe('Calendar', () => {
     await schedule(page.request, name, day);
     await page.goto(`/calendar?week=${day}`);
 
-    await expect(page).toHaveTitle(/^Outfit calendar/);
+    await expect(page).toHaveTitle(/^Week of .+ – Outfit calendar/);
     await expect(
-      page.getByRole('heading', { level: 1, name: 'Outfit calendar' }),
-    ).toBeAttached();
+      page.getByRole('heading', { level: 1, name: /^Week of / }),
+    ).toBeVisible();
     const heading = page.locator('h2[aria-current="date"]');
     await expect(heading).toHaveCount(1);
     await expect(heading).toContainText('Today');
@@ -275,6 +275,123 @@ test.describe('Calendar', () => {
     });
   });
 
+  test('moves by week, says so, and comes back to today', async ({ page }) => {
+    await page.goto('/calendar?week=2026-03-04');
+    const heading = page.getByRole('heading', { level: 1 });
+    await expect(heading).toHaveText('Week of 2 March');
+    await expect(page).toHaveTitle(/^Week of 2 March/);
+    const status = page.locator('#cal-week-status');
+    await expect(status).toHaveRole('status');
+    await expect(status).toBeEmpty();
+    await status.evaluate((node) => (node.dataset.sameNode = 'true'));
+
+    const next = page.getByRole('link', { name: 'Next week' });
+    await next.focus();
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL('/calendar?week=2026-03-09');
+    await expect(heading).toHaveText('Week of 9 March');
+    await expect(page).toHaveTitle(/^Week of 9 March/);
+    await expect(next).toBeFocused();
+    await expect(status).toHaveText('Week of 9 March');
+    // The same node: a screen reader announces a change to a live region, not its arrival.
+    expect(await status.evaluate((node) => node.dataset.sameNode)).toBe('true');
+
+    await page.getByRole('link', { name: 'Previous week' }).click();
+    await expect(heading).toHaveText('Week of 2 March');
+    await page.getByRole('link', { name: 'Previous week' }).click();
+    await expect(page).toHaveURL('/calendar?week=2026-02-23');
+    await expect(heading).toHaveText('Week of 23 February');
+    await expect(status).toHaveText('Week of 23 February');
+
+    await page.getByRole('link', { name: 'Today', exact: true }).click();
+    await expect(page).toHaveURL('/calendar');
+    await expect(page.locator('h2[aria-current="date"]')).toHaveCount(1);
+  });
+
+  test('marks the shown week in the month for a screen reader', async ({
+    page,
+  }) => {
+    await page.goto('/calendar?week=2026-03-04');
+
+    const week = page.locator('#cal-month tbody tr[aria-current="true"]');
+    await expect(week).toHaveCount(1);
+    await expect(week.locator('a').first()).toHaveAttribute(
+      'id',
+      'cal-day-2026-03-02',
+    );
+    await expect(week.locator('a').last()).toHaveAttribute(
+      'id',
+      'cal-day-2026-03-08',
+    );
+  });
+
+  test('lets the keyboard past the month in one stop', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(browserName === 'webkit', 'Tab skips links in WebKit on a Mac');
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/calendar?week=2026-03-04');
+    await expect(page.getByRole('grid')).toBeVisible();
+    const stop = page.locator('#cal-day-2026-03-02');
+    await expect(stop).toHaveAttribute('tabindex', '0');
+
+    await page.locator('#cal-next-month').focus();
+    await page.keyboard.press('Tab');
+    await expect(stop).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(
+      page.locator('#week-grid [data-cal-day] a').first(),
+    ).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(stop).toBeFocused();
+
+    // The stop stays where the arrows leave it.
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Shift+Tab');
+    await expect(page.locator('#cal-day-2026-03-09')).toBeFocused();
+  });
+
+  test('moves round the month by arrow, and opens a day with Space', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/calendar?week=2026-03-04');
+    await expect(page.getByRole('grid')).toBeVisible();
+    await expect(page.getByRole('gridcell')).toHaveCount(42);
+    await expect(page.locator('#cal-month tbody a[tabindex="0"]')).toHaveCount(
+      1,
+    );
+
+    const focused = (date: string) =>
+      expect(page.locator(`#cal-day-${date}`)).toBeFocused();
+    await page.locator('#cal-day-2026-03-02').focus();
+    await page.keyboard.press('ArrowRight');
+    await focused('2026-03-03');
+    await page.keyboard.press('ArrowDown');
+    await focused('2026-03-10');
+    await page.keyboard.press('ArrowLeft');
+    await focused('2026-03-09');
+    await page.keyboard.press('ArrowUp');
+    await focused('2026-03-02');
+    await page.keyboard.press('ArrowLeft');
+    await focused('2026-03-01');
+    await page.keyboard.press('Home');
+    await focused('2026-02-23');
+    await page.keyboard.press('ArrowUp');
+    await focused('2026-02-23');
+    await page.keyboard.press('End');
+    await focused('2026-03-01');
+    await expect(page.locator('#cal-month tbody a[tabindex="0"]')).toHaveCount(
+      1,
+    );
+
+    await page.keyboard.press('Space');
+    await expect(page).toHaveURL(/\?week=2026-03-01#day-2026-03-01$/);
+    await expect(page.locator('#day-2026-03-01')).toBeFocused();
+  });
+
   test('moves by month and keeps the month open on a phone', async ({
     page,
   }) => {
@@ -388,6 +505,20 @@ test.describe('Calendar', () => {
 
   test.describe('without JavaScript', () => {
     test.use({ javaScriptEnabled: false });
+
+    test('keeps the month as plain links, and moves by week', async ({
+      page,
+    }) => {
+      await page.goto('/calendar?week=2026-03-04');
+
+      await expect(page.getByRole('grid')).toHaveCount(0);
+      await expect(page.locator('#cal-month tbody a[tabindex]')).toHaveCount(0);
+      await page.getByRole('link', { name: 'Next week' }).click();
+      await expect(page).toHaveURL('/calendar?week=2026-03-09');
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+        'Week of 9 March',
+      );
+    });
 
     test('marks worn and removes, landing back on the week', async ({
       page,
