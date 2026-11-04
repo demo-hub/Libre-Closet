@@ -30,6 +30,13 @@ const recommended = (matchingUrlPattern, overrides = {}) => ({
   assertions: { ...assertions, ...overrides },
 });
 
+// Photos are served at 1080 px into 182 px boxes (docs/BUGS.md).
+const photoPages = {
+  'is-crawlable': 'off',
+  'uses-responsive-images': 'warn',
+  'largest-contentful-paint': ['error', { maxNumericValue: 4500 }],
+};
+
 module.exports = {
   ci: {
     collect: {
@@ -45,7 +52,7 @@ module.exports = {
         '/wardrobe/new',
         '/outfits',
         // The week scripts/screenshots/seed.ts fills; the current one is empty.
-        '/calendar?week=2026-03-01',
+        '/calendar?week=2026-03-02',
       ].map((path) => origin + path),
       numberOfRuns: 3,
       settings: {
@@ -57,11 +64,12 @@ module.exports = {
         recommended(`^${origin}/(about|auth/login)?$`),
         // robots.txt keeps the app's own pages out of search engines.
         recommended(`^${origin}/wardrobe/new$`, { 'is-crawlable': 'off' }),
-        // Photos are served at 1080 px into 182 px boxes (docs/BUGS.md).
-        recommended(`^${origin}/(wardrobe|outfits|calendar\\?week=[\\d-]+)$`, {
-          'is-crawlable': 'off',
-          'uses-responsive-images': 'warn',
-          'largest-contentful-paint': ['error', { maxNumericValue: 4500 }],
+        recommended(`^${origin}/(wardrobe|outfits)$`, photoPages),
+        recommended(`^${origin}/calendar\\?week=[\\d-]+$`, {
+          ...photoPages,
+          // no-store keeps Back from showing an entry already removed, and it
+          // is what the audit marks down (calendar.controller.ts).
+          'bf-cache': 'off',
         }),
       ],
     },
