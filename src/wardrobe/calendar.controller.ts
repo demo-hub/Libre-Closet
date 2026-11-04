@@ -56,6 +56,10 @@ export class CalendarController {
     return (req['user'] as Payload | undefined)?.userId;
   }
 
+  private timeZone(req: FastifyRequest): string {
+    return viewerTimeZone(req.cookies?.tz, this.configService.get('TZ'));
+  }
+
   @Get()
   @Render('calendar/index')
   async index(
@@ -63,13 +67,16 @@ export class CalendarController {
     @Query('calMonth') calMonthParam: string | undefined,
     @Req() req: FastifyRequest,
     @I18n() i18n: I18nContext,
+    @Res({ passthrough: true }) reply: FastifyReply,
   ) {
+    // Back must not show a copy from before an entry was removed.
+    reply.header('Cache-Control', 'no-store');
     const viewModel = await this.calendarService.buildIndexViewModel(
       weekParam,
       calMonthParam,
       this.userId(req),
       i18n,
-      viewerTimeZone(req.cookies?.tz, this.configService.get<string>('TZ')),
+      this.timeZone(req),
     );
     // htmx names the link it followed; a day picked in the month takes the focus to that day.
     const picked = /^cal-day-(\d{4}-\d{2}-\d{2})$/.exec(
@@ -114,15 +121,23 @@ export class CalendarController {
     @Body() body: { week?: string } | undefined,
     @Req() req: FastifyRequest,
     @Res() reply: FastifyReply,
+    @I18n() i18n: I18nContext,
   ) {
-    await this.calendarService.remove(id, this.userId(req));
-    const week = validWeek(body?.week);
+    const date = await this.calendarService.remove(id, this.userId(req));
     if (req.headers['hx-request'] === 'true') {
-      // No #day here: htmx sets location, and the same URL plus a fragment would not reload.
-      reply.header('HX-Redirect', calendarUrl(week));
-      return reply.send();
+      const day = await this.calendarService.buildDayViewModel(
+        date,
+        this.userId(req),
+        i18n,
+        this.timeZone(req),
+      );
+      reply.header('HX-Trigger', 'calendarEntryRemoved');
+      return reply.viewPartial('partials/calendar_day', {
+        ...day,
+        focus: true,
+      });
     }
-    return reply.redirect(dayUrl(week), 303);
+    return reply.redirect(dayUrl(validWeek(body?.week)), 303);
   }
 
   @Post(':id/worn')
@@ -141,11 +156,11 @@ export class CalendarController {
     );
 
     if (req.headers['hx-request'] === 'true') {
-      return reply.viewPartial('partials/calendar_worn_button', {
-        entryId: id,
-        week: week ?? '',
-        worn: entry.wornAt != null,
-      });
+      reply.header(
+        'HX-Trigger',
+        JSON.stringify({ calendarWorn: { worn: entry.wornAt != null } }),
+      );
+      return reply.status(204).send();
     }
 
     return reply.redirect(dayUrl(week), 303);

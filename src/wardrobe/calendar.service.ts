@@ -135,9 +135,12 @@ export class CalendarService {
     return entry;
   }
 
-  async remove(id: number, userId?: number): Promise<void> {
+  /** Removes an entry and says which day it was on. */
+  async remove(id: number, userId?: number): Promise<Date> {
     const entry = await this.findOneOwned(id, userId);
+    const { date } = entry;
     await this.calendarRepository.getEntityManager().removeAndFlush(entry);
+    return date;
   }
 
   /** Sets wornAt to now or clears it; with no `worn` given, flips it. */
@@ -186,6 +189,22 @@ export class CalendarService {
       ),
     };
   }
+
+  /** One day of the week view, as it stands now. */
+  async buildDayViewModel(
+    date: Date,
+    userId: number | undefined,
+    i18n: I18nContext,
+    timeZone: string,
+  ) {
+    const weekSchedule = await this.findWeek(date, userId);
+    const weekBounds = this.findWeekBounds(weekSchedule, todayIn(timeZone));
+    const dateParam = this.toWeekParam(date);
+    return this.calDays(weekSchedule, i18n, weekBounds).find(
+      (day) => day.dateParam === dateParam,
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
