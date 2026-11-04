@@ -438,6 +438,29 @@ describe('CalendarService', () => {
     );
   });
 
+  describe('one day, after a removal', () => {
+    it('is that day with what is left on it', async () => {
+      entries = [
+        entry(1, '2026-03-04', outfit(4, 'Stays', [])),
+        entry(2, '2026-03-05', outfit(5, 'Another day', [])),
+      ];
+
+      const day = await service.buildDayViewModel(
+        new Date('2026-03-04T00:00:00Z'),
+        undefined,
+        i18n(),
+        'UTC',
+      );
+
+      expect(day).toMatchObject({
+        dateParam: '2026-03-04',
+        dayName: 'CALENDAR_DAY_WED',
+        isToday: true,
+      });
+      expect(day?.entries.map((e) => e.id)).toEqual([1]);
+    });
+  });
+
   describe('marking an entry worn', () => {
     const stored = (wornAt?: Date) => {
       const found = { id: 1, owner: null, wornAt };

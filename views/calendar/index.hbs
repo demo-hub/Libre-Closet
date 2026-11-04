@@ -41,43 +41,7 @@
     <script>{ const month = document.getElementById('cal-month'); if (!month.dataset.ready) { month.dataset.ready = 'true'; if (matchMedia('(min-width: 64rem)').matches) month.open = true; } }</script>
 
     {{#each days}}
-    <div role="group" aria-labelledby="day-{{this.dateParam}}" class="flex flex-col gap-2 rounded-box border border-base-300 bg-base-100 p-3">
-      <h2 id="day-{{this.dateParam}}" class="flex flex-wrap items-center gap-x-1.5 gap-y-1 font-sans"{{#if this.isToday}} aria-current="date"{{/if}}{{#if this.focus}} tabindex="-1" autofocus{{/if}}>
-        <span class="text-sm font-medium text-graphite">{{this.dayName}}</span>
-        <span class="text-sm font-semibold tabular-nums">{{this.dayNum}}</span>
-        {{#if this.isToday}}<span class="badge">{{t 'lang.TODAY'}}</span>{{/if}}
-      </h2>
-
-      {{#each this.entries}}
-      <div class="cal-chip" role="group" aria-labelledby="cal-entry-{{this.id}}-name">
-        <a class="cal-chip__main" href="/outfits/{{this.outfit.id}}/edit?returnTo=/calendar&returnToWeek={{../dateParam}}">
-          <span class="flex items-center" aria-hidden="true">
-            {{#each this.outfit.thumbnails}}
-            {{#if this}}
-            <img src="/file/nobg/{{this}}" alt="" class="cal-chip__thumb object-contain" />
-            {{else}}
-            <span class="cal-chip__thumb text-graphite">{{icon "hanger" class="size-5"}}</span>
-            {{/if}}
-            {{else}}
-            <span class="cal-chip__thumb text-graphite">{{icon "hanger" class="size-5"}}</span>
-            {{/each}}
-            {{#if this.outfit.moreGarments}}<span class="ms-1.5 text-sm text-graphite">+{{this.outfit.moreGarments}}</span>{{/if}}
-          </span>
-          <span id="cal-entry-{{this.id}}-name" class="cal-chip__name font-medium hyphens-auto wrap-anywhere">{{#if this.outfit.name}}{{this.outfit.name}}{{else}}{{t 'lang.UNTITLED_OUTFIT'}}{{/if}}</span>
-        </a>
-        <div class="flex flex-wrap items-center gap-2">
-          {{> calendar_worn_button entryId=this.id week=../dateParam worn=this.worn}}
-          <form method="post" action="/calendar/{{this.id}}/delete" class="ms-auto"
-            hx-post="/calendar/{{this.id}}/delete" hx-confirm="{{t 'lang.CALENDAR_DELETE_CONFIRM'}}">
-            <input type="hidden" name="week" value="{{../dateParam}}" />
-            <button type="submit" class="btn btn-ghost btn-circle" aria-label="{{t 'lang.REMOVE_FROM_CALENDAR'}}">{{icon "x-mark" class="size-5"}}</button>
-          </form>
-        </div>
-      </div>
-      {{/each}}
-
-      <a href="/outfits/new?scheduleDate={{this.dateParam}}&returnTo=/calendar" class="btn btn-ghost mt-auto h-auto min-h-11 self-start py-2 text-start">{{icon "plus" class="size-5"}}{{t 'lang.BUILD_OUTFIT'}}</a>
-    </div>
+    {{> calendar_day}}
     {{/each}}
 
   </div>
