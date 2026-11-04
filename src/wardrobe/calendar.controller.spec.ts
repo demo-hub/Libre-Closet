@@ -1,4 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ConditionalAuthGuard } from '../auth/conditional-auth.guard';
@@ -42,7 +43,10 @@ describe('CalendarController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CalendarController],
-      providers: [{ provide: CalendarService, useValue: calendarService }],
+      providers: [
+        { provide: CalendarService, useValue: calendarService },
+        { provide: ConfigService, useValue: { get: () => 'Europe/Lisbon' } },
+      ],
     })
       .overrideGuard(ConditionalAuthGuard)
       .useValue({ canActivate: () => true })
@@ -79,6 +83,27 @@ describe('CalendarController', () => {
         expect(vm.days.some((day) => day.focus)).toBe(false);
       },
     );
+  });
+
+  describe('the time zone', () => {
+    const zoneFor = async (cookies: Record<string, string>) => {
+      await controller.index(
+        undefined,
+        undefined,
+        { ...request(false), cookies },
+        {} as never,
+      );
+      return calendarService.buildIndexViewModel.mock.lastCall?.[4] as string;
+    };
+
+    it("uses the browser's", async () => {
+      expect(await zoneFor({ tz: 'Asia/Tokyo' })).toBe('Asia/Tokyo');
+    });
+
+    it('falls back to the instance setting for a missing or unknown one', async () => {
+      expect(await zoneFor({})).toBe('Europe/Lisbon');
+      expect(await zoneFor({ tz: 'Mars/Olympus' })).toBe('Europe/Lisbon');
+    });
   });
 
   describe('the worn toggle', () => {

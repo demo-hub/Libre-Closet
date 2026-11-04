@@ -87,6 +87,7 @@ describe('CalendarService', () => {
         undefined,
         undefined,
         i18n(),
+        'UTC',
       );
 
       expect(vm.days[1].entries).toEqual([
@@ -120,6 +121,7 @@ describe('CalendarService', () => {
         undefined,
         undefined,
         i18n(),
+        'UTC',
       );
 
       expect(vm).not.toHaveProperty('weekLabel');
@@ -133,6 +135,7 @@ describe('CalendarService', () => {
         undefined,
         undefined,
         i18n(),
+        'UTC',
       );
 
       expect(vm.days.map((day) => day.isToday)).toEqual([
@@ -165,6 +168,7 @@ describe('CalendarService', () => {
         undefined,
         undefined,
         i18n(),
+        'UTC',
       );
 
       expect(vm.days[0].dateParam).toBe('2026-03-01');
@@ -182,6 +186,7 @@ describe('CalendarService', () => {
         undefined,
         undefined,
         i18n(),
+        'UTC',
       );
 
       expect(vm.days.map((day) => day.dateParam)).toEqual([
@@ -206,6 +211,62 @@ describe('CalendarService', () => {
     });
   });
 
+  describe("today, in the viewer's time zone", () => {
+    const week = async (timeZone: string, param?: string) =>
+      service.buildIndexViewModel(
+        param,
+        undefined,
+        undefined,
+        i18n(),
+        timeZone,
+      );
+    const today = (vm: Awaited<ReturnType<typeof week>>) =>
+      vm.days.filter((day) => day.isToday).map((day) => day.dateParam);
+
+    it('has moved on in Tokyo before it has in UTC', async () => {
+      jest.setSystemTime(new Date('2026-03-04T23:30:00Z'));
+
+      expect(today(await week('UTC'))).toEqual(['2026-03-04']);
+      expect(today(await week('Asia/Tokyo'))).toEqual(['2026-03-05']);
+    });
+
+    it('has not moved on in New York when it has in UTC', async () => {
+      jest.setSystemTime(new Date('2026-03-05T01:00:00Z'));
+
+      expect(today(await week('America/New_York'))).toEqual(['2026-03-04']);
+    });
+
+    it("opens on the viewer's week and month", async () => {
+      // Sunday 1 March in Tokyo, still 28 February in UTC.
+      jest.setSystemTime(new Date('2026-02-28T20:00:00Z'));
+
+      const vm = await week('Asia/Tokyo');
+
+      expect(vm.days[0].dateParam).toBe('2026-03-01');
+      expect(vm.monthLabel).toBe('March 2026');
+    });
+
+    it('falls back to its own today for an unreadable week', async () => {
+      jest.setSystemTime(new Date('2026-03-04T23:30:00Z'));
+
+      expect(today(await week('Asia/Tokyo', 'garbage'))).toEqual([
+        '2026-03-05',
+      ]);
+    });
+
+    it('marks it in the month too', async () => {
+      jest.setSystemTime(new Date('2026-03-04T23:30:00Z'));
+
+      const cells = (await week('Asia/Tokyo')).calendarWeeks.flatMap(
+        (row) => row.days,
+      );
+
+      expect(cells.filter((d) => d.isToday).map((d) => d.dateParam)).toEqual([
+        '2026-03-05',
+      ]);
+    });
+  });
+
   describe('the mini-month', () => {
     it('marks today, the shown week and the days outside the month', async () => {
       const vm = await service.buildIndexViewModel(
@@ -213,6 +274,7 @@ describe('CalendarService', () => {
         undefined,
         undefined,
         i18n(),
+        'UTC',
       );
       const cells = vm.calendarWeeks.flatMap((week) => week.days);
       const classOf = (date: string) =>
@@ -232,6 +294,7 @@ describe('CalendarService', () => {
         undefined,
         undefined,
         i18n(),
+        'UTC',
       );
 
       expect(vm.calendarWeeks[0].days[3]).toMatchObject({
@@ -258,6 +321,7 @@ describe('CalendarService', () => {
         undefined,
         undefined,
         i18n(lang),
+        'UTC',
       );
 
       expect(vm.monthLabel).toBe(label);
@@ -269,6 +333,7 @@ describe('CalendarService', () => {
         undefined,
         undefined,
         i18n(),
+        'UTC',
       );
 
       expect(vm.monthLabel).toBe('April 2026');
@@ -282,6 +347,7 @@ describe('CalendarService', () => {
         '2026-05',
         undefined,
         i18n(),
+        'UTC',
       );
 
       expect(vm.monthLabel).toBe('May 2026');
@@ -300,6 +366,7 @@ describe('CalendarService', () => {
         undefined,
         undefined,
         i18n(),
+        'UTC',
       );
 
       expect(vm.prevMonthWeekParam).toBe('2026-03-04');
@@ -313,6 +380,7 @@ describe('CalendarService', () => {
           calMonth,
           undefined,
           i18n(),
+          'UTC',
         );
 
         expect(vm.monthLabel).toBe('March 2026');

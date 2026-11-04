@@ -11,8 +11,9 @@ const form = (request: APIRequestContext, path: string, fields: string[][]) =>
     data: new URLSearchParams(fields).toString(),
   });
 
-/** The server keeps calendar days as UTC dates. */
-const today = () => new Date().toISOString().slice(0, 10);
+/** The date in the browser's zone, which is the runner's unless a test sets one. */
+const today = (timeZone?: string) =>
+  new Date().toLocaleDateString('en-CA', { timeZone });
 
 /** Every project writes to one database, so each test's outfit has a name of its own. */
 const unique = (info: TestInfo, what: string) =>
@@ -210,6 +211,28 @@ test.describe('Calendar', () => {
     await expect(page).toHaveURL(/\/calendar\?week=2026-03-01$/);
     await expect(month).not.toHaveAttribute('open');
   });
+
+  // At any moment at least one of these has a different date from UTC.
+  for (const timeZone of ['Pacific/Kiritimati', 'Pacific/Pago_Pago']) {
+    test.describe(`in ${timeZone}`, () => {
+      test.use({ timezoneId: timeZone });
+
+      test('marks and opens on the date it is there', async ({ page }) => {
+        // The first response is rendered before the browser has said its zone.
+        await page.goto('/about');
+        await page.goto('/calendar');
+
+        const day = today(timeZone);
+        await expect(page.locator('h2[aria-current="date"]')).toHaveAttribute(
+          'id',
+          `day-${day}`,
+        );
+        await expect(
+          page.locator('#cal-month a[aria-current="date"]'),
+        ).toHaveAttribute('id', `cal-day-${day}`);
+      });
+    });
+  }
 
   test.describe('without JavaScript', () => {
     test.use({ javaScriptEnabled: false });

@@ -77,6 +77,12 @@ https://nestjs-i18n.com/quick-start --}}
     {{!-- crossorigin, or each font is fetched twice. --}}
     <link rel="preload" href="/assets/fonts/inter-v20-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/assets/fonts/plus-jakarta-sans-v12-latin.woff2" as="font" type="font/woff2" crossorigin />
+    {{!-- Only the zone's name; the calendar works out "today" from it. --}}
+    <script>
+      try {
+        document.cookie = 'tz=' + encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone) + '; path=/; max-age=31536000; samesite=lax';
+      } catch (e) {}
+    </script>
     <script>
       window.KNOWN_COLORS = new Set({{{knownColors}}});
     </script>

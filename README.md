@@ -105,6 +105,7 @@ Defaults live in `.env` (baked into the image). Override them with real environm
 | --- | --- | --- |
 | `APP_NAME` | Display name | `Libre Closet` |
 | `DATA_PATH` | Directory for the SQLite DB and uploads | `./data` |
+| `TZ` | Time zone for "today" on the calendar, for a browser that has not said its own, such as `Europe/Lisbon` | `UTC` |
 | `SITE_URL` | Public address for share, canonical and preview links, such as `https://closet.example.com` | the address each visit came in on |
 | `AUTH_ENABLED` | Enable JWT accounts and login | `false` |
 | `DISABLE_REGISTRATION` | Disallow sign ups | `false` |

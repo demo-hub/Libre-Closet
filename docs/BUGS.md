@@ -67,10 +67,6 @@ Bugs found while working on this fork and left out of the change that found them
   - Weeks change only through the month's days, the page title is the same for every week, and a change of week is not announced.
   - The month marks the shown week with a ring alone, which a screen reader does not report.
   - Found in #32.
-- **"Today" is the server's date in UTC** (medium).
-  - Outside UTC the calendar marks and opens the wrong day for as many hours a day as the viewer's offset: from 20:00 in New York in summer, until 03:00 in Moscow.
-  - Where: `src/wardrobe/calendar.service.ts`, `findWeekBounds` and `parseWeekParam`.
-  - Found in #32.
 - **The worn toggle may move the VoiceOver cursor on iOS** (low, unconfirmed).
   - Safari does not focus a button on a tap, so htmx has no focus to restore, and the `outerHTML` swap removes the node VoiceOver is on. Playwright's WebKit focuses the button, so this needs a device to check.
   - A fix would keep the button and change only its `aria-pressed` and icon.
@@ -147,7 +143,8 @@ Bugs found while working on this fork and left out of the change that found them
   - the seven notification keys: `NOTIFICATIONS`, `NOTIFICATIONS_TURN_ON`, `NOTIFICATIONS_TURN_OFF`, `NOTIFICATIONS_ON`, `NOTIFICATIONS_OFF`, `NOTIFICATIONS_BLOCKED`, `NOTIFICATIONS_FAILED` (#54);
   - `COPY_BY_HAND` and `COPY_BY_HAND_TOUCH` (#56);
   - `ERROR_400` (#64);
-  - `MASK_SAVE_FAILED` (#68).
+  - `MASK_SAVE_FAILED` (#68);
+  - the re-worded `PRIVACY_SELF_HOSTED_DATA_ITEMS` (1.5-a).
 
 ## Tests and tooling
 

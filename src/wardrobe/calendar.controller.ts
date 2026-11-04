@@ -13,12 +13,14 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { I18n, I18nContext } from 'nestjs-i18n';
 import { ConditionalAuthGuard } from '../auth/conditional-auth.guard';
 import { Payload } from '../auth/dto/payload.dto';
 import { CalendarService } from './calendar.service';
 import { parseDateInput } from './date-input';
+import { viewerTimeZone } from '../time-zone';
 
 /** The YYYY-MM-DD week a form came from, or undefined for anything else. */
 function validWeek(week: unknown): string | undefined {
@@ -45,7 +47,10 @@ function parseWorn(worn: unknown): boolean | undefined {
 @UseGuards(ConditionalAuthGuard)
 @Controller('calendar')
 export class CalendarController {
-  constructor(private readonly calendarService: CalendarService) {}
+  constructor(
+    private readonly calendarService: CalendarService,
+    private readonly configService: ConfigService,
+  ) {}
 
   private userId(req: FastifyRequest): number | undefined {
     return (req['user'] as Payload | undefined)?.userId;
@@ -64,6 +69,7 @@ export class CalendarController {
       calMonthParam,
       this.userId(req),
       i18n,
+      viewerTimeZone(req.cookies?.tz, this.configService.get<string>('TZ')),
     );
     // htmx names the link it followed; a day picked in the month takes the focus to that day.
     const picked = /^cal-day-(\d{4}-\d{2}-\d{2})$/.exec(
