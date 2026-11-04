@@ -39,6 +39,10 @@ Bugs found while working on this fork and left out of the change that found them
   - Found in #28.
 - **A wardrobe whose garments are all archived says "No garments yet"** (low).
   - Found in #28.
+- **Photos are served at full size into small boxes** (low).
+  - Grid photos are 1080 px in boxes of about 182 px, so `uses-responsive-images` fails. It is only a warning on `/wardrobe`, `/outfits` and the calendar until this is fixed.
+  - Where: `lighthouserc.js` (`photoPages`).
+  - Found in #81.
 - **Cycling a garment or adding a row in the outfit builder is silent to screen readers** (low).
   - Focus stays on a button still named "Next", and the new garment, or the new row, is not announced.
   - Where: `views/partials/outfit_row.hbs`, Previous and Next; `views/outfits/form.hbs`, Add row. `#outfit-rows-status` could say it.
