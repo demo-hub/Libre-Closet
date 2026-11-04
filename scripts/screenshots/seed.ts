@@ -11,7 +11,7 @@ type Fixture = {
 };
 
 /** The week the calendar snapshots show: in the past, so it never contains today. */
-export const SEED_WEEK = '2026-03-01';
+export const SEED_WEEK = '2026-03-02';
 
 const fixtures = join(__dirname, 'fixtures');
 

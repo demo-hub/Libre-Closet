@@ -72,10 +72,6 @@ Bugs found while working on this fork and left out of the change that found them
   - A fix would keep the button and change only its `aria-pressed` and icon.
   - Where: `views/partials/calendar_worn_button.hbs`.
   - Found in #32.
-- **The week starts on Sunday in every language** (low).
-  - The calendars of all six languages the app speaks (en-GB, de, es, fr, it, ru) start on Monday.
-  - Where: `startOfWeek` and `buildCalendarWeeks` in `src/wardrobe/calendar.service.ts`, and the weekday headings.
-  - Found in #32.
 
 ## Shell and PWA
 
