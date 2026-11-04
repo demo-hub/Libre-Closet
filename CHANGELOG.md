@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-11-04
+
+#### Added
+
+- Previous week, Next week and Today buttons on the calendar, with a heading and page title that name the week shown, and a change of week announced to screen readers
+- `TZ` sets the time zone for a browser that has not said its own yet, such as `Europe/Lisbon`. Without it, that is UTC. A value the app cannot use is reported in the log and counts as unset
+
+#### Changed
+
+- The calendar's week starts on Monday in every language, as the calendars of all six languages do
+- The calendar's month is one stop for the Tab key: move between its days with the arrow keys, Home and End, and open one with Enter or Space. Without JavaScript its days are plain links, as before
+- Removing an outfit from the calendar updates that day without reloading the page, and the focus moves to the day's heading
+- Your browser now keeps a cookie naming its time zone, which the privacy page lists. It holds only the zone's name
+
+#### Fixed
+
+- "Today" on the calendar was the server's date in UTC, so outside UTC the wrong day was marked and opened for part of each day. It is now the date where you are. The first page of a first visit is drawn before your browser has said its zone, so it uses `TZ`
+- Back could bring a removed entry back, and its Remove then answered that the request failed
+- The month marked the shown week with a ring alone, which a screen reader does not report
+- The Worn button is no longer replaced when pressed, which should keep VoiceOver's cursor on it on iOS. That has not been checked on a device
+
 ## [1.4.0] - 2026-11-03
 
 #### Security
