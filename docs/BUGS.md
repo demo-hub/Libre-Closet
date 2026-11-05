@@ -70,6 +70,9 @@ Bugs found while working on this fork and left out of the change that found them
   - The stylesheet and the app's scripts are asked for with a content hash, so an older service worker's precache cannot answer them. `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `manifest.json` and `assets/icons/` keep their bare URLs and come from the old precache until the new worker takes over.
   - Where: `views/layout.hbs`, `workbox-config.js` (`manifestTransforms`), `src/asset-url.ts`.
   - Found in #55.
+- **Axe reports the install prompt's own markup** (low).
+  - With `PWA_ENABLED=true`, axe reports `button-name` inside `#pwa-install`, a third-party component, on desktop WebKit, and sometimes `region` on Mobile Chrome, depending on when the component has rendered. `test/a11y.spec.ts` and `test/push.spec.ts` exclude the element.
+  - Found in 1.6-f.
 - **Chrome logs "Transition was skipped" when Back follows a boosted navigation** (low).
   - This comes from htmx's global view transitions.
   - Found in #23.
@@ -136,9 +139,6 @@ Bugs found while working on this fork and left out of the change that found them
 
 ## Tests and tooling
 
-- **A local Playwright run writes into whatever app answers on :3000** (medium).
-  - `playwright.config.ts` reuses an existing server, and the smoke test creates garments, so a local run against your own instance adds test garments to your wardrobe.
-  - Found in #26.
 - **Bare `npx tsc` reports about 96 errors** (low).
   - The Nest build, Jest and ESLint pass, so the errors come from the standalone `tsc` configuration, not the code.
   - Found in #25.

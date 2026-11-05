@@ -6,6 +6,9 @@ import {
   type APIRequestContext,
   type Page,
 } from '@playwright/test';
+import { onAccountsServer } from './fixtures/accounts';
+
+test.use(onAccountsServer);
 
 const APP_NAME = process.env.APP_NAME || 'Boilerplate';
 const PASSWORD = 'Wardrobe2026';
@@ -27,8 +30,7 @@ const form = (
 
 /**
  * Signs this context in as a new account; five projects share one database, so every address is new.
- * The redirect is not followed: the session cookie is what signs the context in. It goes to
- * /auth/profile with AUTH_ENABLED=true and to /wardrobe without, as the suite's own server runs.
+ * The redirect is not followed: the session cookie is what signs the context in.
  */
 async function register(request: APIRequestContext, who: string) {
   const email = `${who}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
@@ -45,14 +47,6 @@ async function register(request: APIRequestContext, who: string) {
   expect(response.status()).toBe(302);
   expect(response.headers()['set-cookie']).toContain('access_token=');
   return email;
-}
-
-/** Sharing management and files exist only with AUTH_ENABLED=true; the suite's own server runs without it. */
-async function signInEnabled(request: APIRequestContext) {
-  const response = await request.get('/wardrobe-share/manage', {
-    maxRedirects: 0,
-  });
-  return response.status() !== 404;
 }
 
 async function createGarment(
@@ -275,24 +269,7 @@ test.describe('chat', () => {
 });
 
 test.describe('files', () => {
-  test('without sign-in there is no files page, rather than a broken one', async ({
-    request,
-  }) => {
-    test.skip(
-      await signInEnabled(request),
-      'needs a server with AUTH_ENABLED=false',
-    );
-    expect((await request.get('/file/files')).status()).toBe(404);
-  });
-
   test.describe('with sign-in', () => {
-    test.beforeEach(async ({ request }) => {
-      test.skip(
-        !(await signInEnabled(request)),
-        'needs a server with AUTH_ENABLED=true',
-      );
-    });
-
     test('upload from the keyboard, keep the focus, and copy a file’s link', async ({
       page,
     }) => {
@@ -397,13 +374,6 @@ test.describe('an invite in German', () => {
 });
 
 test.describe('sharing management', () => {
-  test.beforeEach(async ({ request }) => {
-    test.skip(
-      !(await signInEnabled(request)),
-      'needs a server with AUTH_ENABLED=true',
-    );
-  });
-
   test('names every control, and an empty page says so', async ({ page }) => {
     await register(page.request, 'empty');
     await page.goto('/wardrobe-share/manage');

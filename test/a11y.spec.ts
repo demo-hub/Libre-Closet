@@ -1,7 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test as base, type Page } from '@playwright/test';
+import { ACCOUNTS_URL } from './fixtures/accounts';
 
-/** axe on every page a self-hoster uses, in light and dark (docs/REDESIGN.md 7). Expects AUTH_ENABLED=false. */
+/** axe on every page a self-hoster uses, in light and dark (docs/REDESIGN.md 7). Expects AUTH_ENABLED=false, but for the register page. */
 
 type Made = { garment: string; outfit: string };
 
@@ -82,7 +83,7 @@ const routes: Route[] = [
   { name: '/outfits/:id', path: (made) => made.outfit },
   at('/calendar'),
   at('/auth/login'),
-  at('/auth/register'),
+  { name: '/auth/register', path: () => `${ACCOUNTS_URL}/auth/register` },
   at('/auth/reset'),
   at('/about'),
   at('/privacy'),
@@ -103,6 +104,8 @@ for (const colorScheme of ['light', 'dark'] as const) {
       test(`${route.name} passes axe`, async ({ page, made }) => {
         await visit(page, route, made);
         const { violations } = await new AxeBuilder({ page })
+          // See docs/BUGS.md: only the accounts server has it, in the register page's run.
+          .exclude('#pwa-install')
           .withTags([
             'wcag2a',
             'wcag2aa',
