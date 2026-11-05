@@ -203,7 +203,17 @@
   "CONFIRM_DELETE": "Eliminare questo elemento? Questa azione non può essere annullata.",
   "SEARCH_PLACEHOLDER": "Cerca capi",
   "SEARCH": "Cerca",
-  "RESULTS": "risultati",
+  "RESULT_COUNT": {
+    "one": "{count} risultato",
+    "many": "{count} risultati",
+    "other": "{count} risultati"
+  },
+  "ALL_ARCHIVED": {
+    "one": "L'unico capo qui è archiviato.",
+    "many": "Tutti i {count} capi qui sono archiviati.",
+    "other": "Tutti i {count} capi qui sono archiviati."
+  },
+  "FILTER_ANY": "Qualsiasi",
   "FILTERS": "Filtri",
   "CLEAR_FILTERS": "Cancella filtri",
   "APPLY_FILTERS": "Applica filtri",

@@ -194,7 +194,19 @@
   "CONFIRM_DELETE": "Удалить? Это действие нельзя отменить.",
   "SEARCH_PLACEHOLDER": "Поиск вещей",
   "SEARCH": "Поиск",
-  "RESULTS": "результатов",
+  "RESULT_COUNT": {
+    "one": "{count} результат",
+    "few": "{count} результата",
+    "many": "{count} результатов",
+    "other": "{count} результата"
+  },
+  "ALL_ARCHIVED": {
+    "one": "{count} вещь здесь в архиве.",
+    "few": "{count} вещи здесь в архиве.",
+    "many": "{count} вещей здесь в архиве.",
+    "other": "{count} вещи здесь в архиве."
+  },
+  "FILTER_ANY": "Все",
   "FILTERS": "Фильтры",
   "CLEAR_FILTERS": "Сбросить фильтры",
   "APPLY_FILTERS": "Применить фильтры",

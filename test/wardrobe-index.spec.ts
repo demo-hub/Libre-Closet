@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { onAccountsServer } from './fixtures/accounts';
 
 const fixedElements = (page: Page) =>
   page.evaluate(() =>
@@ -248,4 +249,131 @@ test('a garment without a name is titled with its category', async ({
   await expect(card).toHaveCount(1);
   await expect(card.locator('.card-title')).toHaveText('Tops');
   await expect(card.getByRole('link')).toHaveAccessibleName('Tops');
+});
+
+test.describe('the filter sheet', () => {
+  const open = (page: Page) => page.locator('#filter-button').click();
+  const search = (page: Page) => new URL(page.url()).search;
+
+  test('a chosen facet can be cleared inside it', async ({ page }) => {
+    await page.goto('/wardrobe?color=red&keyword=coat');
+    await open(page);
+    const colours = page.getByRole('group', { name: 'Colour' });
+    await expect(colours.getByRole('radio', { name: 'red' })).toBeChecked();
+    await colours.getByRole('radio', { name: 'Any' }).check();
+    await page.getByRole('button', { name: 'Apply filters' }).click();
+    await expect(page).not.toHaveURL(/color=/);
+    expect(search(page)).toBe('?keyword=coat');
+  });
+
+  test('Any is chosen for a facet with no filter', async ({ page }) => {
+    await page.goto('/wardrobe');
+    await open(page);
+    await expect(
+      page
+        .getByRole('group', { name: 'Colour' })
+        .getByRole('radio', { name: 'Any' }),
+    ).toBeChecked();
+  });
+
+  test('Apply and Clear leave no empty parameters', async ({ page }) => {
+    await page.goto('/wardrobe');
+    await open(page);
+    await page.getByRole('button', { name: 'Apply filters' }).click();
+    await expect(page.locator('#filter-modal')).toBeHidden();
+    expect(search(page)).toBe('');
+
+    await open(page);
+    await page.getByRole('radio', { name: 'red' }).check();
+    await page.getByRole('button', { name: 'Apply filters' }).click();
+    await expect(page).toHaveURL(/color=red/);
+    expect(search(page)).toBe('?color=red');
+
+    await open(page);
+    await page.getByRole('button', { name: 'Clear filters' }).click();
+    await expect(page).not.toHaveURL(/color=/);
+    expect(search(page)).toBe('');
+
+    await page.goBack();
+    await expect(page).toHaveURL(/color=red/);
+    await open(page);
+    await page.getByRole('button', { name: 'Apply filters' }).click();
+    await expect(page.locator('#filter-modal')).toBeHidden();
+    expect(search(page)).toBe('?color=red');
+  });
+});
+
+test.describe('with an account of its own', () => {
+  test.use(onAccountsServer);
+
+  /** A new, signed-in, empty wardrobe. */
+  async function register(page: Page) {
+    const email = `wardrobe-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
+    const password = 'Wardrobe2026';
+    const response = await page.request.post('/auth/register', {
+      form: { email, password, confirmPassword: password },
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(302);
+  }
+
+  const addGarment = async (page: Page, name: string) => {
+    const created = await page.request.post('/wardrobe', {
+      form: { name, category: 'tops' },
+    });
+    expect(created.ok()).toBeTruthy();
+    return new URL(created.url()).pathname;
+  };
+
+  test('a wardrobe with only archived garments says so, and links to them', async ({
+    page,
+  }) => {
+    await register(page);
+    for (const name of ['One', 'Two']) {
+      const path = await addGarment(page, name);
+      await page.request.post(`${path}/archive`, {
+        headers: { 'hx-request': 'true' },
+      });
+    }
+
+    await page.goto('/wardrobe');
+    const main = page.locator('main');
+    await expect(main).toContainText('All 2 garments here are archived.');
+    await expect(main).not.toContainText('No garments yet');
+    await expect(main.getByRole('link', { name: 'New garment' })).toBeVisible();
+
+    await main.getByRole('link', { name: 'Show archived' }).click();
+    await expect(page).toHaveURL(/archived=true/);
+    await expect(main).toContainText('2 results');
+  });
+
+  test.describe('in Russian', () => {
+    test.use({ locale: 'ru-RU' });
+
+    test('the count takes its plural', async ({ page }, info) => {
+      test.skip(info.project.name !== 'chromium', 'Twenty-one garments');
+      await register(page);
+      const counted = [
+        [1, '1 результат'],
+        [2, '2 результата'],
+        [5, '5 результатов'],
+        [21, '21 результат'],
+      ] as const;
+      let made = 0;
+      for (const [count, text] of counted) {
+        for (; made < count; made++) await addGarment(page, `G${made}`);
+        await page.goto('/wardrobe');
+        await expect(page.locator('main')).toContainText(text);
+      }
+    });
+  });
+
+  test('one garment is one result', async ({ page }) => {
+    await register(page);
+    await addGarment(page, 'Only');
+    await page.goto('/wardrobe');
+    await expect(page.locator('main p').getByText('1 result')).toHaveText(
+      '1 result',
+    );
+  });
 });

@@ -38,18 +38,31 @@ const IMPORT_FAILURES = [
   'IMPORT_DISABLED',
 ];
 
+/** How a plural's forms are named. Which ones a language has differs, so they are checked apart. */
+const PLURAL_FORM = /\.(zero|one|two|few|many|other)$/;
+
 describe('translations', () => {
   const english = load('en');
 
+  // Without its form, nestjs-i18n returns the whole object, and the page prints [object Object].
+  it.each(LOCALES)('%s has every plural form it can need', (locale) => {
+    const forms = new Intl.PluralRules(locale).resolvedOptions()
+      .pluralCategories;
+    for (const [key, value] of Object.entries(load(locale))) {
+      if (key === 'validation' || typeof value === 'string') continue;
+      expect([key, Object.keys(value).sort()]).toEqual([
+        key,
+        [...forms].sort(),
+      ]);
+    }
+  });
+
   it.each(LOCALES)('%s has exactly the keys English has', (locale) => {
-    const keys = flatten(load(locale))
-      .map(([key]) => key)
-      .sort();
-    expect(keys).toEqual(
-      flatten(english)
-        .map(([key]) => key)
-        .sort(),
-    );
+    const names = (lang: Lang) => [
+      ...new Set(flatten(lang).map(([key]) => key.replace(PLURAL_FORM, ''))),
+    ];
+    const keys = names(load(locale)).sort();
+    expect(keys).toEqual(names(english).sort());
   });
 
   it.each(LOCALES)('%s declares each key once', (locale) => {
@@ -62,7 +75,7 @@ describe('translations', () => {
     const seen = new Set<string>();
     const repeated: string[] = [];
     for (const [, key] of raw.matchAll(/^\s*"([^"]+)"\s*:/gm)) {
-      if (seen.has(key)) repeated.push(key);
+      if (seen.has(key) && !PLURAL_FORM.test(`.${key}`)) repeated.push(key);
       seen.add(key);
     }
     expect(repeated).toEqual([]);
