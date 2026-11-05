@@ -23,14 +23,6 @@ Bugs found while working on this fork and left out of the change that found them
   - Grid photos are 1080 px in boxes of about 182 px, so `uses-responsive-images` fails. It is only a warning on `/wardrobe`, `/outfits` and the calendar until this is fixed.
   - Where: `lighthouserc.js` (`photoPages`).
   - Found in #81.
-- **Cycling a garment or adding a row in the outfit builder is silent to screen readers** (low).
-  - Focus stays on a button still named "Next", and the new garment, or the new row, is not announced.
-  - Where: `views/partials/outfit_row.hbs`, Previous and Next; `views/outfits/form.hbs`, Add row. `#outfit-rows-status` could say it.
-  - Found in #31.
-- **Fast presses on an outfit row's Next are partly lost** (low).
-  - A press that arrives while the row's request is running is sent with the old row's index, so three quick presses advance one or two garments.
-  - Where: `views/partials/outfit_row.hbs`, Previous and Next.
-  - Found in #31.
 
 ## Calendar
 
@@ -116,7 +108,8 @@ Bugs found while working on this fork and left out of the change that found them
   - `MASK_SAVE_FAILED` (#68);
   - the re-worded `PRIVACY_SELF_HOSTED_DATA_ITEMS` (#75);
   - `PREVIOUS_WEEK`, `NEXT_WEEK` and `WEEK_OF` (#78);
-  - `RESULT_COUNT`, `ALL_ARCHIVED` and `FILTER_ANY`, which replace `RESULTS` (1.6-a).
+  - `RESULT_COUNT`, `ALL_ARCHIVED` and `FILTER_ANY`, which replace `RESULTS` (1.6-a);
+  - `PREVIOUS_IN_ROW` and `NEXT_IN_ROW`, which replace `PREVIOUS` and `NEXT`, and `ROW_GARMENT` and `ROW_ADDED` (1.6-c).
 
 ## Tests and tooling
 
