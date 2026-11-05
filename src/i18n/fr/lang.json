@@ -203,7 +203,17 @@
   "CONFIRM_DELETE": "Supprimer ceci ? Cette action est irréversible.",
   "SEARCH_PLACEHOLDER": "Rechercher des vêtements",
   "SEARCH": "Rechercher",
-  "RESULTS": "résultats",
+  "RESULT_COUNT": {
+    "one": "{count} résultat",
+    "many": "{count} résultats",
+    "other": "{count} résultats"
+  },
+  "ALL_ARCHIVED": {
+    "one": "Le seul vêtement ici est archivé.",
+    "many": "Les {count} vêtements ici sont tous archivés.",
+    "other": "Les {count} vêtements ici sont tous archivés."
+  },
+  "FILTER_ANY": "Toutes",
   "FILTERS": "Filtres",
   "CLEAR_FILTERS": "Effacer les filtres",
   "APPLY_FILTERS": "Appliquer les filtres",

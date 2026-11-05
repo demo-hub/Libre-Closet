@@ -264,6 +264,7 @@ export class GarmentService {
     brands: string[];
     sizes: string[];
     categories: string[];
+    archivedCount: number;
   }> {
     const where = userId != null ? { owner: { id: userId } } : { owner: null };
     const garments = await this.garmentRepository.find(where);
@@ -287,7 +288,12 @@ export class GarmentService {
       ...new Set(garments.map((g) => g.category).filter(Boolean)),
     ].sort();
 
-    return { brands, sizes, categories };
+    return {
+      brands,
+      sizes,
+      categories,
+      archivedCount: garments.filter((g) => g.archived).length,
+    };
   }
 
   async update(

@@ -110,7 +110,13 @@ export class WardrobeController {
       colors: Object.values(GarmentColor),
       availableSizes: filters.sizes,
       search,
-      ...filterState(search, owner, garments.length),
+      resultCount: i18n.t('lang.RESULT_COUNT', {
+        args: { count: garments.length },
+      }),
+      allArchivedText: i18n.t('lang.ALL_ARCHIVED', {
+        args: { count: filters.archivedCount },
+      }),
+      ...filterState(search, owner, garments.length, filters.archivedCount),
       activeFilters: activeFilters(
         search,
         owner,

@@ -64,7 +64,10 @@ export interface FilterState {
   /** A keyword or a facet narrows the list; archived only widens it. */
   filtered: boolean;
   emptyWardrobe: boolean;
+  /** Nothing to show here, but archived garments exist. */
+  allArchived: boolean;
   showArchived: boolean;
+  showArchivedHref: string;
   /** Keeps the keyword, which the search field still shows; null when no facet is set. */
   clearFiltersHref: string | null;
 }
@@ -73,6 +76,7 @@ export function filterState(
   query: SearchGarmentDto,
   ownerId: number | null,
   count: number,
+  archivedCount = 0,
 ): FilterState {
   const facet = [query.category, query.color, query.size].some((value) =>
     single(value),
@@ -80,8 +84,10 @@ export function filterState(
   const filtered = facet || !!single(query.keyword);
   return {
     filtered,
-    emptyWardrobe: count === 0 && !filtered,
+    emptyWardrobe: count === 0 && !filtered && archivedCount === 0,
+    allArchived: count === 0 && !filtered && archivedCount > 0,
     showArchived: showsArchived(query),
+    showArchivedHref: wardrobeHref({ ...query, archived: 'true' }, ownerId),
     clearFiltersHref: facet
       ? wardrobeHref(query, ownerId, ['category', 'color', 'size', 'archived'])
       : null,

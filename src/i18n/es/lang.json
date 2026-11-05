@@ -203,7 +203,17 @@
   "CONFIRM_DELETE": "¿Eliminar esto? No se puede deshacer.",
   "SEARCH_PLACEHOLDER": "Buscar prendas",
   "SEARCH": "Buscar",
-  "RESULTS": "resultados",
+  "RESULT_COUNT": {
+    "one": "{count} resultado",
+    "many": "{count} resultados",
+    "other": "{count} resultados"
+  },
+  "ALL_ARCHIVED": {
+    "one": "La única prenda de aquí está archivada.",
+    "many": "Las {count} prendas de aquí están archivadas.",
+    "other": "Las {count} prendas de aquí están archivadas."
+  },
+  "FILTER_ANY": "Cualquiera",
   "FILTERS": "Filtros",
   "CLEAR_FILTERS": "Limpiar filtros",
   "APPLY_FILTERS": "Aplicar filtros",
