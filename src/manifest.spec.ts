@@ -174,10 +174,10 @@ describe('the identity assets', () => {
       'utf8',
     );
     expect(layout).toContain(
-      '<link rel="icon" href="/favicon.ico" sizes="32x32" />',
+      `<link rel="icon" href="{{asset '/favicon.ico'}}" sizes="32x32" />`,
     );
     expect(layout).toContain(
-      '<link rel="icon" href="/favicon.svg" type="image/svg+xml" />',
+      `<link rel="icon" href="{{asset '/favicon.svg'}}" type="image/svg+xml" />`,
     );
   });
 

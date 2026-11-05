@@ -3,7 +3,8 @@ import { existsSync, readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 
 /**
- * Content hashes of the stylesheet and the app's own scripts, keyed by URL path.
+ * Content hashes of the stylesheet, the app's own scripts, the icons the layout
+ * links to and the manifest, keyed by URL path.
  *
  * A service worker answers a precached URL from its cache, so an unversioned
  * /bundle.css after an upgrade is the previous release's stylesheet until the
@@ -13,7 +14,13 @@ import { join } from 'path';
  * the new worker's precache holds exactly the URLs the pages ask for.
  */
 export function assetRevisions(publicDir: string): Map<string, string> {
-  const files = ['bundle.css'];
+  const files = [
+    'bundle.css',
+    'favicon.ico',
+    'favicon.svg',
+    'apple-touch-icon.png',
+    'manifest.json',
+  ];
   const jsDir = join(publicDir, 'js');
   if (existsSync(jsDir)) {
     for (const name of readdirSync(jsDir).sort()) {
