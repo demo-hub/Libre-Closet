@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-11-05
+
+#### Added
+
+- Activewear, Swimwear, Underwear and Lingerie are garment categories, named in all six languages. A garment already typed with one of these names now shows it translated
+- Each facet of the wardrobe's filter sheet has an Any chip, which clears it there and then
+- The outfit builder says what changed for screen readers: the garment or empty slot a row moved to, and a row that was added. Previous and Next name their row, such as "Next in Tops"
+
+#### Changed
+
+- With `AUTH_ENABLED=false`, `/auth/register` and its live validation answer 404, and the sitemap leaves the page out. Before, an account could be made that did nothing until accounts were turned on
+- The test suite runs its own servers, on ports 3400 and 3300, each with a throwaway database, so a local run no longer touches an app on port 3000 or the data `.env` names
+
+#### Fixed
+
+- Apply and Clear in the filter sheet no longer fill the address with empty parameters
+- A wardrobe whose garments are all archived says so, and links to them, rather than "No garments yet"
+- The result count takes its plural in every language
+- Every fast press on Previous or Next in the outfit builder counts, and so does a swipe
+- The first page view after an upgrade no longer shows the previous release's favicon, home screen icon or manifest. The icons inside the manifest can still lag until the new service worker takes over
+- A field typed while a live validation was running is now validated when you leave it
+
 ## [1.5.0] - 2026-11-04
 
 #### Added
