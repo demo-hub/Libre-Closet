@@ -1,8 +1,16 @@
-// The stylesheet and the app's own scripts are asked for with ?v=<revision>
+// The stylesheet, the app's own scripts, the layout's icons and the manifest are asked for with ?v=<revision>
 // (src/asset-url.ts), so they are precached under that same URL. An older
 // worker's precache has only the bare URL and cannot answer for this build.
 // The revision is workbox's md5 of the file, which the server also computes.
-const versioned = (url) => url === 'bundle.css' || /^js\/[^/]+\.js$/.test(url);
+const ROOT_FILES = [
+  'bundle.css',
+  'favicon.ico',
+  'favicon.svg',
+  'apple-touch-icon.png',
+  'manifest.json',
+];
+const versioned = (url) =>
+  ROOT_FILES.includes(url) || /^js\/[^/]+\.js$/.test(url);
 
 module.exports = {
   globDirectory: 'public/',

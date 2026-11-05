@@ -38,12 +38,12 @@ https://nestjs-i18n.com/quick-start --}}
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#161d38" media="(prefers-color-scheme: dark)" />
 
-    <link rel="icon" href="/favicon.ico" sizes="32x32" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="{{asset '/favicon.ico'}}" sizes="32x32" />
+    <link rel="icon" href="{{asset '/favicon.svg'}}" type="image/svg+xml" />
     {{!--
     https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html
     https://developer.chrome.com/docs/lighthouse/pwa/apple-touch-icon --}}
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" href="{{asset '/apple-touch-icon.png'}}" />
 
     {{!-- htmx reads only the first htmx-config meta, so there is exactly one. --}}
     <meta name="htmx-config" content='{"globalViewTransitions": true, "includeIndicatorStyles": false}' />
@@ -52,7 +52,7 @@ https://nestjs-i18n.com/quick-start --}}
     <title>{{#if pageTitle}}{{pageTitle}}{{else}}{{appName}}{{/if}}</title>
     {{! Used inconjunction with service worker sw.js to enable PWA (Progressive
     Web App) functionality. }}
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="{{asset '/manifest.json'}}" />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
     {{! Served modules from node_modules, look to main.ts to see how this is
     performed. https://htmx.org/docs/#installing
@@ -166,10 +166,23 @@ https://nestjs-i18n.com/quick-start --}}
           try { typed.start = active.selectionStart; typed.end = active.selectionEnd; } catch (err) {}
           fs.querySelectorAll('input[id]').forEach(function (i) { typed.values[i.id] = i.value; });
         });
+        // A value set by script fires no change, so a field the server has not seen would not be validated when left.
+        function validateOnLeave(field) {
+          function edited() { field.removeEventListener('blur', left); }
+          function left() {
+            field.removeEventListener('change', edited);
+            field.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          field.addEventListener('change', edited, { once: true });
+          field.addEventListener('blur', left, { once: true });
+        }
         document.addEventListener('htmx:afterSwap', function (e) {
           if (!typed || !e.target.hasAttribute('data-live-validation')) return;
+          var sent = e.detail.requestConfig.parameters;
           e.target.querySelectorAll('input[id]').forEach(function (i) {
-            if (i.id in typed.values) i.value = typed.values[i.id];
+            if (!(i.id in typed.values)) return;
+            i.value = typed.values[i.id];
+            if (i.value !== (sent.get(i.name) || '')) validateOnLeave(i);
           });
           var el = typed.focus && document.getElementById(typed.focus);
           if (el && typed.start != null) { try { el.setSelectionRange(typed.start, typed.end); } catch (err) {} }
@@ -287,7 +300,7 @@ https://nestjs-i18n.com/quick-start --}}
         document.addEventListener('htmx:historyRestore', dropDetachedBar);
       }
     </script>
-    <pwa-install id="pwa-install" manifest-url="/manifest.json"></pwa-install>
+    <pwa-install id="pwa-install" manifest-url="{{asset '/manifest.json'}}"></pwa-install>
     <script type="text/javascript">
       var pwaInstall = document.getElementById('pwa-install');
     </script>

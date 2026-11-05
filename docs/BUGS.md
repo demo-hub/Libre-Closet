@@ -12,11 +12,6 @@ Bugs found while working on this fork and left out of the change that found them
 
 ## Accounts and security
 
-- **A field typed while a live validation is in flight is not validated when left** (low).
-  - The head script puts what was typed into the swapped-in field, but a value set by script fires no `change`, so leaving that field sends no validation. The next edit, or the submit, reports its errors.
-  - Where: the head script's `htmx:afterSwap` handler in `views/layout.hbs`.
-  - Found in #49.
-
 ## Wardrobe
 
 - **Photos are served at full size into small boxes** (low).
@@ -38,9 +33,9 @@ Bugs found while working on this fork and left out of the change that found them
 
 ## Shell and PWA
 
-- **After an upgrade, the first page view can show the previous release's icons and manifest** (low).
-  - The stylesheet and the app's scripts are asked for with a content hash, so an older service worker's precache cannot answer them. `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `manifest.json` and `assets/icons/` keep their bare URLs and come from the old precache until the new worker takes over.
-  - Where: `views/layout.hbs`, `workbox-config.js` (`manifestTransforms`), `src/asset-url.ts`.
+- **After an upgrade, the first page view can show the previous release's install icons** (low).
+  - The layout's icons and the manifest are asked for with a content hash, but the manifest names `assets/icons/` by bare URL, so those come from the old precache until the new worker takes over. Versioning them needs a manifest rewritten for each build, and its hash has to cover the icons too.
+  - Where: `public/manifest.json`, `workbox-config.js` (`manifestTransforms`), `src/asset-url.ts`.
   - Found in #55.
 - **Axe reports the install prompt's own markup** (low).
   - With `PWA_ENABLED=true`, axe reports `button-name` inside `#pwa-install`, a third-party component, on desktop WebKit, and sometimes `region` on Mobile Chrome, depending on when the component has rendered. `test/a11y.spec.ts` and `test/push.spec.ts` exclude the element.

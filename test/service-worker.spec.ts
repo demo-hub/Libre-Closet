@@ -119,6 +119,13 @@ test('the current worker precaches exactly the URLs the page asks for', async ({
     ) as { imports: Record<string, string> };
     return [
       document.querySelector('link[rel="stylesheet"]')!.getAttribute('href')!,
+      ...[...document.querySelectorAll('link[rel="icon"]')].map(
+        (link) => link.getAttribute('href')!,
+      ),
+      document
+        .querySelector('link[rel="apple-touch-icon"]')!
+        .getAttribute('href')!,
+      document.querySelector('link[rel="manifest"]')!.getAttribute('href')!,
       ...Object.entries(map.imports)
         .filter(([key]) => key.startsWith('/js/'))
         .map(([, url]) => url),
