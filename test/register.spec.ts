@@ -121,3 +121,32 @@ test('live validation keeps what was typed while it was in flight', async ({
   await expect(page.locator('#password')).toHaveValue('Password123!');
   await expect(page.locator('#password')).toBeFocused();
 });
+
+test('a field typed while a validation was in flight is validated when left', async ({
+  page,
+}) => {
+  await page.route('**/auth/validate/register', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    await route.continue();
+  });
+  await page.goto('/auth/register');
+  await page.locator('#email').fill('someone@example.com');
+  await page.locator('#email').press('Tab');
+  const settled = page.evaluate(
+    () =>
+      new Promise((resolve) =>
+        document.addEventListener('htmx:afterSettle', resolve, { once: true }),
+      ),
+  );
+  await page.keyboard.type('short', { delay: 20 });
+  await settled;
+  await expect(page.locator('#password')).toHaveValue('short');
+
+  const second = page.waitForResponse('**/auth/validate/register');
+  await page.keyboard.press('Tab');
+  await second;
+  await expect(page.locator('#password')).toHaveAttribute(
+    'aria-invalid',
+    'true',
+  );
+});
