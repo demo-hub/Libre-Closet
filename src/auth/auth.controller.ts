@@ -86,9 +86,9 @@ export class AuthController {
   ) {}
 
   /**
-   * Where a sign-in lands. /auth/profile exists only with accounts on; without
-   * them the register and login routes still answer a typed address, so they
-   * go to the wardrobe instead of a 404.
+   * Where a login lands. /auth/profile exists only with accounts on; without
+   * them the login route still answers a typed address, so it goes to the
+   * wardrobe instead of a 404.
    */
   private afterSignIn(): string {
     return this.configService.get<boolean>('AUTH_ENABLED')
@@ -147,7 +147,7 @@ export class AuthController {
       maxAge: 365 * 24 * 60 * 60 * 1000, // 365 days
       httpOnly: true, // Prevents client-side JS from reading it
     });
-    return navigate(reply, this.afterSignIn());
+    return navigate(reply, '/auth/profile');
   }
 
   @UseGuards(RegistrationGuard)

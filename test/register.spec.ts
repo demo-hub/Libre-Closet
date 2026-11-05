@@ -3,6 +3,12 @@ import { onAccountsServer } from './fixtures/accounts';
 
 test.use(onAccountsServer);
 
+test('the sitemap lists the page', async ({ request }) => {
+  expect(await (await request.get('/sitemap.xml')).text()).toContain(
+    '/auth/register',
+  );
+});
+
 test('every field has a label', async ({ page }) => {
   await page.goto('/auth/register');
   for (const label of ['Email', 'Password', 'Confirm password']) {

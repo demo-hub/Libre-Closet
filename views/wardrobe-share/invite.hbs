@@ -36,9 +36,9 @@
           <div class="flex flex-col gap-2">
             <p class="text-sm text-graphite">{{t 'lang.INVITE_LOGIN_REQUIRED'}}</p>
             <a href="/auth/login" class="btn btn-primary">{{t 'lang.LOGIN'}}</a>
-            {{#unless signupsDisabled}}
+            {{#if authEnabled}}{{#unless signupsDisabled}}
             <a href="/auth/register" class="btn btn-outline">{{t 'lang.REGISTER'}}</a>
-            {{/unless}}
+            {{/unless}}{{/if}}
           </div>
         {{/if}}
       {{/if}}
