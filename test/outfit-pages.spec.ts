@@ -2,6 +2,10 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { test, expect, type APIRequestContext } from '@playwright/test';
 
+declare const htmx: {
+  ajax(verb: string, path: string, context: object): Promise<void>;
+};
+
 const coat = readFileSync(
   join(__dirname, '../scripts/screenshots/fixtures/camel-coat.png'),
 );
@@ -232,6 +236,210 @@ test.describe('the outfit builder', () => {
       row.getByRole('button', { name: `Second ${info.project.name}` }),
     ).toBeVisible();
     await expect(next).toBeFocused();
+  });
+
+  test('names Previous and Next after the row, and says what each press shows', async ({
+    page,
+  }, info) => {
+    const category = `say-${info.project.name.replace(/\W+/g, '-').toLowerCase()}-${Date.now().toString(36)}`;
+    const first = await createGarment(
+      page.request,
+      category,
+      `First ${info.project.name}`,
+    );
+    await createGarment(page.request, category, `Second ${info.project.name}`);
+    await page.goto(
+      `${await createOutfit(page.request, `Say ${info.project.name}`, [[category, first]])}/edit`,
+    );
+    const row = page.getByRole('group', { name: category });
+    const status = page.locator('#outfit-rows-status');
+    await expect(
+      row.getByRole('button', { name: `Previous in ${category}` }),
+    ).toBeVisible();
+    const next = row.getByRole('button', { name: `Next in ${category}` });
+    await next.click();
+    await expect(status).toHaveText(`${category}: No garment`);
+    await next.click();
+    await expect(status).toHaveText(`${category}: Second ${info.project.name}`);
+  });
+
+  test('every fast press counts', async ({ page }, info) => {
+    const category = `fast-${info.project.name.replace(/\W+/g, '-').toLowerCase()}-${Date.now().toString(36)}`;
+    const names = ['A', 'B', 'C', 'D'].map((n) => `${n} ${info.project.name}`);
+    let last = 0;
+    for (const name of names) {
+      last = await createGarment(page.request, category, name);
+    }
+    await page.goto(
+      `${await createOutfit(page.request, `Fast ${info.project.name}`, [[category, last]])}/edit`,
+    );
+    await page.route('**/outfits/row-fragment*', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await route.continue();
+    });
+    // Newest first: D (shown), C, B, A, the empty slot.
+    const row = page.getByRole('group', { name: category });
+    const next = row.getByRole('button', { name: 'Next' });
+    await next.focus();
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#outfit-rows-status')).toHaveText(
+      `${category}: ${names[0]}`,
+    );
+    await expect(row.locator('input[name="garmentId"]')).not.toHaveValue(
+      String(last),
+    );
+    await expect(next).toBeFocused();
+
+    // Past the end: the empty slot, then round to D.
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#outfit-rows-status')).toHaveText(
+      `${category}: ${names[3]}`,
+    );
+    await expect(row.locator('input[name="garmentId"]')).toHaveValue(
+      String(last),
+    );
+  });
+
+  test('stops at the garments the server has, when the page counted one more', async ({
+    page,
+  }, info) => {
+    const category = `end-${info.project.name.replace(/\W+/g, '-').toLowerCase()}-${Date.now().toString(36)}`;
+    const kept = await createGarment(page.request, category, 'Kept');
+    const gone = await createGarment(page.request, category, 'Gone');
+    const outfit = await createOutfit(
+      page.request,
+      `End ${info.project.name}`,
+      [
+        [category, kept],
+        [category, gone],
+      ],
+    );
+    await page.request.post(`/wardrobe/${gone}/archive`, {
+      headers: { 'hx-request': 'true' },
+    });
+    await page.goto(`${outfit}/edit`);
+
+    let requests = 0;
+    await page.route('**/outfits/row-fragment*', async (route) => {
+      requests++;
+      await route.continue();
+    });
+    await page
+      .getByRole('group', { name: category })
+      .first()
+      .getByRole('button', { name: 'Next' })
+      .click();
+    await expect(page.locator('#outfit-rows-status')).toHaveText(
+      `${category}: Kept`,
+    );
+    await page.waitForTimeout(300);
+    expect(requests).toBe(1);
+  });
+
+  test('a row removed during its request holds nothing up on the next page', async ({
+    page,
+  }, info) => {
+    const first = await threePieceOutfit(
+      page.request,
+      `left ${info.project.name}`,
+    );
+    const second = await threePieceOutfit(
+      page.request,
+      `next ${info.project.name}`,
+    );
+    await page.goto(`${first}/edit`);
+    await page.route('**/outfits/row-fragment*', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await route.continue();
+    });
+    const tops = page.getByRole('group', { name: 'Tops' });
+    await tops.getByRole('button', { name: 'Next in Tops' }).click();
+    await tops.getByRole('button', { name: 'Remove row' }).click();
+    await page.waitForTimeout(600);
+
+    // Without a full load, so the script's state survives. Rows are keyed by position.
+    await page.evaluate(
+      (path) => htmx.ajax('GET', path, { target: '#main', select: '#main' }),
+      `${second}/edit`,
+    );
+    await expect(tops).toHaveCount(1);
+    await tops.getByRole('button', { name: 'Next in Tops' }).click();
+    await expect(page.locator('#outfit-rows-status')).toContainText('Tops:');
+  });
+
+  test('a press that fails does not stop the row answering the next', async ({
+    page,
+  }, info) => {
+    await page.goto(
+      `${await threePieceOutfit(page.request, `fail ${info.project.name}`)}/edit`,
+    );
+    let failed = false;
+    await page.route('**/outfits/row-fragment*', async (route) => {
+      if (failed) return route.continue();
+      failed = true;
+      await route.fulfill({ status: 500, body: '' });
+    });
+    const next = page
+      .getByRole('group', { name: 'Tops' })
+      .getByRole('button', { name: 'Next in Tops' });
+    await next.click();
+    await expect(page.locator('#requestErrorToast')).toBeVisible();
+    await next.click();
+    await expect(page.locator('#outfit-rows-status')).toContainText('Tops:');
+  });
+
+  test.describe('on a touch screen', () => {
+    test.use({ hasTouch: true });
+
+    test('a swipe moves to the next garment', async ({
+      page,
+      browserName,
+    }, info) => {
+      test.skip(browserName !== 'chromium', 'Builds its own TouchEvent');
+      const category = `swipe-${info.project.name.replace(/\W+/g, '-').toLowerCase()}-${Date.now().toString(36)}`;
+      const first = await createGarment(page.request, category, 'First');
+      await createGarment(page.request, category, 'Second');
+      await page.goto(
+        `${await createOutfit(page.request, `Swipe ${info.project.name}`, [[category, first]])}/edit`,
+      );
+      await page.locator('.outfit-row').evaluate((row: HTMLElement) => {
+        const send = (type: string, x: number) => {
+          const touch = new Touch({
+            identifier: 1,
+            target: row,
+            clientX: x,
+            clientY: 100,
+          });
+          row.dispatchEvent(
+            new TouchEvent(type, {
+              bubbles: true,
+              cancelable: true,
+              touches: type === 'touchend' ? [] : [touch],
+              changedTouches: [touch],
+            }),
+          );
+        };
+        send('touchstart', 200);
+        send('touchend', 100);
+      });
+      await expect(page.locator('#outfit-rows-status')).toHaveText(
+        `${category}: No garment`,
+      );
+    });
+  });
+
+  test('says when a row is added', async ({ page }, info) => {
+    await page.goto(
+      `${await threePieceOutfit(page.request, `add ${info.project.name}`)}/edit`,
+    );
+    await page.locator('#add-row-input').fill('Dresses');
+    await page.getByRole('button', { name: 'Add row' }).click();
+    await expect(page.locator('#outfit-rows-status')).toHaveText(
+      'Dresses added: row 4 of 4',
+    );
   });
 
   test('moves rows from the keyboard and says where they went', async ({

@@ -8,6 +8,7 @@
   data-category="{{row.value}}"
   data-index="{{row.currentIndex}}"
   data-count="{{row.garmentCount}}"
+  data-garment="{{#if row.currentGarment}}{{#if row.currentGarment.name}}{{row.currentGarment.name}}{{else}}{{row.label}}{{/if}}{{else}}{{t 'lang.NO_GARMENT'}}{{/if}}"
   _="on touchstart
        if event.target.closest('.drag-handle')
          set my startX to null
@@ -30,16 +31,7 @@
          set my startX to null
          set my startY to null
          if Math.abs(dx) >= 30 and Math.abs(dx) > Math.abs(dy)
-           set cnt to (me's @data-count as Int)
-           set idx to (me's @data-index as Int)
-           if dx < 0
-             set newIdx to idx + 1
-             if newIdx > cnt then set newIdx to 0 end
-           else
-             set newIdx to idx - 1
-             if newIdx < 0 then set newIdx to cnt end
-           end
-           js(me, newIdx) htmx.ajax('GET', '/outfits/row-fragment?category=' + encodeURIComponent(me.dataset.category) + '&index=' + newIdx + '&key=' + me.dataset.key, {target: me, swap: 'outerHTML settle:0ms'}) end
+           js(me, dx) window.stepOutfitRow(me, dx < 0 ? 1 : -1) end
          end
        end"
 >
@@ -65,15 +57,13 @@
     >{{icon "x-mark" class="size-5"}}</button>
   </div>
   <div class="flex items-center gap-2">
-    {{!-- settle:0ms: htmx wires a swapped row's buttons when it settles, and focus is back on them before that. --}}
+    {{!-- /js/outfit-builder.js handles data-step, so a press during a request still counts. --}}
     <button
       type="button"
       id="row-{{row.key}}-previous"
       class="btn btn-ghost btn-circle shrink-0"
-      aria-label="{{t 'lang.PREVIOUS'}}"
-      hx-get="/outfits/row-fragment?category={{uri row.value}}&index={{row.prevIndex}}&key={{row.key}}"
-      hx-target="closest .outfit-row"
-      hx-swap="outerHTML settle:0ms"
+      aria-label="{{row.previousLabel}}"
+      data-step="-1"
     >{{icon "chevron-left" class="size-5"}}</button>
     {{#if row.currentGarment}}
     {{!-- It focuses the close button itself: WebKit leaves focus on <body> when a daisyUI .modal opens. --}}
@@ -127,10 +117,8 @@
       type="button"
       id="row-{{row.key}}-next"
       class="btn btn-ghost btn-circle shrink-0"
-      aria-label="{{t 'lang.NEXT'}}"
-      hx-get="/outfits/row-fragment?category={{uri row.value}}&index={{row.nextIndex}}&key={{row.key}}"
-      hx-target="closest .outfit-row"
-      hx-swap="outerHTML settle:0ms"
+      aria-label="{{row.nextLabel}}"
+      data-step="1"
     >{{icon "chevron-right" class="size-5"}}</button>
   </div>
   <input type="hidden" name="category" value="{{row.value}}" />
