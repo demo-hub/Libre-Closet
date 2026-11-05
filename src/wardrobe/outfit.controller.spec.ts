@@ -23,7 +23,11 @@ describe('OutfitController category resolution', () => {
       }
     ).resolveCategory(
       typed,
-      [{ category: 'tops' }, { category: 'Knitwear' }] as Garment[],
+      [
+        { category: 'tops' },
+        { category: 'Knitwear' },
+        { category: 'Swimwear' },
+      ] as Garment[],
       {} as I18nContext,
     );
 
@@ -36,6 +40,9 @@ describe('OutfitController category resolution', () => {
     ['hosen', 'bottoms'],
     ['knitwear', 'Knitwear'],
     ['Scarves', 'Scarves'],
+    // Typed before it was built in: the garments are stored under this spelling.
+    ['Swimwear', 'Swimwear'],
+    ['swimwear', 'swimwear'],
   ];
   for (const [typed, stored] of cases) {
     it(`reads ${JSON.stringify(typed)} as ${JSON.stringify(stored)}`, () => {
