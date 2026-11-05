@@ -6,5 +6,9 @@ export enum GarmentCategory {
   TOPS = 'tops',
   BOTTOMS = 'bottoms',
   FOOTWEAR = 'footwear',
+  ACTIVEWEAR = 'activewear',
+  SWIMWEAR = 'swimwear',
+  UNDERWEAR = 'underwear',
+  LINGERIE = 'lingerie',
   OTHER = 'other',
 }

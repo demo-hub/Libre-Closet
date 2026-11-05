@@ -23,9 +23,6 @@ Bugs found while working on this fork and left out of the change that found them
   - It reads "1 results", and Russian uses one form for every count.
   - Where: `views/wardrobe/index.hbs:46`.
   - Found in #28.
-- **Four category names are translated but never used** (low).
-  - `CATEGORY_ACTIVEWEAR`, `_SWIMWEAR`, `_UNDERWEAR` and `_LINGERIE` exist in the locale files, but `GarmentCategory` has no such values, so a garment typed with one of those categories shows the raw word.
-  - Found in #28.
 - **One facet cannot be cleared inside the filter sheet** (low).
   - The chips are radios. Only the pill or "Clear filters" removes a facet.
   - Found in #28.

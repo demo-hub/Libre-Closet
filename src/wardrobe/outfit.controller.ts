@@ -160,6 +160,9 @@ export class OutfitController {
       ]),
     ];
     return (
+      // The wardrobe's own spelling first: 'Swimwear' typed before it was a
+      // built-in category must keep its garments.
+      known.find((c) => c === typed.trim()) ??
       known.find((c) => c.toLocaleLowerCase() === wanted) ??
       known.find(
         (c) =>
