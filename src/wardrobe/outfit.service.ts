@@ -225,10 +225,15 @@ export class OutfitService {
   ) {
     const count = items.length;
     const sel = idx > 0 ? (items[idx - 1] ?? null) : null;
+    const label = this.garmentService.resolveCategoryLabel(category, i18n);
     return {
       key,
       value: category,
-      label: this.garmentService.resolveCategoryLabel(category, i18n),
+      label,
+      previousLabel: i18n.t('lang.PREVIOUS_IN_ROW', {
+        args: { category: label },
+      }),
+      nextLabel: i18n.t('lang.NEXT_IN_ROW', { args: { category: label } }),
       garmentCount: count,
       currentIndex: idx,
       prevIndex: idx === 0 ? count : idx - 1,
