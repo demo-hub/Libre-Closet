@@ -21,14 +21,6 @@ test('homepage loads with APP_NAME title and version', async ({ page }) => {
 });
 
 test('garment with several colors saves and lists them', async ({ page }) => {
-  const email = `colors-${Date.now()}@example.com`;
-  const password = 'Password123!';
-
-  // Signs in a user; with AUTH_ENABLED=false the wardrobe guard passes requests through anyway.
-  await page.request.post('/auth/register', {
-    form: { email, password, confirmPassword: password },
-  });
-
   // Two `color` fields, as the multiselect submits them; stored comma-joined.
   const response = await page.request.post('/wardrobe', {
     headers: { 'content-type': 'application/x-www-form-urlencoded' },

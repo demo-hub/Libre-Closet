@@ -1,12 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
 import Database from 'better-sqlite3';
-import { tmpdir } from 'os';
 import { join } from 'path';
 import { test, expect, type Page } from '@playwright/test';
-
-// Where scripts/e2e/accounts-server.mjs runs the app.
-const ACCOUNTS_PORT = 3300;
-const ACCOUNTS_DATA_PATH = join(tmpdir(), 'lc-e2e-accounts');
+import { ACCOUNTS_DATA_PATH, ACCOUNTS_URL } from './fixtures/accounts';
 
 /**
  * Push, from the profile page to sign-out, on the server with accounts and the
@@ -16,7 +12,7 @@ const ACCOUNTS_DATA_PATH = join(tmpdir(), 'lc-e2e-accounts');
  * DevTools protocol. src/push.spec.ts covers what a click on it opens.
  */
 // The full Chromium's headless mode: the headless shell reports notifications as denied, so its service worker shows none.
-test.use({ baseURL: `http://localhost:${ACCOUNTS_PORT}`, channel: 'chromium' });
+test.use({ baseURL: ACCOUNTS_URL, channel: 'chromium' });
 test.skip(
   ({ browserName }) => browserName !== 'chromium',
   'Needs the DevTools protocol',
@@ -268,6 +264,8 @@ for (const colorScheme of ['light', 'dark'] as const) {
       'Notifications are on in this browser.',
     );
     const { violations } = await new AxeBuilder({ page })
+      // See docs/BUGS.md: what it reports depends on when axe catches it rendering.
+      .exclude('#pwa-install')
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa', 'best-practice'])
       .analyze();
     expect(

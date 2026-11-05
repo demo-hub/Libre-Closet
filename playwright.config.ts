@@ -11,6 +11,8 @@ dotenv.config({ path: path.resolve(__dirname, '.env') });
 // VISUAL=1 runs only the screenshot tests, against a throwaway server (scripts/screenshots/visual.sh).
 const visual = !!process.env.VISUAL;
 const visualUrl = 'http://localhost:3100';
+// Never :3000, which is where a developer's own instance answers.
+const mainUrl = 'http://localhost:3400';
 const ignoreVisual = /visual\.(spec|setup)\.ts$/;
 const visualUse = {
   baseURL: visualUrl,
@@ -53,7 +55,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: 'http://localhost:3000',
+    baseURL: mainUrl,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -144,9 +146,10 @@ export default defineConfig({
       }
     : [
         {
-          command: 'npm run build && npm run start:prod',
-          url: 'http://localhost:3000',
-          reuseExistingServer: !process.env.CI,
+          command: 'npm run build && node scripts/e2e/main-server.mjs',
+          url: mainUrl,
+          reuseExistingServer: false,
+          gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 },
           stderr: 'pipe',
           env: {
             // url-import.spec.ts serves a fixture shop on 127.0.0.1, which the
@@ -158,8 +161,9 @@ export default defineConfig({
           },
         },
         {
-          // Accounts and the PWA on, for push (push.spec.ts). Starts from the
-          // dist/ the server above builds, with its own throwaway database.
+          // Accounts and the PWA on, for the specs that need them
+          // (test/fixtures/accounts.ts). Starts from the dist/ the server above
+          // builds, with its own throwaway database.
           command: 'node scripts/e2e/accounts-server.mjs',
           url: 'http://localhost:3300',
           reuseExistingServer: false,

@@ -10,12 +10,6 @@ import sharp from 'sharp';
 test('new garment form takes a photo and saves it with the garment', async ({
   page,
 }) => {
-  const email = `photo-${Date.now()}@example.com`;
-  const password = 'Password123!';
-  await page.request.post('/auth/register', {
-    form: { email, password, confirmPassword: password },
-  });
-
   await page.goto('/wardrobe/new');
 
   const captureButton = page.locator('#photoCaptureBtn');

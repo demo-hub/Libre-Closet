@@ -15,7 +15,7 @@ const ACCOUNTS_DATA_PATH = join(tmpdir(), 'lc-e2e-accounts');
 async function waitForBuild() {
   for (;;) {
     try {
-      await fetch('http://localhost:3000/');
+      await fetch('http://localhost:3400/');
       return;
     } catch {
       await new Promise((resolve) => setTimeout(resolve, 500));
