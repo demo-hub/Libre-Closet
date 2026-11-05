@@ -19,6 +19,15 @@ Bugs found while working on this fork and left out of the change that found them
   - Where: `lighthouserc.js` (`photoPages`).
   - Found in #81.
 
+- **A category stored with a capital is offered twice** (low).
+  - A garment stored as `Swimwear` adds an option beside the built-in `swimwear`, with the same label, because the check for custom categories is case-sensitive. The same goes for every built-in category.
+  - Where: `src/wardrobe/garment-form.ts`, `src/wardrobe/wardrobe.controller.ts` (edit and clone).
+  - Found in 1.6.0's review.
+- **`$t(...)` in a typed category is expanded in Previous and Next** (low).
+  - nestjs-i18n reads nested translations in the text it has just filled in, so a category typed as `$t(lang.SAVE)` gives "Next in Save". Only translation strings can be reached, and the output is escaped.
+  - Where: `src/wardrobe/outfit.service.ts` (`buildRow`).
+  - Found in 1.6.0's review.
+
 ## Calendar
 
 - **Back can show an entry whose outfit was deleted** (low).
@@ -40,6 +49,10 @@ Bugs found while working on this fork and left out of the change that found them
 - **Axe reports the install prompt's own markup** (low).
   - With `PWA_ENABLED=true`, axe reports `button-name` inside `#pwa-install`, a third-party component, on desktop WebKit, and sometimes `region` on Mobile Chrome, depending on when the component has rendered. `test/a11y.spec.ts` and `test/push.spec.ts` exclude the element.
   - Found in 1.6-f.
+- **Leaving a field just before a live validation's swap loses its validation** (low).
+  - In the moment between the response and the swap, the swap replaces the wrapper and aborts the request the field's `change` just sent. The next edit, or the submit, reports its errors.
+  - Where: `data-live-validation` wrappers, the head script in `views/layout.hbs`.
+  - Found in 1.6-d.
 - **Chrome logs "Transition was skipped" when Back follows a boosted navigation** (low).
   - This comes from htmx's global view transitions.
   - Found in #23.
