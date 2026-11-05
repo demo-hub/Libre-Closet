@@ -149,6 +149,18 @@ export class AppController {
       this.configService.get<string>('SITE_URL'),
       req,
     );
+    // A route that answers 404 or redirects does not belong in a sitemap.
+    const register =
+      this.configService.get<boolean>('AUTH_ENABLED') &&
+      !this.configService.get<boolean>('DISABLE_REGISTRATION')
+        ? `
+  <url>
+    <loc>${baseUrl}/auth/register</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>`
+        : '';
     reply.header('Content-Type', 'application/xml; charset=utf-8');
     reply.send(
       `<?xml version="1.0" encoding="UTF-8"?>
@@ -158,13 +170,7 @@ export class AppController {
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/auth/register</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
+  </url>${register}
   <url>
     <loc>${baseUrl}/auth/login</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>

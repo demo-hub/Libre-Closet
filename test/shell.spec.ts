@@ -41,6 +41,23 @@ test('the header stays at the top while the page scrolls', async ({ page }) => {
   expect(box?.y).toBe(0);
 });
 
+test('without accounts nobody can register, and nothing links there', async ({
+  page,
+  request,
+}) => {
+  const form = { email: 'a@example.com', password: 'Password123!' };
+  expect((await request.get('/auth/register')).status()).toBe(404);
+  expect((await request.post('/auth/register', { form })).status()).toBe(404);
+  expect(
+    (await request.post('/auth/validate/register', { form })).status(),
+  ).toBe(404);
+  expect(await (await request.get('/sitemap.xml')).text()).not.toContain(
+    '/auth/register',
+  );
+  await page.goto('/');
+  await expect(page.locator('a[href="/auth/register"]')).toHaveCount(0);
+});
+
 test('without sign-in there is no files page, rather than a broken one', async ({
   request,
 }) => {

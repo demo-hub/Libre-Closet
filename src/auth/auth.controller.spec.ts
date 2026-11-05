@@ -155,14 +155,14 @@ describe('AuthController', () => {
       [true, '/auth/profile'],
       [false, '/wardrobe'],
     ];
-    for (const [on, target] of landings) {
-      it(`with AUTH_ENABLED=${on}, registering goes to ${target}`, async () => {
-        withAccounts(on);
-        const r = await register();
-        expect(r.setCookie).toHaveBeenCalled();
-        expect(r.redirect).toHaveBeenCalledWith(target, 302);
-      });
+    it('registering goes to the profile page', async () => {
+      withAccounts(true);
+      const r = await register();
+      expect(r.setCookie).toHaveBeenCalled();
+      expect(r.redirect).toHaveBeenCalledWith('/auth/profile', 302);
+    });
 
+    for (const [on, target] of landings) {
       it(`with AUTH_ENABLED=${on}, logging in goes to ${target}`, async () => {
         withAccounts(on);
         expect((await login()).redirect).toHaveBeenCalledWith(target, 302);
