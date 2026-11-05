@@ -19,18 +19,6 @@ Bugs found while working on this fork and left out of the change that found them
 
 ## Wardrobe
 
-- **The result count has no plural** (low).
-  - It reads "1 results", and Russian uses one form for every count.
-  - Where: `views/wardrobe/index.hbs:46`.
-  - Found in #28.
-- **One facet cannot be cleared inside the filter sheet** (low).
-  - The chips are radios. Only the pill or "Clear filters" removes a facet.
-  - Found in #28.
-- **Apply and Clear produce URLs full of empty parameters** (low).
-  - For example `?category=&color=&size=&archived=&keyword=`. The hidden inputs are always submitted.
-  - Found in #28.
-- **A wardrobe whose garments are all archived says "No garments yet"** (low).
-  - Found in #28.
 - **Photos are served at full size into small boxes** (low).
   - Grid photos are 1080 px in boxes of about 182 px, so `uses-responsive-images` fails. It is only a warning on `/wardrobe`, `/outfits` and the calendar until this is fixed.
   - Where: `lighthouserc.js` (`photoPages`).
@@ -127,7 +115,8 @@ Bugs found while working on this fork and left out of the change that found them
   - `ERROR_400` (#64);
   - `MASK_SAVE_FAILED` (#68);
   - the re-worded `PRIVACY_SELF_HOSTED_DATA_ITEMS` (#75);
-  - `PREVIOUS_WEEK`, `NEXT_WEEK` and `WEEK_OF` (#78).
+  - `PREVIOUS_WEEK`, `NEXT_WEEK` and `WEEK_OF` (#78);
+  - `RESULT_COUNT`, `ALL_ARCHIVED` and `FILTER_ANY`, which replace `RESULTS` (1.6-a).
 
 ## Tests and tooling
 

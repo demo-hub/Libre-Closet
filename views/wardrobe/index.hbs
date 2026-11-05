@@ -20,7 +20,7 @@
   </div>
   {{/if}}
 
-  <form method="get" action="/wardrobe" id="search-form" role="search" class="flex w-full max-w-xl gap-2 mb-3">
+  <form method="get" action="/wardrobe" id="search-form" role="search" data-omit-empty class="flex w-full max-w-xl gap-2 mb-3">
     <input type="hidden" name="category" id="active-category" value="{{search.category}}" data-initial="{{search.category}}">
     <input type="hidden" name="color" id="active-color" value="{{search.color}}" data-initial="{{search.color}}">
     <input type="hidden" name="size" id="active-size" value="{{search.size}}" data-initial="{{search.size}}">
@@ -43,7 +43,7 @@
   </div>
 
   {{#if garments.length}}
-  <p class="text-sm text-graphite mb-3">{{garments.length}} {{t 'lang.RESULTS'}}</p>
+  <p class="text-sm text-graphite mb-3">{{resultCount}}</p>
   <ul role="list" class="grid grid-cols-2 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
     {{#each garments}}
     <li>
@@ -71,6 +71,8 @@
   </ul>
   {{else if filtered}}
   {{> empty icon="magnifying-glass" text=(t 'lang.NO_MATCHES') href=clearFiltersHref cta=(t 'lang.CLEAR_FILTERS') outline=true}}
+  {{else if allArchived}}
+  {{> empty icon="hanger" text=allArchivedText href=showArchivedHref cta=(t 'lang.SHOW_ARCHIVED') outline=true}}
   {{else}}
   {{> empty icon="hanger" text=(t 'lang.NO_GARMENTS') href=newGarmentHref cta=(t 'lang.ADD_FIRST_GARMENT')}}
   {{/if}}
@@ -87,9 +89,14 @@
 
     <div class="grid min-h-0 gap-5 overflow-y-auto px-6 py-2">
       {{!-- peer-focus, not peer-focus-visible: WebKit drops :focus-visible when arrow keys move between radios. --}}
+      {{#if availableCategories.length}}
       <fieldset>
         <legend class="mb-2 text-sm font-medium text-graphite">{{t 'lang.CATEGORY'}}</legend>
         <div class="flex flex-wrap gap-2">
+          <label class="group relative cursor-pointer">
+            <input type="radio" name="modal-category" value="" class="peer absolute inset-0 m-0 size-full cursor-pointer appearance-none opacity-0" {{#unless search.category}}checked{{/unless}}>
+            <span class="badge badge-outline gap-1 min-h-11 h-auto px-3 wrap-anywhere select-none peer-checked:bg-primary peer-checked:text-primary-content peer-checked:border-primary peer-checked:font-semibold peer-focus:outline-2 peer-focus:outline-offset-2 peer-focus:outline-focus">{{icon "check" class="size-4 shrink-0 hidden group-has-checked:inline"}}{{t 'lang.FILTER_ANY'}}</span>
+          </label>
           {{#each availableCategories}}
           <label class="group relative cursor-pointer">
             <input type="radio" name="modal-category" value="{{this.value}}" class="peer absolute inset-0 m-0 size-full cursor-pointer appearance-none opacity-0" {{#ifEquals this.value ../search.category}}checked{{/ifEquals}}>
@@ -98,10 +105,15 @@
           {{/each}}
         </div>
       </fieldset>
+      {{/if}}
 
       <fieldset>
         <legend class="mb-2 text-sm font-medium text-graphite">{{t 'lang.COLOR'}}</legend>
         <div class="flex flex-wrap gap-2">
+          <label class="group relative cursor-pointer">
+            <input type="radio" name="modal-color" value="" class="peer absolute inset-0 m-0 size-full cursor-pointer appearance-none opacity-0" {{#unless search.color}}checked{{/unless}}>
+            <span class="badge badge-outline gap-1 min-h-11 h-auto px-3 wrap-anywhere select-none peer-checked:bg-primary peer-checked:text-primary-content peer-checked:border-primary peer-checked:font-semibold peer-focus:outline-2 peer-focus:outline-offset-2 peer-focus:outline-focus">{{icon "check" class="size-4 shrink-0 hidden group-has-checked:inline"}}{{t 'lang.FILTER_ANY'}}</span>
+          </label>
           {{#each colors}}
           <label class="group relative cursor-pointer">
             <input type="radio" name="modal-color" value="{{this}}" class="peer absolute inset-0 m-0 size-full cursor-pointer appearance-none opacity-0" {{#ifEquals this ../search.color}}checked{{/ifEquals}}>
@@ -115,6 +127,10 @@
       <fieldset>
         <legend class="mb-2 text-sm font-medium text-graphite">{{t 'lang.SIZE'}}</legend>
         <div class="flex flex-wrap gap-2">
+          <label class="group relative cursor-pointer">
+            <input type="radio" name="modal-size" value="" class="peer absolute inset-0 m-0 size-full cursor-pointer appearance-none opacity-0" {{#unless search.size}}checked{{/unless}}>
+            <span class="badge badge-outline gap-1 min-h-11 h-auto px-3 wrap-anywhere select-none peer-checked:bg-primary peer-checked:text-primary-content peer-checked:border-primary peer-checked:font-semibold peer-focus:outline-2 peer-focus:outline-offset-2 peer-focus:outline-focus">{{icon "check" class="size-4 shrink-0 hidden group-has-checked:inline"}}{{t 'lang.FILTER_ANY'}}</span>
+          </label>
           {{#each availableSizes}}
           <label class="group relative cursor-pointer">
             <input type="radio" name="modal-size" value="{{this}}" class="peer absolute inset-0 m-0 size-full cursor-pointer appearance-none opacity-0" {{#ifEquals this ../search.size}}checked{{/ifEquals}}>

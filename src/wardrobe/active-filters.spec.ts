@@ -146,7 +146,7 @@ describe('filterState', () => {
   });
 
   it('offers no clearing when only a keyword is set', () => {
-    expect(filterState(query({ keyword: 'coat' }), null, 0)).toEqual({
+    expect(filterState(query({ keyword: 'coat' }), null, 0)).toMatchObject({
       filtered: true,
       emptyWardrobe: false,
       showArchived: false,
@@ -163,6 +163,18 @@ describe('filterState', () => {
       false,
     );
     expect(filterState(query({}), null, 3).emptyWardrobe).toBe(false);
+    expect(filterState(query({}), null, 0, 2).emptyWardrobe).toBe(false);
+  });
+
+  it('calls a list with nothing left but archived garments all archived', () => {
+    const state = filterState(query({}), 9, 0, 2);
+    expect(state.allArchived).toBe(true);
+    expect(state.showArchivedHref).toBe('/wardrobe?archived=true&ownerId=9');
+    expect(filterState(query({}), null, 0, 0).allArchived).toBe(false);
+    expect(filterState(query({}), null, 1, 2).allArchived).toBe(false);
+    expect(filterState(query({ keyword: 'x' }), null, 0, 2).allArchived).toBe(
+      false,
+    );
   });
 });
 

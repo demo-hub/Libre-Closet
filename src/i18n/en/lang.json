@@ -211,7 +211,15 @@
   "CONFIRM_DELETE": "Delete this? It cannot be undone.",
   "SEARCH_PLACEHOLDER": "Search garments",
   "SEARCH": "Search",
-  "RESULTS": "results",
+  "RESULT_COUNT": {
+    "one": "{count} result",
+    "other": "{count} results"
+  },
+  "ALL_ARCHIVED": {
+    "one": "The only garment here is archived.",
+    "other": "All {count} garments here are archived."
+  },
+  "FILTER_ANY": "Any",
   "FILTERS": "Filters",
   "CLEAR_FILTERS": "Clear filters",
   "APPLY_FILTERS": "Apply filters",

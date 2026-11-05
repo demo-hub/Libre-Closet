@@ -102,6 +102,13 @@ https://nestjs-i18n.com/quick-start --}}
           toast.classList.add('hidden');
           setTimeout(function () { toast.classList.remove('hidden'); }, 100);
         });
+        // A GET form would otherwise put every empty field in the address.
+        document.addEventListener('htmx:configRequest', function (e) {
+          if (e.detail.verb !== 'get' || !e.detail.elt.matches('form[data-omit-empty]')) return;
+          Array.from(e.detail.parameters.entries()).forEach(function (entry) {
+            if (entry[1] === '') e.detail.parameters.delete(entry[0]);
+          });
+        });
         document.addEventListener('htmx:beforeHistorySave', function () {
           document.querySelectorAll('details.dropdown[open], details.color-ms[open]').forEach(function (d) { d.removeAttribute('open'); });
           // A restored snapshot must not keep a toast, a "Copied" label, an open dialog (it would come back non-modal) or values a script wrote into a form.

@@ -203,7 +203,15 @@
   "CONFIRM_DELETE": "Löschen? Das lässt sich nicht rückgängig machen.",
   "SEARCH_PLACEHOLDER": "Kleidungsstücke suchen",
   "SEARCH": "Suchen",
-  "RESULTS": "Ergebnisse",
+  "RESULT_COUNT": {
+    "one": "{count} Ergebnis",
+    "other": "{count} Ergebnisse"
+  },
+  "ALL_ARCHIVED": {
+    "one": "Das einzige Kleidungsstück hier ist archiviert.",
+    "other": "Alle {count} Kleidungsstücke hier sind archiviert."
+  },
+  "FILTER_ANY": "Alle",
   "FILTERS": "Filter",
   "CLEAR_FILTERS": "Filter zurücksetzen",
   "APPLY_FILTERS": "Filter anwenden",
