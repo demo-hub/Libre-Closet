@@ -22,11 +22,11 @@ Bugs found while working on this fork and left out of the change that found them
 - **A category stored with a capital is offered twice** (low).
   - A garment stored as `Swimwear` adds an option beside the built-in `swimwear`, with the same label, because the check for custom categories is case-sensitive. The same goes for every built-in category.
   - Where: `src/wardrobe/garment-form.ts`, `src/wardrobe/wardrobe.controller.ts` (edit and clone).
-  - Found in 1.6.0's review.
+  - Found in #88.
 - **`$t(...)` in a typed category is expanded in Previous and Next** (low).
   - nestjs-i18n reads nested translations in the text it has just filled in, so a category typed as `$t(lang.SAVE)` gives "Next in Save". Only translation strings can be reached, and the output is escaped.
   - Where: `src/wardrobe/outfit.service.ts` (`buildRow`).
-  - Found in 1.6.0's review.
+  - Found in #88.
 
 ## Calendar
 
@@ -48,11 +48,11 @@ Bugs found while working on this fork and left out of the change that found them
   - Found in #55.
 - **Axe reports the install prompt's own markup** (low).
   - With `PWA_ENABLED=true`, axe reports `button-name` inside `#pwa-install`, a third-party component, on desktop WebKit, and sometimes `region` on Mobile Chrome, depending on when the component has rendered. `test/a11y.spec.ts` and `test/push.spec.ts` exclude the element.
-  - Found in 1.6-f.
+  - Found in #82.
 - **Leaving a field just before a live validation's swap loses its validation** (low).
   - In the moment between the response and the swap, the swap replaces the wrapper and aborts the request the field's `change` just sent. The next edit, or the submit, reports its errors.
   - Where: `data-live-validation` wrappers, the head script in `views/layout.hbs`.
-  - Found in 1.6-d.
+  - Found in #87.
 - **Chrome logs "Transition was skipped" when Back follows a boosted navigation** (low).
   - This comes from htmx's global view transitions.
   - Found in #23.
@@ -116,8 +116,8 @@ Bugs found while working on this fork and left out of the change that found them
   - `MASK_SAVE_FAILED` (#68);
   - the re-worded `PRIVACY_SELF_HOSTED_DATA_ITEMS` (#75);
   - `PREVIOUS_WEEK`, `NEXT_WEEK` and `WEEK_OF` (#78);
-  - `RESULT_COUNT`, `ALL_ARCHIVED` and `FILTER_ANY`, which replace `RESULTS` (1.6-a);
-  - `PREVIOUS_IN_ROW` and `NEXT_IN_ROW`, which replace `PREVIOUS` and `NEXT`, and `ROW_GARMENT` and `ROW_ADDED` (1.6-c).
+  - `RESULT_COUNT`, `ALL_ARCHIVED` and `FILTER_ANY`, which replace `RESULTS` (#85);
+  - `PREVIOUS_IN_ROW` and `NEXT_IN_ROW`, which replace `PREVIOUS` and `NEXT`, and `ROW_GARMENT` and `ROW_ADDED` (#86).
 
 ## Tests and tooling
 
