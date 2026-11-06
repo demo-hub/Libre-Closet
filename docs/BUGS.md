@@ -61,6 +61,13 @@ Bugs found while working on this fork and left out of the change that found them
 
 ## Translations
 
+- **A custom colour with a translated colour's name is offered twice** (low).
+  - Before 1.7.0 the colour field only offered English names, so a French garment can hold a custom "Rouge". It now sits beside the built-in red, with the same label, and the filter's "Rouge" asks for `red` and leaves that garment out. Mapping such a value to the built-in colour needs a migration per language.
+  - Where: `src/wardrobe/color-input.ts`, `src/wardrobe/color-label.ts`.
+  - Found in #91.
+- **Four Russian strings use a hyphen the Inter subsets do not draw** (low).
+  - `TEST_WEB_PUSH`, `EMAIL_MUST_MATCH`, `FEATURE_DOCKER_DESC` and `SELF_HOST_DESC` have U+2011, which comes from a fallback font. #92 fixed it for "AGPL-3.0" alone.
+  - Found in #92.
 - **Machine-written values await a native speaker** in de, es, fr, it and ru:
   - the copy pass (#26);
   - the eleven error keys (#27);
@@ -80,8 +87,8 @@ Bugs found while working on this fork and left out of the change that found them
   - `PREVIOUS_WEEK`, `NEXT_WEEK` and `WEEK_OF` (#78);
   - `RESULT_COUNT`, `ALL_ARCHIVED` and `FILTER_ANY`, which replace `RESULTS` (#85);
   - `PREVIOUS_IN_ROW` and `NEXT_IN_ROW`, which replace `PREVIOUS` and `NEXT`, and `ROW_GARMENT` and `ROW_ADDED` (#86);
-  - the sixteen `COLOR_*` keys (1.7-b);
-  - the re-worded `ARCHIVED` and `SHOW_ARCHIVED` in es, `ARCHIVED` in ru, `HERO_DESCRIPTION` in de, es, fr and it, `FEATURE_SCHEDULING_DESC` in those and ru, and every German string that said "Garderobe" (1.7-c).
+  - the sixteen `COLOR_*` keys (#91);
+  - the re-worded `ARCHIVED` and `SHOW_ARCHIVED` in es, `ARCHIVED` in ru, `HERO_DESCRIPTION` in de, es, fr and it, `FEATURE_SCHEDULING_DESC` in those and ru, and every German string that said "Garderobe" (#92).
 
 ## Tests and tooling
 
