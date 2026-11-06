@@ -7,6 +7,7 @@ function render(view: string, context: Record<string, unknown>): string {
   const hbs = Handlebars.create();
   hbs.registerHelper('t', (key: string) => key);
   hbs.registerHelper('json', jsonForScript);
+  hbs.registerHelper('licence', (text: string) => text);
   hbs.registerHelper('icon', () => '');
   hbs.registerPartial('navbar', '');
   hbs.registerPartial('dock', '');

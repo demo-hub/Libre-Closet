@@ -61,23 +61,6 @@ Bugs found while working on this fork and left out of the change that found them
 
 ## Translations
 
-- **"Archived" has the wrong gender for a garment** in es ("Archivado") and ru ("Архивировано") (low). Found in #28.
-- **French filter pills put no space before the colon** (low).
-  - The pill's name joins the parts with a hard-coded `": "`, so French reads "Retirer le filtre: …" instead of "Retirer le filtre : …".
-  - Where: `views/wardrobe/index.hbs:38`.
-  - Found in #30.
-- **German uses two words for the wardrobe** (low).
-  - `WARDROBE` is "Kleiderschrank", while `MY_WARDROBE`, the sharing strings and `WARDROBE_SWITCHER` use "Garderobe".
-  - German and Italian also use two words for the calendar section.
-  - Found in #26 and #28.
-- **"AGPL-3.0" can break across lines at its hyphen** (low).
-  - A hyphen is a break point, so About's introduction reads "AGPL-" and then "3.0" on the next line (en at 1280 px, de at 320 px).
-  - A non-breaking hyphen (U+2011) would hold it together, as the Russian badge does, but the shipped Inter subsets do not draw it, so it comes from a fallback font.
-  - Where: `ABOUT_INTRO`, `FOOTER_CREDIT`, `ABOUT_OPEN_SOURCE_DESC`, `WHY_SELF_HOST_DESC_2` and every other value with "AGPL-3.0".
-  - Found in #33.
-- **Four languages drop part of the landing page's opening paragraph** (low).
-  - de, es, fr and it `HERO_DESCRIPTION` leave out "with photos" and the closing "with no subscriptions, no ads and no third-party tracking" that en and ru have. Five languages also shorten `FEATURE_SCHEDULING_DESC`.
-  - Found in #33.
 - **Machine-written values await a native speaker** in de, es, fr, it and ru:
   - the copy pass (#26);
   - the eleven error keys (#27);
@@ -97,7 +80,8 @@ Bugs found while working on this fork and left out of the change that found them
   - `PREVIOUS_WEEK`, `NEXT_WEEK` and `WEEK_OF` (#78);
   - `RESULT_COUNT`, `ALL_ARCHIVED` and `FILTER_ANY`, which replace `RESULTS` (#85);
   - `PREVIOUS_IN_ROW` and `NEXT_IN_ROW`, which replace `PREVIOUS` and `NEXT`, and `ROW_GARMENT` and `ROW_ADDED` (#86);
-  - the sixteen `COLOR_*` keys (1.7-b).
+  - the sixteen `COLOR_*` keys (1.7-b);
+  - the re-worded `ARCHIVED` and `SHOW_ARCHIVED` in es, `ARCHIVED` in ru, `HERO_DESCRIPTION` in de, es, fr and it, `FEATURE_SCHEDULING_DESC` in those and ru, and every German string that said "Garderobe" (1.7-c).
 
 ## Tests and tooling
 

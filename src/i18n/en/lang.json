@@ -119,6 +119,7 @@
   "COLOR_SILVER": "Silver",
   "COLOR_PATTERN": "Pattern",
   "COLOR_OTHER": "Other",
+  "LABEL_SEPARATOR": ": ",
   "SIZE": "Size",
   "NOTES": "Notes",
   "SOURCE_LINK": "Source link",
