@@ -19,6 +19,7 @@ import { jsonForScript } from './json-script';
 import { formatDateLong } from './i18n/format-date-long';
 import { I18nService } from 'nestjs-i18n';
 import { tRawHelper } from './i18n/t-raw.helper';
+import { colorLabel, colorLabels } from './wardrobe/color-label';
 import { assetRevisions, assetUrl, importMap } from './asset-url';
 
 async function bootstrap() {
@@ -182,13 +183,15 @@ async function bootstrap() {
       return arr.includes(item) ? options.fn(this) : options.inverse(this);
     },
   );
-  hbs.registerHelper('formatColors', function (value: string | undefined) {
-    if (!value) return '';
-    return value
-      .split(',')
-      .map((s) => s.trim())
-      .join(', ');
-  });
+  const translate = tRawHelper(app.get(I18nService));
+  hbs.registerHelper(
+    'formatColors',
+    (value: string | undefined, options: HelperOptions) =>
+      colorLabels(value, (key) => translate(key, options)),
+  );
+  hbs.registerHelper('colorLabel', (value: string, options: HelperOptions) =>
+    colorLabel(value, (key) => translate(key, options)),
+  );
   hbs.registerHelper(
     'ifEquals',
     function (arg1: unknown, arg2: unknown, options: HelperOptions) {
@@ -209,7 +212,7 @@ async function bootstrap() {
           'en',
       ),
   );
-  hbs.registerHelper('tRaw', tRawHelper(app.get(I18nService)));
+  hbs.registerHelper('tRaw', translate);
   hbs.registerHelper('uri', (str: string) =>
     encodeURIComponent(String(str ?? '')),
   );

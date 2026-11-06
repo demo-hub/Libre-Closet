@@ -36,7 +36,7 @@
     <button id="filter-button" type="button" class="btn btn-outline" aria-haspopup="dialog" _="on click call #filter-modal.showModal() then call #filter-close.focus()">{{icon "funnel" class="size-5"}}{{t 'lang.FILTERS'}}</button>
     {{#each activeFilters}}
     <a href="{{this.href}}" class="badge gap-1 min-h-11 h-auto px-3 max-w-full wrap-anywhere" aria-label="{{t 'lang.REMOVE_FILTER'}}: {{#if this.facet}}{{this.facet}}: {{/if}}{{this.value}}">
-      <span>{{#if this.facet}}{{this.facet}}: {{/if}}<span{{#if this.capitalize}} class="capitalize"{{/if}}>{{this.value}}</span></span>
+      <span>{{#if this.facet}}{{this.facet}}: {{/if}}{{this.value}}</span>
       {{icon "x-mark" class="size-4 shrink-0"}}
     </a>
     {{/each}}
@@ -117,7 +117,7 @@
           {{#each colors}}
           <label class="group relative cursor-pointer">
             <input type="radio" name="modal-color" value="{{this}}" class="peer absolute inset-0 m-0 size-full cursor-pointer appearance-none opacity-0" {{#ifEquals this ../search.color}}checked{{/ifEquals}}>
-            <span class="badge badge-outline gap-1 min-h-11 h-auto px-3 capitalize select-none peer-checked:bg-primary peer-checked:text-primary-content peer-checked:border-primary peer-checked:font-semibold peer-focus:outline-2 peer-focus:outline-offset-2 peer-focus:outline-focus">{{icon "check" class="size-4 shrink-0 hidden group-has-checked:inline"}}{{this}}</span>
+            <span class="badge badge-outline gap-1 min-h-11 h-auto px-3 select-none peer-checked:bg-primary peer-checked:text-primary-content peer-checked:border-primary peer-checked:font-semibold peer-focus:outline-2 peer-focus:outline-offset-2 peer-focus:outline-focus">{{icon "check" class="size-4 shrink-0 hidden group-has-checked:inline"}}{{colorLabel this}}</span>
           </label>
           {{/each}}
         </div>

@@ -52,7 +52,7 @@ test('a pasted product link fills the form in', async ({ page }) => {
   await expect(
     page.locator('input[name="color"][value="beige"]'),
   ).toBeChecked();
-  await expect(page.locator('#color-pills-')).toContainText('beige');
+  await expect(page.locator('#color-pills-')).toContainText('Beige');
 
   // Every prefilled field says so, and stops saying so once edited.
   await expect(page.locator('[data-suggested="name"]')).toBeVisible();

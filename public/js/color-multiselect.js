@@ -17,11 +17,21 @@
     return el;
   }
 
+  // A known colour's value is its enum name; the page gives it a translated label.
+  function label(box) {
+    return box.dataset.label || box.value;
+  }
+
   function text(value) {
     const el = document.createElement('span');
-    el.className = 'capitalize';
+    el.className = 'ms-label';
     el.textContent = value;
     return el;
+  }
+
+  // Typing finds a colour by either: "rouge" and "red" are the same box.
+  function names(box) {
+    return [box.value.toLowerCase(), label(box).toLowerCase()];
   }
 
   function announce(box) {
@@ -62,10 +72,10 @@
       remove.dataset.val = box.value;
       remove.setAttribute(
         'aria-label',
-        removeTemplate.replace('{name}', () => box.value),
+        removeTemplate.replace('{name}', () => label(box)),
       );
       remove.innerHTML = CROSS;
-      el.append(swatch(box.value), text(box.value), remove);
+      el.append(swatch(box.value), text(label(box)), remove);
       return el;
     }
 
@@ -89,13 +99,15 @@
       optionsEl.querySelectorAll('.ms-option').forEach(function (opt) {
         const match =
           !needle ||
-          opt.querySelector('input').value.toLowerCase().includes(needle);
+          names(opt.querySelector('input')).some((name) =>
+            name.includes(needle),
+          );
         opt.classList.toggle('hidden', !match);
         if (match) visible++;
       });
       emptyEl.hidden = visible !== 0;
       say(visible === 0 ? emptyEl.textContent.trim() : '');
-      const exists = boxes().some((box) => box.value.toLowerCase() === needle);
+      const exists = boxes().some((box) => names(box).includes(needle));
       const label = document.createElement('strong');
       label.textContent = value;
       createText?.replaceChildren(createBefore, label, createAfter);
@@ -105,9 +117,8 @@
     function addCustom(raw) {
       const value = normalise(raw);
       if (!value) return;
-      let box = boxes().find(
-        (b) => b.value.toLowerCase() === value.toLowerCase(),
-      );
+      const needle = value.toLowerCase();
+      let box = boxes().find((b) => names(b).includes(needle));
       if (!box) {
         const row = document.createElement('label');
         row.className = 'ms-option';

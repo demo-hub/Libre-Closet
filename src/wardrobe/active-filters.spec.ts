@@ -14,6 +14,7 @@ const names = {
   showArchived: 'Show archived',
 };
 const label = (value: string) => `label:${value}`;
+const color = (value: string) => `colour:${value}`;
 const query = (q: Record<string, unknown>) => q as SearchGarmentDto;
 
 describe('single', () => {
@@ -65,7 +66,7 @@ describe('wardrobeHref', () => {
 describe('activeFilters', () => {
   it('has no pill for the keyword, which stays in the search field', () => {
     expect(
-      activeFilters(query({ keyword: 'coat' }), null, names, label),
+      activeFilters(query({ keyword: 'coat' }), null, names, label, color),
     ).toEqual([]);
   });
 
@@ -75,11 +76,12 @@ describe('activeFilters', () => {
       null,
       names,
       label,
+      color,
     );
-    expect(pills.map((p) => [p.facet, p.value, p.capitalize])).toEqual([
-      ['Category', 'label:tops', false],
-      ['Colour', 'red', true],
-      ['Size', 'M', false],
+    expect(pills.map((p) => [p.facet, p.value])).toEqual([
+      ['Category', 'label:tops'],
+      ['Colour', 'colour:red'],
+      ['Size', 'M'],
     ]);
   });
 
@@ -95,6 +97,7 @@ describe('activeFilters', () => {
       9,
       names,
       label,
+      color,
     );
     const colour = new URL(pills[1].href, 'http://x').searchParams;
     expect(Object.fromEntries(colour)).toEqual({
@@ -112,11 +115,11 @@ describe('activeFilters', () => {
       null,
       names,
       label,
+      color,
     ).slice(-1);
     expect(pill).toEqual({
       facet: null,
       value: 'Show archived',
-      capitalize: false,
       href: '/wardrobe?color=red',
     });
   });
