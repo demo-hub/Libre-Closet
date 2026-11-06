@@ -13,7 +13,7 @@ other field does. Swapped into #aiSuggestion by htmx. --}} {{#if suggestion}}
         _="on click set #garmentForm.name.value to my @data-value then set chip to my nextElementSibling then if chip is null set chip to my previousElementSibling end then if chip is null set chip to #aiSuggestBtn end then call chip.focus() then remove me"
         data-value="{{suggestion.name}}"
       >
-        {{t 'lang.NAME'}}: {{suggestion.name}}
+        {{t 'lang.NAME'}}{{t 'lang.LABEL_SEPARATOR'}}{{suggestion.name}}
       </button>
       {{/if}} {{#if suggestion.category}}
       <button
@@ -22,7 +22,7 @@ other field does. Swapped into #aiSuggestion by htmx. --}} {{#if suggestion}}
         _="on click set #garmentForm.category.value to my @data-value then set chip to my nextElementSibling then if chip is null set chip to my previousElementSibling end then if chip is null set chip to #aiSuggestBtn end then call chip.focus() then remove me"
         data-value="{{suggestion.category}}"
       >
-        {{t 'lang.CATEGORY'}}: {{aiCategoryLabel}}
+        {{t 'lang.CATEGORY'}}{{t 'lang.LABEL_SEPARATOR'}}{{aiCategoryLabel}}
       </button>
       {{/if}} {{#if suggestion.brand}}
       <button
@@ -31,7 +31,7 @@ other field does. Swapped into #aiSuggestion by htmx. --}} {{#if suggestion}}
         _="on click set #garmentForm.brand.value to my @data-value then set chip to my nextElementSibling then if chip is null set chip to my previousElementSibling end then if chip is null set chip to #aiSuggestBtn end then call chip.focus() then remove me"
         data-value="{{suggestion.brand}}"
       >
-        {{t 'lang.BRAND'}}: {{suggestion.brand}}
+        {{t 'lang.BRAND'}}{{t 'lang.LABEL_SEPARATOR'}}{{suggestion.brand}}
       </button>
       {{/if}} {{#if suggestion.notes}}
       <button
@@ -51,7 +51,7 @@ other field does. Swapped into #aiSuggestion by htmx. --}} {{#if suggestion}}
              if box then set box.checked to true then send change to box end
              then set chip to my nextElementSibling then if chip is null set chip to my previousElementSibling end then if chip is null set chip to #aiSuggestBtn end then call chip.focus() then remove me"
       >
-        {{t 'lang.COLOR'}}: {{colorLabel this}}
+        {{t 'lang.COLOR'}}{{t 'lang.LABEL_SEPARATOR'}}{{colorLabel this}}
       </button>
       {{/each}}
     </div>

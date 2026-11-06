@@ -18,6 +18,7 @@ import { renderIcon } from './icons';
 import { jsonForScript } from './json-script';
 import { formatDateLong } from './i18n/format-date-long';
 import { I18nService } from 'nestjs-i18n';
+import { keepLicenceWhole } from './i18n/keep-licence-whole';
 import { tRawHelper } from './i18n/t-raw.helper';
 import { colorLabel, colorLabels } from './wardrobe/color-label';
 import { assetRevisions, assetUrl, importMap } from './asset-url';
@@ -213,6 +214,10 @@ async function bootstrap() {
       ),
   );
   hbs.registerHelper('tRaw', translate);
+  hbs.registerHelper(
+    'licence',
+    (text: string) => new hbs.handlebars.SafeString(keepLicenceWhole(text)),
+  );
   hbs.registerHelper('uri', (str: string) =>
     encodeURIComponent(String(str ?? '')),
   );

@@ -35,8 +35,8 @@
     {{!-- Close is focused explicitly: WebKit drops focus on the first keyboard opening, and Chromium would pick the scrollable box. --}}
     <button id="filter-button" type="button" class="btn btn-outline" aria-haspopup="dialog" _="on click call #filter-modal.showModal() then call #filter-close.focus()">{{icon "funnel" class="size-5"}}{{t 'lang.FILTERS'}}</button>
     {{#each activeFilters}}
-    <a href="{{this.href}}" class="badge gap-1 min-h-11 h-auto px-3 max-w-full wrap-anywhere" aria-label="{{t 'lang.REMOVE_FILTER'}}: {{#if this.facet}}{{this.facet}}: {{/if}}{{this.value}}">
-      <span>{{#if this.facet}}{{this.facet}}: {{/if}}{{this.value}}</span>
+    <a href="{{this.href}}" class="badge gap-1 min-h-11 h-auto px-3 max-w-full wrap-anywhere" aria-label="{{t 'lang.REMOVE_FILTER'}}{{t 'lang.LABEL_SEPARATOR'}}{{#if this.facet}}{{this.facet}}{{t 'lang.LABEL_SEPARATOR'}}{{/if}}{{this.value}}">
+      <span>{{#if this.facet}}{{this.facet}}{{t 'lang.LABEL_SEPARATOR'}}{{/if}}{{this.value}}</span>
       {{icon "x-mark" class="size-4 shrink-0"}}
     </a>
     {{/each}}

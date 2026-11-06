@@ -44,6 +44,22 @@ const PLURAL_FORM = /\.(zero|one|two|few|many|other)$/;
 describe('translations', () => {
   const english = load('en');
 
+  it('uses one German word for the wardrobe and one for the calendar', () => {
+    expect(JSON.stringify(load('de'))).not.toMatch(/Garderobe/);
+    expect(load('de').CALENDAR).toBe('Kalender');
+    expect(load('it').CALENDAR).toBe('Calendario');
+  });
+
+  it('gives a garment its gender in "archived"', () => {
+    expect(load('es').ARCHIVED).toBe('Archivada');
+    expect(load('ru').ARCHIVED).toBe('В архиве');
+  });
+
+  it('puts a no-break space before a French colon', () => {
+    expect(load('fr').LABEL_SEPARATOR).toBe('\u00a0: ');
+    expect(english.LABEL_SEPARATOR).toBe(': ');
+  });
+
   // Without its form, nestjs-i18n returns the whole object, and the page prints [object Object].
   it.each(LOCALES)('%s has every plural form it can need', (locale) => {
     const forms = new Intl.PluralRules(locale).resolvedOptions()
@@ -151,6 +167,13 @@ describe('translations', () => {
       ]) {
         expect((lang[key] as string).startsWith(prefix)).toBe(false);
       }
+    });
+
+    it('writes the licence with a plain hyphen, which the Inter subsets draw', () => {
+      const broken = flatten(lang)
+        .filter(([, value]) => /AGPL(?!-3\.0)/.test(value))
+        .map(([key]) => key);
+      expect(broken).toEqual([]);
     });
 
     it('keeps the licence and the original builder in the footer credit', () => {

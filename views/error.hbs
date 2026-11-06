@@ -3,8 +3,8 @@
 <main id="main" tabindex="-1" class="page page--center justify-items-center gap-4 text-center">
   <h1>{{t 'lang.ERROR'}} {{statusCode}}</h1>
   <p class="wrap-anywhere">{{message}}</p>
-  <p class="text-sm text-graphite wrap-anywhere">{{t 'lang.PATH'}}: {{path}}</p>
-  <p class="text-sm text-graphite">{{t 'lang.TIME'}}: <time datetime="{{timestampIso}}">{{timestamp}}</time></p>
+  <p class="text-sm text-graphite wrap-anywhere">{{t 'lang.PATH'}}{{t 'lang.LABEL_SEPARATOR'}}{{path}}</p>
+  <p class="text-sm text-graphite">{{t 'lang.TIME'}}{{t 'lang.LABEL_SEPARATOR'}}<time datetime="{{timestampIso}}">{{timestamp}}</time></p>
   <a href="/" class="btn btn-primary">{{t 'lang.RETURN_TO_HOME'}}</a>
 </main>
 
