@@ -49,11 +49,11 @@
     <h1 class="max-w-3xl text-h1 text-balance sm:text-display">{{t 'lang.TAGLINE'}}</h1>
     <p class="max-w-2xl text-graphite sm:text-lg">{{t 'lang.HERO_DESCRIPTION'}}</p>
     <div class="flex flex-wrap justify-center gap-3">
-      <a href="/wardrobe" class="btn btn-primary btn-lg h-auto min-h-(--size) max-w-full py-2">{{t 'lang.GET_STARTED'}}</a>
+      <a href="/wardrobe" class="btn btn-primary btn-lg max-w-full py-2">{{t 'lang.GET_STARTED'}}</a>
       {{#if authEnabled}}{{#unless user}}{{#unless signupsDisabled}}
-      <a href="/auth/register" class="btn btn-outline btn-lg h-auto min-h-(--size) max-w-full py-2">{{t 'lang.REGISTER'}}</a>
+      <a href="/auth/register" class="btn btn-outline btn-lg max-w-full py-2">{{t 'lang.REGISTER'}}</a>
       {{/unless}}{{/unless}}{{/if}}
-      <a href="{{sourceUrl}}" target="_blank" rel="noopener" hx-boost="false" class="btn btn-outline btn-lg h-auto min-h-(--size) max-w-full py-2">{{t 'lang.SOURCE_ON_GITHUB'}}</a>
+      <a href="{{sourceUrl}}" target="_blank" rel="noopener" hx-boost="false" class="btn btn-outline btn-lg max-w-full py-2">{{t 'lang.SOURCE_ON_GITHUB'}}</a>
     </div>
   </section>
 

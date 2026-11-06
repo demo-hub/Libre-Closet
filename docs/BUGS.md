@@ -59,23 +59,6 @@ Bugs found while working on this fork and left out of the change that found them
 
 ## Accessibility and theme
 
-- **Placeholder text fails contrast** (medium).
-  - Every input uses Tailwind preflight's placeholder colour, 50 % of the text colour, which measures 3.35:1 on White.
-  - Plan 5.1 maps placeholders to Graphite.
-  - Found in #28.
-- **A focused control's ring is partly hidden under the header or the dock** (low).
-  - `scroll-padding` equals the bars' height, so a control scrolled into view stops flush with the bar and 3.6–4.2 px of its 4 px ring is hidden (Chromium, WebKit; 320×568 and 640×400). About 0.5rem more on both paddings would clear it.
-  - Where: `views/assets/main.css:158-159`.
-  - Found in #32.
-- **Firefox leaves a focused control partly under the dock** (low).
-  - It does not scroll a partly visible element out from under the fixed dock: at 360×568 only 19–21 px of a 44 px control can show. A control is never wholly hidden, so WCAG 2.4.11 still passes. `/wardrobe` and `/outfits` do the same.
-  - It leaves one under the sticky header too: at 640×400, Shift+Tab from the landing page's footer shows 19 of the 44 px of "Copy command" (#33).
-  - Found in #32.
-- **With WCAG 1.4.12 text spacing, a button label that wraps spills out of its button** (low).
-  - daisyUI's `.btn` has a fixed height, so a two-line label ("Start over", "Delete outfit" in French, "Kleidungsstück ansehen" at 320 px) crosses the button's border. Nothing is lost.
-  - Where: every `.btn`; `h-auto min-h-(--size)` would let them grow.
-  - Found in #31.
-
 ## Translations
 
 - **"Archived" has the wrong gender for a garment** in es ("Archivado") and ru ("Архивировано") (low). Found in #28.
