@@ -366,7 +366,7 @@ test.describe('an invite in German', () => {
   test('that does not exist says so in German', async ({ page }) => {
     await register(page.request, 'invite-de');
     await page.goto('/wardrobe-share/invite/no-such-invite');
-    await expect(page).toHaveTitle('Garderoben-Einladung');
+    await expect(page).toHaveTitle('Kleiderschrank-Einladung');
     await expect(page.getByRole('alert')).toContainText(
       'Fehler: Diese Einladung wurde nicht gefunden.',
     );
@@ -501,7 +501,7 @@ test.describe('sharing management', () => {
       await page.setViewportSize({ width: 320, height: 640 });
       await page.goto('/wardrobe-share/manage');
       await expect(
-        page.getByRole('button', { name: 'Garderobe verlassen' }),
+        page.getByRole('button', { name: 'Kleiderschrank verlassen' }),
       ).toBeVisible();
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth),

@@ -344,3 +344,27 @@ for (const locale of ['de-DE', 'it-IT', 'ru-RU']) {
     });
   });
 }
+
+test.describe('the licence', () => {
+  test('never breaks at its hyphen', async ({ page }) => {
+    await page.goto('/about');
+    const licence = page
+      .locator('main .whitespace-nowrap')
+      .filter({ hasText: 'AGPL-3.0' })
+      .first();
+    await expect(licence).toHaveCSS('white-space', 'nowrap');
+    await page.goto('/');
+    await expect(
+      page.locator('.whitespace-nowrap').filter({ hasText: 'AGPL-3.0' }),
+    ).toHaveCount(3);
+  });
+
+  test.describe('in Russian', () => {
+    test.use({ locale: 'ru-RU' });
+
+    test('is written with a plain hyphen', async ({ page }) => {
+      await page.goto('/');
+      await expect(page.locator('main').first()).toContainText('AGPL-3.0');
+    });
+  });
+});

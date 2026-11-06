@@ -50,14 +50,14 @@ test.describe('in French', () => {
     await page.getByRole('button', { name: 'Appliquer les filtres' }).click();
     await expect(page).toHaveURL(/[?&]color=brown\b/);
     await expect(
-      page.getByRole('link', { name: 'Couleur: Marron' }),
+      page.getByRole('link', { name: /Couleur\s: Marron/ }),
     ).toBeVisible();
   });
 
   test('a filter on a custom colour shows it as typed', async ({ page }) => {
     await page.goto('/wardrobe?color=bleu%20nuit');
     await expect(
-      page.getByRole('link', { name: 'Couleur: bleu nuit' }),
+      page.getByRole('link', { name: /Couleur\s: bleu nuit/ }),
     ).toBeVisible();
   });
 

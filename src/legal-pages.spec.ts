@@ -23,6 +23,7 @@ function render(
     return value;
   });
   hbs.registerHelper('json', (value: unknown) => JSON.stringify(value));
+  hbs.registerHelper('licence', (text: string) => text);
   hbs.registerPartial('navbar', '');
   hbs.registerPartial('dock', '');
   hbs.registerPartial(

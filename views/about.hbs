@@ -26,7 +26,7 @@
 
 <main id="main" tabindex="-1" class="page page--narrow">
   <h1 class="mb-6">{{t 'lang.ABOUT_HEADING'}}</h1>
-  <p class="mb-4">{{t 'lang.ABOUT_INTRO'}}</p>
+  <p class="mb-4">{{licence (t 'lang.ABOUT_INTRO')}}</p>
   <p class="mb-4">{{t 'lang.ABOUT_FORK'}}</p>
 
   {{#if operatorName}}{{> instance}}{{else if operatorContact}}{{> instance}}{{/if}}
@@ -35,7 +35,7 @@
   <p class="mb-4">{{t 'lang.ABOUT_STORY_DESC'}}</p>
 
   <h2 class="mt-8 mb-2">{{t 'lang.ABOUT_OPEN_SOURCE'}}</h2>
-  <p class="mb-4">{{t 'lang.ABOUT_OPEN_SOURCE_DESC'}}</p>
+  <p class="mb-4">{{licence (t 'lang.ABOUT_OPEN_SOURCE_DESC')}}</p>
 
   <h2 class="mt-8 mb-2">{{t 'lang.ABOUT_TECH'}}</h2>
   <p class="mb-4">{{t 'lang.ABOUT_TECH_DESC'}}</p>
