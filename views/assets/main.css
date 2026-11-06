@@ -422,8 +422,8 @@
   max-width: 100%;
 }
 
-.ms-pill > .capitalize,
-.ms-option > .capitalize {
+.ms-pill > .ms-label,
+.ms-option > .ms-label {
   min-width: 0;
   overflow-wrap: anywhere;
 }

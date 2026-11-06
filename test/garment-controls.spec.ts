@@ -339,7 +339,7 @@ test.describe('the colour multiselect', () => {
     await page
       .locator('.ms-option')
       .filter({ has: page.locator('input[value="red"]') })
-      .locator('.capitalize')
+      .locator('.ms-label')
       .click();
     await expect(
       page.locator('input[name="color"][value="red"]'),
@@ -447,7 +447,7 @@ test.describe('the colour multiselect', () => {
     await expect(page).toHaveURL(`${show}/edit`);
     await colourBox(page).locator('summary').click();
     await page.locator('input[name="color"][value="red"]').check();
-    await expect(page.locator('.ms-pills')).toContainText('red');
+    await expect(page.locator('.ms-pills')).toContainText('Red');
   });
 
   test.describe('in German', () => {
@@ -462,7 +462,7 @@ test.describe('the colour multiselect', () => {
       await expect(summary).toHaveText('1 ausgewählt');
       await expect(page.locator('.ms-count')).toHaveText('1 ausgewählt');
       await expect(
-        page.getByRole('button', { name: 'red entfernen' }),
+        page.getByRole('button', { name: 'Rot entfernen' }),
       ).toBeVisible();
       await page
         .getByRole('textbox', { name: 'Suchen oder erstellen' })

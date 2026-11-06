@@ -51,7 +51,7 @@ other field does. Swapped into #aiSuggestion by htmx. --}} {{#if suggestion}}
              if box then set box.checked to true then send change to box end
              then set chip to my nextElementSibling then if chip is null set chip to my previousElementSibling end then if chip is null set chip to #aiSuggestBtn end then call chip.focus() then remove me"
       >
-        {{t 'lang.COLOR'}}: {{this}}
+        {{t 'lang.COLOR'}}: {{colorLabel this}}
       </button>
       {{/each}}
     </div>

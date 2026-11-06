@@ -151,7 +151,7 @@ test.describe('what it does to the form', () => {
       page.locator('input[name="color"][value="blue"]'),
     ).toBeChecked();
     // The pills only redraw if the change event reached the multiselect.
-    await expect(page.locator('.ms-pills')).toContainText('blue');
+    await expect(page.locator('.ms-pills')).toContainText('Blue');
   });
 
   test('says the colour was suggested, until it is touched', async ({
@@ -237,5 +237,5 @@ test('a photo run through the pipeline suggests its colours', async ({
 
   await expect(page.locator('input[name="color"][value="blue"]')).toBeChecked();
   await expect(page.locator('[data-suggested="colors"]')).toBeVisible();
-  await expect(page.locator('.ms-pills')).toContainText('blue');
+  await expect(page.locator('.ms-pills')).toContainText('Blue');
 });

@@ -31,7 +31,7 @@ test('garment with several colors saves and lists them', async ({ page }) => {
   expect(showPath).toMatch(/^\/wardrobe\/\d+$/);
 
   await page.goto(showPath);
-  await expect(page.locator('body')).toContainText('red, blue');
+  await expect(page.locator('body')).toContainText('Red, Blue');
 });
 
 test('brand fonts are self-hosted, cached for good, and actually used', async ({
