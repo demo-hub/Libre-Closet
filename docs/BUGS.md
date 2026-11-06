@@ -62,10 +62,6 @@ Bugs found while working on this fork and left out of the change that found them
 ## Translations
 
 - **"Archived" has the wrong gender for a garment** in es ("Archivado") and ru ("Архивировано") (low). Found in #28.
-- **Colour names are never translated** (low).
-  - Garment colours are stored as English enum values and shown as they are: "Beige, Brown" on the garment page, the filter chips and the AI chips ("Colour: beige") in every language. There are no `COLOR_*` keys.
-  - Where: the `formatColors` helper (`src/main.ts`), `views/wardrobe/index.hbs`, `views/partials/aiSuggestion.hbs`, the colour multiselect.
-  - Found in #29.
 - **French filter pills put no space before the colon** (low).
   - The pill's name joins the parts with a hard-coded `": "`, so French reads "Retirer le filtre: …" instead of "Retirer le filtre : …".
   - Where: `views/wardrobe/index.hbs:38`.
@@ -100,7 +96,8 @@ Bugs found while working on this fork and left out of the change that found them
   - the re-worded `PRIVACY_SELF_HOSTED_DATA_ITEMS` (#75);
   - `PREVIOUS_WEEK`, `NEXT_WEEK` and `WEEK_OF` (#78);
   - `RESULT_COUNT`, `ALL_ARCHIVED` and `FILTER_ANY`, which replace `RESULTS` (#85);
-  - `PREVIOUS_IN_ROW` and `NEXT_IN_ROW`, which replace `PREVIOUS` and `NEXT`, and `ROW_GARMENT` and `ROW_ADDED` (#86).
+  - `PREVIOUS_IN_ROW` and `NEXT_IN_ROW`, which replace `PREVIOUS` and `NEXT`, and `ROW_GARMENT` and `ROW_ADDED` (#86);
+  - the sixteen `COLOR_*` keys (1.7-b).
 
 ## Tests and tooling
 

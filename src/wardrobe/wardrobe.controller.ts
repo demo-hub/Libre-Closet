@@ -19,6 +19,7 @@ import { I18n, I18nContext } from 'nestjs-i18n';
 import { ConditionalAuthGuard } from '../auth/conditional-auth.guard';
 import { Payload } from '../auth/dto/payload.dto';
 import { GarmentCategory } from './garment-category.enum';
+import { colorLabel } from './color-label';
 import { GarmentColor } from './garment-color.enum';
 import { buildFormModel, customOf } from './garment-form';
 import { activeFilters, filterState, normalizeSearch } from './active-filters';
@@ -127,6 +128,7 @@ export class WardrobeController {
           showArchived: i18n.t('lang.SHOW_ARCHIVED'),
         },
         categoryLabel,
+        (color) => colorLabel(color, (key) => i18n.t(key)),
       ),
       newGarmentHref: canEdit ? newGarmentHref(owner) : null,
       sharedWardrobes,

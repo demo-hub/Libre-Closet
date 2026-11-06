@@ -8,8 +8,6 @@ export interface ActiveFilter {
   /** The facet's name, or null for the archived switch, which names itself. */
   facet: string | null;
   value: string;
-  /** Colour values are lowercase enum names, so only they are capitalised. */
-  capitalize: boolean;
   href: string;
 }
 
@@ -100,6 +98,7 @@ export function activeFilters(
   ownerId: number | null,
   names: FacetNames,
   categoryLabel: (value: string) => string,
+  colorName: (value: string) => string,
 ): ActiveFilter[] {
   const filters: ActiveFilter[] = [];
   const category = single(query.category);
@@ -107,7 +106,6 @@ export function activeFilters(
     filters.push({
       facet: names.category,
       value: categoryLabel(category),
-      capitalize: false,
       href: wardrobeHref(query, ownerId, ['category']),
     });
   }
@@ -115,8 +113,7 @@ export function activeFilters(
   if (color) {
     filters.push({
       facet: names.color,
-      value: color,
-      capitalize: true,
+      value: colorName(color),
       href: wardrobeHref(query, ownerId, ['color']),
     });
   }
@@ -125,7 +122,6 @@ export function activeFilters(
     filters.push({
       facet: names.size,
       value: size,
-      capitalize: false,
       href: wardrobeHref(query, ownerId, ['size']),
     });
   }
@@ -133,7 +129,6 @@ export function activeFilters(
     filters.push({
       facet: null,
       value: names.showArchived,
-      capitalize: false,
       href: wardrobeHref(query, ownerId, ['archived']),
     });
   }

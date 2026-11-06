@@ -151,7 +151,7 @@ describe('WardrobeController', () => {
 
       expect(view.activeFilters.map((p) => [p.facet, p.value])).toEqual([
         ['lang.CATEGORY', 'label:tops'],
-        ['lang.COLOR', 'red'],
+        ['lang.COLOR', 'lang.COLOR_RED'],
       ]);
     });
 
