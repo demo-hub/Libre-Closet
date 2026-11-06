@@ -27,7 +27,7 @@
             <option value="MANAGE"{{#ifEquals permission 'MANAGE'}} selected{{/ifEquals}}>{{t 'lang.PERMISSION_MANAGE'}}</option>
           </select>
         </div>
-        <button id="create-invite" type="submit" class="btn btn-primary h-auto min-h-(--size) max-w-full py-2">{{t 'lang.CREATE_INVITE_LINK'}}</button>
+        <button id="create-invite" type="submit" class="btn btn-primary max-w-full py-2">{{t 'lang.CREATE_INVITE_LINK'}}</button>
       </form>
       {{#if inviteUrl}}
       <div class="grid gap-1">
@@ -36,7 +36,7 @@
           <input id="new-invite-link" type="text" class="input min-w-0 grow" value="{{inviteUrl}}" readonly autofocus _="on click call me.select()" />
           <button
             type="button"
-            class="btn btn-outline h-auto min-h-(--size) max-w-full py-2"
+            class="btn btn-outline max-w-full py-2"
             aria-live="polite"
             data-copy="{{inviteUrl}}"
             data-field="new-invite-link"
@@ -71,7 +71,7 @@
             {{#if this.inviteToken}}
             <button
               type="button"
-              class="btn btn-outline btn-sm h-auto min-h-(--size) max-w-full py-1.5"
+              class="btn btn-outline btn-sm max-w-full py-1.5"
               aria-live="polite"
               aria-describedby="outbound-{{this.id}}"
               data-copy="{{../baseUrl}}/wardrobe-share/invite/{{this.inviteToken}}"
@@ -81,7 +81,7 @@
             >{{icon "link" class="size-4"}}<span>{{t 'lang.COPY_INVITE_LINK'}}</span></button>
             {{/if}}
             <form method="post" action="/wardrobe-share/{{this.id}}/remove"{{#if this.grantee}} hx-confirm="{{t 'lang.REVOKE_CONFIRM'}}"{{/if}}>
-              <button type="submit" class="btn btn-outline btn-sm h-auto min-h-(--size) max-w-full py-1.5" aria-describedby="outbound-{{this.id}}">{{icon "trash" class="size-4"}}{{#if this.grantee}}{{t 'lang.REVOKE'}}{{else}}{{t 'lang.REVOKE_INVITE'}}{{/if}}</button>
+              <button type="submit" class="btn btn-outline btn-sm max-w-full py-1.5" aria-describedby="outbound-{{this.id}}">{{icon "trash" class="size-4"}}{{#if this.grantee}}{{t 'lang.REVOKE'}}{{else}}{{t 'lang.REVOKE_INVITE'}}{{/if}}</button>
             </form>
           </div>
         </li>
@@ -104,10 +104,10 @@
           </div>
           <div class="flex flex-wrap gap-2">
             <form method="post" action="/wardrobe-share/invite/{{this.inviteToken}}/accept">
-              <button type="submit" class="btn btn-primary btn-sm h-auto min-h-(--size) max-w-full py-1.5" aria-describedby="pending-{{this.id}}">{{t 'lang.ACCEPT'}}</button>
+              <button type="submit" class="btn btn-primary btn-sm max-w-full py-1.5" aria-describedby="pending-{{this.id}}">{{t 'lang.ACCEPT'}}</button>
             </form>
             <form method="post" action="/wardrobe-share/invite/{{this.inviteToken}}/decline">
-              <button type="submit" class="btn btn-outline btn-sm h-auto min-h-(--size) max-w-full py-1.5" aria-describedby="pending-{{this.id}}">{{t 'lang.DECLINE'}}</button>
+              <button type="submit" class="btn btn-outline btn-sm max-w-full py-1.5" aria-describedby="pending-{{this.id}}">{{t 'lang.DECLINE'}}</button>
             </form>
           </div>
         </li>
@@ -129,7 +129,7 @@
             <span class="badge">{{#ifEquals this.permission 'MANAGE'}}{{t 'lang.PERMISSION_MANAGE'}}{{else}}{{t 'lang.PERMISSION_VIEW'}}{{/ifEquals}}</span>
           </div>
           <form method="post" action="/wardrobe-share/{{this.id}}/remove" hx-confirm="{{t 'lang.LEAVE_CONFIRM'}}">
-            <button type="submit" class="btn btn-outline btn-sm h-auto min-h-(--size) max-w-full py-1.5" aria-describedby="inbound-{{this.id}}">{{icon "trash" class="size-4"}}{{t 'lang.LEAVE'}}</button>
+            <button type="submit" class="btn btn-outline btn-sm max-w-full py-1.5" aria-describedby="inbound-{{this.id}}">{{icon "trash" class="size-4"}}{{t 'lang.LEAVE'}}</button>
           </form>
         </li>
         {{/each}}

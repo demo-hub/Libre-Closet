@@ -162,8 +162,10 @@
   body { line-height: 1.55; }
   code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.875rem; line-height: 1.5; }
   table { font-variant-numeric: tabular-nums; }
-  html { scroll-padding-top: var(--spacing-header); }
-  @media (width < 64rem) { html { scroll-padding-bottom: calc(var(--spacing-dock) + env(safe-area-inset-bottom)); } }
+  ::placeholder { color: var(--mq-text-secondary); opacity: 1; } /* preflight's is 50 % of the text colour: 3.35:1 on White */
+  /* The bars' height plus 0.5rem, so a focused control's 4px ring clears them too. public/js/focus-scroll.js reads these. */
+  html { scroll-padding-top: calc(var(--spacing-header) + 0.5rem); }
+  @media (width < 64rem) { html { scroll-padding-bottom: calc(var(--spacing-dock) + env(safe-area-inset-bottom) + 0.5rem); } }
 }
 
 /* Keep in @layer utilities: :where() beats daisyUI's sub-layers yet loses to template utilities. */
@@ -181,6 +183,7 @@
   :where(.menu li > *):focus-visible { outline: 2px solid var(--mq-focus); outline-offset: 2px; background: transparent; }
   :where(.dock > *):focus-visible, :where(.checkbox, .toggle):focus-visible { outline: 2px solid var(--mq-focus); outline-offset: 2px; }
   :where(.btn) { --fontsize: 1rem; }
+  :where(.btn:not(.btn-square, .btn-circle)) { height: auto; min-height: var(--size); padding-block: 0.25rem; } /* a label that wraps grows the button */
   :where(.btn-sm) { --fontsize: 0.875rem; }
   @media (pointer: coarse) { :where(.btn-sm, .input-sm, .select-sm, .file-input-sm) { --size: calc(var(--size-field) * 10); } }
   :where(.btn-lg) { --fontsize: 1.125rem; }
@@ -509,11 +512,6 @@
   color: var(--color-base-content);
   width: 100%;
   padding: 0;
-}
-
-.ms-search-input::placeholder {
-  color: var(--mq-text-secondary);
-  opacity: 1;
 }
 
 .ms-options {
