@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-11-06
+
+#### Changed
+
+- Garment colours are named in your language everywhere they are shown: the garment page, an outfit's garment, the filter sheet and its pill, AI suggestions and the colour field, whose search finds a colour by that name as well as the English one. A custom colour shows exactly as you typed it, no longer with capital letters added. One typed by hand before 1.7.0 with a built-in colour's name, such as "Rouge", now shows beside it, and the filter for the built-in colour leaves it out
+- German says Kleiderschrank and Kalender throughout, rather than two words for each, and Italian says Calendario
+
+#### Fixed
+
+- Placeholder text now passes contrast, in the light and the dark theme
+- A control reached with the keyboard stops clear of the header and the dock, focus ring included. In Firefox it could stay partly hidden under them
+- A button label that wraps makes its button taller instead of spilling out of it, so WCAG 1.4.12 text spacing no longer breaks one
+- "Archived" agrees with a garment in Spanish and Russian
+- French puts its space before a colon, in the filter pills, AI suggestions and the error page
+- "AGPL-3.0" no longer breaks across two lines, and the Russian badge draws it in the page's own font
+- The landing page's opening paragraph and scheduling feature say the same in every language: de, es, fr and it had dropped part of the first, and those and ru part of the second
+
 ## [1.6.0] - 2026-11-05
 
 #### Added
